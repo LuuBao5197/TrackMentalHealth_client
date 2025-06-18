@@ -1,12 +1,14 @@
 import React, { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import Loadable from '../layouts/full/shared/loadable/Loadable';
+import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
+import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
-const UserLayout = Loadable(lazy(()=>import('../layouts/user/UserLayout')));
+const UserLayout = Loadable(lazy(() => import('../layouts/user/UserLayout')));
 /* ****Pages***** */
 const Dashboard = Loadable(lazy(() => import('../views/dashboard/Dashboard')))
 const SamplePage = Loadable(lazy(() => import('../views/sample-page/SamplePage')))
@@ -24,8 +26,9 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { path: '404', element: <Error /> },
-      { path: 'register', element: <Register /> },
-      { path: 'login', element: <Login /> },
+      { path: '/auth/register', element: <Register /> },
+      { path: '/auth/login', element: <Login /> },
+      { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
   },
@@ -36,6 +39,7 @@ const Router = [
     path: '/',
     element: <FullLayout />,
     children: [
+
       { path: '/', element: <Navigate to="/dashboard" /> },
       {
         element: <ProtectedRoute />, // dùng Outlet cho nhóm cần login
