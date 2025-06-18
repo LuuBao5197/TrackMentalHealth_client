@@ -5,7 +5,7 @@
 
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { useRoutes } from 'react-router-dom';
-import Router from './routes/Router';
+import Router from '../src/routes/Router';
 
 import { baselightTheme } from "./theme/DefaultColors";
 
@@ -22,4 +22,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
