@@ -17,6 +17,12 @@ const Menuitems = [
     href: '/dashboard',
   },
   {
+    id: uniqueId(),
+    title: 'Pending Registrations',
+    icon: IconUserPlus,
+    href: '/pending-registrations',
+  },
+  {
     navlabel: true,
     subheader: 'Utilities',
   },

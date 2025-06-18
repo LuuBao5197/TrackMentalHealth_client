@@ -5,10 +5,9 @@ import { Grid, Box, Card, Stack, Typography } from '@mui/material';
 // components
 import PageContainer from 'src/components/container/PageContainer';
 import Logo from 'src/layouts/full/shared/logo/Logo';
-import AuthLogin from './auth/AuthLogin';
-
+import LoginForm from '../../components/loginPage/LoginForm';
 const Login2 = () => {
-  
+
   return (
     <PageContainer title="Login" description="this is Login page">
       <Box
@@ -41,7 +40,7 @@ const Login2 = () => {
               <Box display="flex" alignItems="center" justifyContent="center">
                 <Logo />
               </Box>
-              <AuthLogin
+              <LoginForm
                 subtext={
                   <Typography variant="subtitle1" textAlign="center" color="textSecondary" mb={1}>
                     Your Social Campaigns
