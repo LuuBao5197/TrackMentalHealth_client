@@ -18,7 +18,7 @@ const Error = () => (
       <Typography align="center" variant="h4" mb={4}>
         This page you are looking for could not be found.
       </Typography>
-      <Button color="primary" variant="contained" component={Link} to="/" disableElevation>
+      <Button color="primary" variant="contained" component={Link} to="/auth/login" disableElevation>
         Go Back to Home
       </Button>
     </Container>
