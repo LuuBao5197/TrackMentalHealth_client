@@ -47,8 +47,8 @@ const LoginForm = () => {
 
                 if (decoded.roleId.id === 1) {
                     navigate('/dashboard');
-                } else {
-                    setErrorMessage('Access denied: You are not an admin.');
+                } else if (decoded.roleId.id === 2) {
+                    navigate('/user/homepage');
                 }
             } catch (error) {
                 console.error(error);
@@ -56,6 +56,33 @@ const LoginForm = () => {
             }
         }
     });
+
+    React.useEffect(() => {
+        const handleMouseMove = (e) => {
+            const pupils = document.querySelectorAll('.pupil');
+            pupils.forEach(pupil => {
+                const rect = pupil.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const dx = e.clientX - centerX;
+                const dy = e.clientY - centerY;
+                const angle = Math.atan2(dy, dx);
+                const radius = 3;
+                pupil.setAttribute('cx', Number(pupil.dataset.ox) + radius * Math.cos(angle));
+                pupil.setAttribute('cy', Number(pupil.dataset.oy) + radius * Math.sin(angle));
+            });
+        };
+
+        const pupils = document.querySelectorAll('.pupil');
+        pupils.forEach(pupil => {
+            pupil.dataset.ox = pupil.getAttribute('cx');
+            pupil.dataset.oy = pupil.getAttribute('cy');
+        });
+
+        document.addEventListener('mousemove', handleMouseMove);
+        return () => document.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
 
     return (
         // <form onSubmit={formik.handleSubmit}>

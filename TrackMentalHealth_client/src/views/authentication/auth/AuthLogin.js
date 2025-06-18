@@ -10,9 +10,62 @@ import {
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
-
 const AuthLogin = ({ title, subtitle, subtext, formik }) => (
+
     <form onSubmit={formik.handleSubmit}>
+        <Box display="flex" justifyContent="center" mb={3}>
+            <svg
+                id="cat"
+                width="200"
+                height="200"
+                viewBox="0 0 200 200"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <circle cx="100" cy="100" r="60" fill="#FDCB6E" stroke="#000" strokeWidth="2" />
+
+                <polygon points="50,70 55,25 85,55" fill="#FDCB6E" stroke="#000" strokeWidth="2" />
+
+                <polygon points="115,55 145,25 150,70" fill="#FDCB6E" stroke="#000" strokeWidth="2" />
+
+                <circle className="eye" cx="80" cy="90" r="10" fill="#fff" />
+                <circle className="pupil" cx="80" cy="90" r="5" fill="#000" />
+
+                <circle className="eye" cx="120" cy="90" r="10" fill="#fff" />
+                <circle className="pupil" cx="120" cy="90" r="5" fill="#000" />
+
+                <path d="M90,120 Q100,130 110,120" stroke="#000" strokeWidth="2" fill="none" />
+
+                <rect
+                    className="left-hand"
+                    x="45"
+                    y="130"
+                    width="20"
+                    height="40"
+                    rx="10"
+                    ry="10"
+                    fill="#FDCB6E"
+                    stroke="#000"
+                    strokeWidth="2"
+                    transform-origin="55 130"
+                />
+
+                <rect
+                    className="right-hand"
+                    x="135"
+                    y="130"
+                    width="20"
+                    height="40"
+                    rx="10"
+                    ry="10"
+                    fill="#FDCB6E"
+                    stroke="#000"
+                    strokeWidth="2"
+                    transform-origin="145 130"
+                />
+
+                <rect className="hand" x="50" y="70" width="100" height="30" fill="#000000FF" rx="10" ry="10" style={{ display: 'none' }} />
+            </svg>
+        </Box>
         {title && (
             <Typography fontWeight="700" variant="h2" mb={1}>
                 {title}
@@ -60,7 +113,17 @@ const AuthLogin = ({ title, subtitle, subtext, formik }) => (
                     type="password"
                     value={formik.values.password}
                     onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    onFocus={() => {
+                        document.querySelector('.left-hand').setAttribute('y', '70');
+                        document.querySelector('.right-hand').setAttribute('y', '70');
+                        document.querySelector('.hand').style.display = 'block';
+                    }}
+
+                    onBlur={() => {
+                        document.querySelector('.left-hand').setAttribute('y', '130');
+                        document.querySelector('.right-hand').setAttribute('y', '130');
+                        document.querySelector('.hand').style.display = 'none';
+                    }}
                     error={formik.touched.password && Boolean(formik.errors.password)}
                     helperText={formik.touched.password && formik.errors.password}
                     variant="outlined"

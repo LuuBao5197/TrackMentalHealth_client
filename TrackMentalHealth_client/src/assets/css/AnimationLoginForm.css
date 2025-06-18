@@ -1,0 +1,6 @@
+.hand {
+    transition: all 0.3s ease;
+}
+.pupil {
+    transition: cx 0.1s, cy 0.1s;
+}
