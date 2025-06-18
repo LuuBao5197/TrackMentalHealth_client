@@ -4,6 +4,8 @@ import * as Yup from 'yup';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../redux/slices/authSlice';
 import {
     Box,
     Typography,
@@ -21,7 +23,7 @@ import AuthLogin from '../../views/authentication/auth/AuthLogin';
 const LoginForm = () => {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = React.useState('');
-
+    const dispatch = useDispatch();
     const formik = useFormik({
         initialValues: {
             email: '',
@@ -40,19 +42,19 @@ const LoginForm = () => {
                 });
 
                 const { token } = response.data;
-                console.log('Login token:', token);
-
                 const decoded = jwtDecode(token);
-                console.log("Decoded token:", decoded);
+
+                dispatch(setCredentials({ user: decoded, token }));
+                console.log('Dispatched credentials:', decoded);
 
                 if (decoded.roleId.id === 1) {
+                    console.log('Redirect to dashboard');
                     navigate('/dashboard');
                 } else if (decoded.roleId.id === 2) {
                     navigate('/user/homepage');
                 }
-            } catch (error) {
-                console.error(error);
-                setErrorMessage('Login failed. Please check your credentials.');
+            } catch (err) {
+                setErrorMessage('Login failed');
             }
         }
     });

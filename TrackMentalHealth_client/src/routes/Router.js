@@ -3,6 +3,8 @@ import { Navigate } from 'react-router-dom';
 import Loadable from '../layouts/full/shared/loadable/Loadable';
 import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
 import PendingRegistrations from '../components/loginPage/PendingRegistrations';
+import ProtectedRoute from './ProtectedRoute';
+import { element } from 'prop-types';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -19,41 +21,50 @@ const Register = Loadable(lazy(() => import('../views/authentication/Register'))
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const Router = [
-  {
-    path: '/',
-    element: <FullLayout />,
-    children: [
-      { path: '/', element: <Navigate to="/dashboard" /> },
-      { path: '/dashboard', exact: true, element: <Dashboard /> },
-      { path: '/sample-page', exact: true, element: <SamplePage /> },
-      { path: '/icons', exact: true, element: <Icons /> },
-      { path: '/ui/typography', exact: true, element: <TypographyPage /> },
-      { path: '/ui/shadow', exact: true, element: <Shadow /> },
-      { path: '*', element: <Navigate to="/auth/404" /> },
-      { path: '/pending-registrations', element: <PendingRegistrations /> },
-    ],
-  },
+  // 🟢 Public: Không cần đăng nhập
   {
     path: '/auth',
     element: <BlankLayout />,
     children: [
-      { path: '404', element: <Error /> },
-      { path: '/auth/register', element: <Register /> },
-      { path: '/auth/login', element: <Login /> },
+      { path: 'login', element: <Login /> },
+      { path: 'register', element: <Register /> },
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
-      { path: '*', element: <Navigate to="/auth/404" /> },
+      { path: '404', element: <Error /> },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
+
+  // 🔐 Private: Cần đăng nhập
+  {
+    path: '/',
+    element: <FullLayout />,
+    children: [
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+      {
+        element: <ProtectedRoute allowedRoles={[1]} />,
+        children: [
+          { path: 'dashboard', element: <Dashboard /> },
+          { path: 'sample-page', element: <SamplePage /> },
+          { path: 'icons', element: <Icons /> },
+          { path: 'ui/typography', element: <TypographyPage /> },
+          { path: 'ui/shadow', element: <Shadow /> },
+        ],
+      },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
+    ],
+  },
+
   {
     path: '/user',
     element: <UserLayout />,
     children: [
-      { path: '/user/homepage', element: <HomePage /> },
-      // { path: '/auth/register', element: <Register /> },
-      // { path: '/auth/login', element: <Login /> },
-      // { path: '*', element: <Navigate to="/auth/404" /> },
+      {
+        element: <ProtectedRoute allowedRoles={[2]} />,
+        children: [
+          { path: 'homepage', element: <HomePage /> },
+        ],
+      },
     ],
-  }
+  },
 ];
-
 export default Router;
