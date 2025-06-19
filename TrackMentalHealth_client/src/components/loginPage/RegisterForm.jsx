@@ -1,152 +1,176 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    Box,
+    Typography,
+    Button,
+    MenuItem,
+    InputLabel,
+    Select,
+    FormControl,
+} from '@mui/material';
+import { Stack } from '@mui/system';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import {
-    Button,
-    TextField,
-    Typography,
-    InputLabel,
-    MenuItem,
-    Select,
-    FormControl,
-    Box,
-} from '@mui/material';
+import CustomTextField from '../../components/forms/theme-elements/CustomTextField';
 
 const RegisterForm = () => {
+    const navigate = useNavigate();
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [certificateFiles, setCertificateFiles] = useState([]);
+
     const formik = useFormik({
         initialValues: {
+            fullName: '',
             email: '',
             password: '',
-            fullName: '',
             roleId: '',
-            avatar: null,
-            certificates: [],
         },
         validationSchema: Yup.object({
-            email: Yup.string().email('Invalid email').required('Required'),
-            password: Yup.string().min(6).required('Required'),
-            fullName: Yup.string().required('Required'),
-            roleId: Yup.number().required('Required'),
+            fullName: Yup.string().required('Name is required'),
+            email: Yup.string().email('Invalid email').required('Email is required'),
+            password: Yup.string().min(6, 'Min 6 characters').required('Password is required'),
+            roleId: Yup.string().required('Please select role'),
         }),
-        onSubmit: async (values, { setSubmitting, resetForm }) => {
+        onSubmit: async (values, { setSubmitting }) => {
             try {
                 const formData = new FormData();
+                formData.append('fullName', values.fullName);
                 formData.append('email', values.email);
                 formData.append('password', values.password);
-                formData.append('fullName', values.fullName);
-                formData.append('roleId', values.roleId);
+                formData.append('roleId', Number(values.roleId));
 
-                if (values.avatar) {
-                    formData.append('avatar', values.avatar);
+                if (avatarFile) formData.append('avatar', avatarFile);
+
+                if (certificateFiles.length > 0) {
+                    Array.from(certificateFiles).forEach((file) =>
+                        formData.append('certificates', file)
+                    );
                 }
 
-                if (values.certificates && values.certificates.length > 0) {
-                    Array.from(values.certificates).forEach((file, index) => {
-                        formData.append('certificates', file);
-                    });
-                }
-
-                const res = await axios.post('http://localhost:9999/api/users/register', formData, {
+                const response = await axios.post('http://localhost:9999/api/users/register', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
 
-                alert(res.data.message);
-                resetForm();
+                alert('Registration successful!');
+                navigate('/auth/login');
             } catch (err) {
-                alert(err.response?.data?.error || 'Register failed');
+                alert('Registration failed. Please try again.');
+                console.error('Registration error:', err.response?.data || err);
             } finally {
                 setSubmitting(false);
             }
         },
     });
 
+    const showCertificateInput =
+        formik.values.roleId === '2' ||
+        formik.values.roleId === '4' ||
+        formik.values.roleId === '5';
+
     return (
-        <form onSubmit={formik.handleSubmit} encType="multipart/form-data">
-            <TextField
-                fullWidth
-                margin="normal"
-                label="Email"
-                name="email"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                error={formik.touched.email && !!formik.errors.email}
-                helperText={formik.touched.email && formik.errors.email}
-            />
-            <TextField
-                fullWidth
-                type="password"
-                margin="normal"
-                label="Password"
-                name="password"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                error={formik.touched.password && !!formik.errors.password}
-                helperText={formik.touched.password && formik.errors.password}
-            />
-            <TextField
-                fullWidth
-                margin="normal"
-                label="Full Name"
-                name="fullName"
-                value={formik.values.fullName}
-                onChange={formik.handleChange}
-                error={formik.touched.fullName && !!formik.errors.fullName}
-                helperText={formik.touched.fullName && formik.errors.fullName}
-            />
-            <FormControl fullWidth margin="normal">
-                <InputLabel>Role</InputLabel>
-                <Select
-                    name="roleId"
-                    value={formik.values.roleId}
+        <Box component="form" onSubmit={formik.handleSubmit} encType="multipart/form-data">
+            <Stack mb={3}>
+                <Typography variant="subtitle1" fontWeight={600} mb="5px">
+                    Name
+                </Typography>
+                <CustomTextField
+                    id="fullName"
+                    name="fullName"
+                    variant="outlined"
+                    fullWidth
+                    value={formik.values.fullName}
                     onChange={formik.handleChange}
-                >
-                    {/* <MenuItem value={1}>Admin</MenuItem> */}
-                    <MenuItem value={2}>Psychologist</MenuItem>
-                    <MenuItem value={3}>User</MenuItem>
-                    <MenuItem value={4}>Content Creator</MenuItem>
-                    <MenuItem value={5}>Test Designer</MenuItem>
-                </Select>
-            </FormControl>
-
-            <Box my={2}>
-                <InputLabel>Avatar (optional)</InputLabel>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => formik.setFieldValue('avatar', e.target.files[0])}
+                    error={formik.touched.fullName && Boolean(formik.errors.fullName)}
+                    helperText={formik.touched.fullName && formik.errors.fullName}
                 />
-            </Box>
 
-            {(formik.values.roleId === 2 ||
-                formik.values.roleId === 4 ||
-                formik.values.roleId === 5) && (
-                    <Box my={2}>
-                        <InputLabel>Certificates (1–5 files)</InputLabel>
+                <Typography variant="subtitle1" fontWeight={600} mb="5px" mt="25px">
+                    Email Address
+                </Typography>
+                <CustomTextField
+                    id="email"
+                    name="email"
+                    variant="outlined"
+                    fullWidth
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    error={formik.touched.email && Boolean(formik.errors.email)}
+                    helperText={formik.touched.email && formik.errors.email}
+                />
+
+                <Typography variant="subtitle1" fontWeight={600} mb="5px" mt="25px">
+                    Password
+                </Typography>
+                <CustomTextField
+                    id="password"
+                    name="password"
+                    type="password"
+                    variant="outlined"
+                    fullWidth
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    error={formik.touched.password && Boolean(formik.errors.password)}
+                    helperText={formik.touched.password && formik.errors.password}
+                />
+
+                <FormControl fullWidth margin="normal">
+                    <InputLabel id="roleId-label">Role</InputLabel>
+                    <Select
+                        labelId="roleId-label"
+                        id="roleId"
+                        name="roleId"
+                        value={formik.values.roleId}
+                        onChange={(e) => formik.setFieldValue('roleId', Number(e.target.value))}
+                        error={formik.touched.roleId && Boolean(formik.errors.roleId)}
+                    >
+                        <MenuItem value="2">Psychologist</MenuItem>
+                        <MenuItem value="3">User</MenuItem>
+                        <MenuItem value="4">Content Creator</MenuItem>
+                        <MenuItem value="5">Test Designer</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <Box mt={2}>
+                    <Typography fontWeight={600} mb="5px">
+                        Avatar (optional)
+                    </Typography>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setAvatarFile(e.currentTarget.files[0])}
+                    />
+                </Box>
+
+                {showCertificateInput && (
+                    <Box mt={2}>
+                        <Typography fontWeight={600} mb="5px">
+                            Certificates (1–5 files)
+                        </Typography>
                         <input
                             type="file"
-                            accept=".pdf,image/*"
                             multiple
-                            onChange={(e) =>
-                                formik.setFieldValue('certificates', e.target.files)
-                            }
+                            accept=".pdf,image/*"
+                            onChange={(e) => setCertificateFiles(e.target.files)}
                         />
                     </Box>
                 )}
+            </Stack>
 
             <Button
-                type="submit"
-                variant="contained"
                 color="primary"
-                disabled={formik.isSubmitting}
+                variant="contained"
+                size="large"
                 fullWidth
-                sx={{ mt: 2 }}
+                type="submit"
+                disabled={formik.isSubmitting}
             >
-                Register
+                Sign Up
             </Button>
-        </form>
+        </Box>
     );
 };
 

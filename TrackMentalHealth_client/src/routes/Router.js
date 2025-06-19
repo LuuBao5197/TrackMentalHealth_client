@@ -4,6 +4,7 @@ import Loadable from '../layouts/full/shared/loadable/Loadable';
 import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
 import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
+import { element } from 'prop-types';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -25,11 +26,11 @@ const Router = [
     path: '/auth',
     element: <BlankLayout />,
     children: [
-      { path: '404', element: <Error /> },
-      { path: '/auth/register', element: <Register /> },
-      { path: '/auth/login', element: <Login /> },
+      { path: 'login', element: <Login /> },
+      { path: 'register', element: <Register /> },
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
-      { path: '*', element: <Navigate to="/auth/404" /> },
+      { path: '404', element: <Error /> },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
 
@@ -39,10 +40,9 @@ const Router = [
     path: '/',
     element: <FullLayout />,
     children: [
-
-      { path: '/', element: <Navigate to="/dashboard" /> },
+      { index: true, element: <Navigate to="/dashboard" replace /> },
       {
-        element: <ProtectedRoute />, // dùng Outlet cho nhóm cần login
+        element: <ProtectedRoute allowedRoles={[1]} />,
         children: [
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
@@ -51,7 +51,7 @@ const Router = [
           { path: 'ui/shadow', element: <Shadow /> },
         ],
       },
-      { path: '*', element: <Navigate to="/auth/404" /> },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
 
@@ -60,12 +60,12 @@ const Router = [
     element: <UserLayout />,
     children: [
       {
-        element: <ProtectedRoute />, // bảo vệ UserLayout
+        element: <ProtectedRoute allowedRoles={[2]} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
-        ]
-      }
+        ],
+      },
     ],
-  }
+  },
 ];
 export default Router;

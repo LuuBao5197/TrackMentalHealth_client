@@ -42,6 +42,7 @@
     "react-redux": "^9.2.0",
     "react-router": "^6.16.0",
     "react-router-dom": "^6.16.0",
+    "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "swiper": "^11.2.8",
     "yup": "^1.6.1"
