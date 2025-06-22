@@ -5,6 +5,7 @@ import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
 import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
 import { element } from 'prop-types';
+import LessonForm from '../components/LessonPage/LessonForm';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -31,6 +32,7 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
+      { path: 'lesson-form', element: <LessonForm /> },
     ],
   },
 
