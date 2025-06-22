@@ -20,7 +20,13 @@ const Menuitems = [
     id: uniqueId(),
     title: 'Pending Registrations',
     icon: IconUserPlus,
-    href: '/pending-registrations',
+    href: '/admin/users/pending-registrations',
+  },
+  {
+    id: uniqueId(),
+    title: 'User Profile',
+    icon: IconUserPlus,
+    href: '/admin/users',
   },
   {
     navlabel: true,
