@@ -31,6 +31,7 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
+      { path: 'homepage', element: <HomePage /> },
     ],
   },
 
@@ -59,6 +60,8 @@ const Router = [
     path: '/user',
     element: <UserLayout />,
     children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
       {
         element: <ProtectedRoute allowedRoles={[2]} />,
         children: [
