@@ -5,6 +5,9 @@ import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
 import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
 import { element } from 'prop-types';
+import UserProfile from '../components/adminPage/UserProfile';
+import UserList from '../components/adminPage/UserList';
+import UserDetail from '../components/adminPage/UserDetail';
 import LessonForm from '../components/LessonPage/LessonForm';
 
 /* ***Layouts**** */
@@ -39,7 +42,6 @@ const Router = [
     ],
   },
 
-
   // 🔐 Private: Cần đăng nhập
   {
     path: '/',
@@ -54,12 +56,17 @@ const Router = [
           { path: 'icons', element: <Icons /> },
           { path: 'ui/typography', element: <TypographyPage /> },
           { path: 'ui/shadow', element: <Shadow /> },
+          { path: 'admin/users', element: <UserProfile /> },
+          { path: 'admin/users/role/:roleId', element: <UserList /> },
+          { path: 'admin/users/detail/:id', element: <UserDetail /> },
+          { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
 
+  //USER
   {
     path: '/user',
     element: <UserLayout />,
