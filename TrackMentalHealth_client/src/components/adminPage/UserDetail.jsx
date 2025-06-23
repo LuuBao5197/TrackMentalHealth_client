@@ -8,7 +8,13 @@ const UserDetail = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        axios.get(`http://localhost:9999/api/users/profile/${id}`)
+        const token = localStorage.getItem('token'); 
+
+        axios.get(`http://localhost:9999/api/users/profile/${id}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        })
             .then((res) => setUser(res.data))
             .catch((err) => console.error(err));
     }, [id]);
