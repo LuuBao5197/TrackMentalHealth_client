@@ -8,6 +8,7 @@ import { element } from 'prop-types';
 import UserProfile from '../components/adminPage/UserProfile';
 import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
+import LessonForm from '../components/LessonPage/LessonForm';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -34,11 +35,11 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
+      { path: 'lesson-form', element: <LessonForm /> },
     ],
   },
 
-  // 🔐 Private: Cần đăng nhập 
-  //ADMIN
+  // 🔐 Private: Cần đăng nhập
   {
     path: '/',
     element: <FullLayout />,
