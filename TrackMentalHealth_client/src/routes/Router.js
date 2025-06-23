@@ -21,6 +21,9 @@ const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
+const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
+const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
+const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const Router = [
   // 🟢 Public: Không cần đăng nhập
   {
@@ -36,7 +39,7 @@ const Router = [
     ],
   },
 
-  
+
   // 🔐 Private: Cần đăng nhập
   {
     path: '/',
@@ -63,10 +66,17 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
+      { path: 'test/create', element: <TestPage /> },
+      { path: 'test/edit/:id', element: <TestPage /> },
+      { path: 'question/create', element: <QuestionPage /> },
+      { path: 'question/edit/:id"', element: <QuestionPage /> },
+      { path: 'question/option/create', element: <OptionPage /> },
+      { path: 'question/option/edit/:id"', element: <OptionPage /> },
       {
         element: <ProtectedRoute allowedRoles={[2]} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
+
         ],
       },
     ],
