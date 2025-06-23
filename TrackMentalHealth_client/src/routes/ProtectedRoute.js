@@ -6,9 +6,9 @@ const ProtectedRoute = ({ allowedRoles }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   if (!isAuthenticated) return <Navigate to="/auth/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(user?.roleId?.id)) {
-    return <Navigate to="/auth/unauthorized" replace />;
-  }
+  // if (allowedRoles && !allowedRoles.includes(user?.roleId?.id)) {
+  //   return <Navigate to="/auth/unauthorized" replace />;
+  // }
 
   return <Outlet />;
 };
