@@ -42,14 +42,18 @@ const LoginForm = () => {
                 });
 
                 const { token } = response.data;
-                const decoded = jwtDecode(token);
+                console.log('Token from response:', token);
 
+                // ✅ Lưu token vào localStorage
+                localStorage.setItem('token', token);
+
+                const decoded = jwtDecode(token);
                 dispatch(setCredentials({ user: decoded, token }));
-                console.log('Dispatched credentials:', decoded);
+                console.log('Decoded token:', decoded);
 
                 if (decoded.roles && decoded.roles.includes('ROLE_ADMIN')) {
                     navigate('/dashboard');
-                } else if (decoded.roleId.id === 3) {
+                } else if (decoded.roleId.id === 1) {
                     navigate('/user/homepage');
                 }
             } catch (err) {

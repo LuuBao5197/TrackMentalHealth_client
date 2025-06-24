@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
 import axios from "axios";
 import {
     Table,
@@ -16,13 +17,14 @@ import {
 const PendingRegistrations = () => {
     const [pendingUsers, setPendingUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const token = useSelector(state => state.auth.token) || localStorage.getItem('token');
 
     const roleMap = {
-        1: "Admin",
-        2: "Psychologist",
-        3: "User",
-        4: "Content Creator",
-        5: "Test Designer",
+        1: "User",
+        2: "Admin",
+        3: "Content CreatorC",
+        4: "Test Designer",
+        5: "Psychologist",
     };
 
     const fetchPendingUsers = async () => {
@@ -38,10 +40,20 @@ const PendingRegistrations = () => {
 
     const handleApprove = async (pendingId) => {
         try {
-            await axios.post(`http://localhost:9999/api/users/approve/${pendingId}`);
-            setPendingUsers(prev => prev.filter(user => user.pendingId !== pendingId));
+            await axios.post(
+                `http://localhost:9999/api/users/approve/${pendingId}`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setPendingUsers((prev) => prev.filter((user) => user.pendingId !== pendingId));
             alert("User approved successfully!");
         } catch (error) {
+            console.error("Approve failed:", error);
             alert("Failed to approve user.");
         }
     };
@@ -54,7 +66,7 @@ const PendingRegistrations = () => {
 
     return (
         <Paper sx={{ padding: 3 }}>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h5" gutterBottom textAlign="center">
                 Pending User Registrations
             </Typography>
             {pendingUsers.length === 0 ? (

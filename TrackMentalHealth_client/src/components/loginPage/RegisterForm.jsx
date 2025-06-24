@@ -35,6 +35,18 @@ const RegisterForm = () => {
         }),
         onSubmit: async (values, { setSubmitting }) => {
             try {
+                // 1. Gọi API kiểm tra email
+                const emailCheck = await axios.get(`http://localhost:9999/api/users/check-email`, {
+                    params: { email: values.email },
+                });
+
+                if (emailCheck.data.exists) {
+                    alert('Email is already registered!');
+                    setSubmitting(false);
+                    return;
+                }
+
+                // 2. Nếu email hợp lệ, tạo FormData
                 const formData = new FormData();
                 formData.append('fullName', values.fullName);
                 formData.append('email', values.email);
@@ -42,13 +54,23 @@ const RegisterForm = () => {
                 formData.append('roleId', Number(values.roleId));
 
                 if (avatarFile) formData.append('avatar', avatarFile);
+                const roleIdNum = Number(values.roleId);
+                const requiresCertificate = [3, 4, 5].includes(roleIdNum);
 
-                if (certificateFiles.length > 0) {
-                    Array.from(certificateFiles).forEach((file) =>
-                        formData.append('certificates', file)
-                    );
+                if (requiresCertificate) {
+                    if (!certificateFiles || certificateFiles.length < 1 || certificateFiles.length > 5) {
+                        setCertificateError('You must upload between 1 and 5 certificates for this role.');
+                        setSubmitting(false);
+                        return;
+                    } else {
+                        setCertificateError('');
+                        Array.from(certificateFiles).forEach((file) =>
+                            formData.append('certificates', file)
+                        );
+                    }
                 }
 
+                // 3. Gửi form đăng ký
                 const response = await axios.post('http://localhost:9999/api/users/register', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
@@ -64,12 +86,15 @@ const RegisterForm = () => {
                 setSubmitting(false);
             }
         },
+
     });
 
     const showCertificateInput =
-        formik.values.roleId === '2' ||
-        formik.values.roleId === '4' ||
-        formik.values.roleId === '5';
+        formik.values.roleId === 3 ||
+        formik.values.roleId === 4 ||
+        formik.values.roleId === 5;
+
+    const [certificateError, setCertificateError] = useState('');
 
     return (
         <Box component="form" onSubmit={formik.handleSubmit} encType="multipart/form-data">
@@ -80,6 +105,7 @@ const RegisterForm = () => {
                 <CustomTextField
                     id="fullName"
                     name="fullName"
+                    label="Full Name"
                     variant="outlined"
                     fullWidth
                     value={formik.values.fullName}
@@ -94,10 +120,29 @@ const RegisterForm = () => {
                 <CustomTextField
                     id="email"
                     name="email"
+                    label="Email"
                     variant="outlined"
                     fullWidth
                     value={formik.values.email}
                     onChange={formik.handleChange}
+                    onBlur={async (e) => {
+                        formik.handleBlur(e); // giữ tính năng validation của Yup
+                        const email = e.target.value;
+
+                        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return; // bỏ qua nếu không hợp lệ
+
+                        try {
+                            const res = await axios.get('http://localhost:9999/api/users/check-email', {
+                                params: { email },
+                            });
+
+                            if (res.data.exists) {
+                                formik.setFieldError('email', 'Email is already taken');
+                            }
+                        } catch (err) {
+                            console.error('Check email failed', err);
+                        }
+                    }}
                     error={formik.touched.email && Boolean(formik.errors.email)}
                     helperText={formik.touched.email && formik.errors.email}
                 />
@@ -108,6 +153,7 @@ const RegisterForm = () => {
                 <CustomTextField
                     id="password"
                     name="password"
+                    label="Password"
                     type="password"
                     variant="outlined"
                     fullWidth
@@ -123,14 +169,15 @@ const RegisterForm = () => {
                         labelId="roleId-label"
                         id="roleId"
                         name="roleId"
+                        label="Role"
                         value={formik.values.roleId}
                         onChange={(e) => formik.setFieldValue('roleId', Number(e.target.value))}
                         error={formik.touched.roleId && Boolean(formik.errors.roleId)}
                     >
-                        <MenuItem value="2">Psychologist</MenuItem>
-                        <MenuItem value="3">User</MenuItem>
-                        <MenuItem value="4">Content Creator</MenuItem>
-                        <MenuItem value="5">Test Designer</MenuItem>
+                        <MenuItem value="1">User</MenuItem>
+                        <MenuItem value="3">Content Creator</MenuItem>
+                        <MenuItem value="4">Test Designer</MenuItem>
+                        <MenuItem value="5">Psychologist</MenuItem>
                     </Select>
                 </FormControl>
 
@@ -156,6 +203,11 @@ const RegisterForm = () => {
                             accept=".pdf,image/*"
                             onChange={(e) => setCertificateFiles(e.target.files)}
                         />
+                        {certificateError && (
+                            <Typography color="error" fontSize="0.875rem" mt="5px">
+                                {certificateError}
+                            </Typography>
+                        )}
                     </Box>
                 )}
             </Stack>
