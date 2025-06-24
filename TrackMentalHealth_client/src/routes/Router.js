@@ -58,7 +58,7 @@ const Router = [
           { path: 'ui/shadow', element: <Shadow /> },
           { path: 'admin/users', element: <UserProfile /> },
           { path: 'admin/users/role/:roleId', element: <UserList /> },
-          { path: 'admin/users/detail/:id', element: <UserDetail /> },
+          { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
         ],
       },
