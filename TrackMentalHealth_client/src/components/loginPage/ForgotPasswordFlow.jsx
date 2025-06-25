@@ -8,11 +8,11 @@ const ForgotPasswordFlow = () => {
     const [email, setEmail] = useState('');
 
     return (
-        <>
+        <div className="container w-50">
             {step === 1 && <ForgotPasswordForm onOtpSent={(email) => { setEmail(email); setStep(2); }} />}
             {step === 2 && <VerifyOtpForm email={email} onVerified={() => setStep(3)} />}
             {step === 3 && <ResetPasswordForm email={email} />}
-        </>
+        </div>
     );
 };
 
