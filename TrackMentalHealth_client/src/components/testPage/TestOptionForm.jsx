@@ -49,6 +49,14 @@ const FullTestFormWithPreview = () => {
             )
         })
       ).min(1, 'Cần ít nhất 1 câu hỏi')
+        .test(
+          'unique-questionText',
+          'Các câu hỏi không được trùng nội dung',
+          (questions) => {
+            const texts = questions.map(q => q.questionText?.trim().toLowerCase());
+            return new Set(texts).size === texts.length;
+          }
+        )
     }),
     onSubmit: async (values) => {
       const payload = {
