@@ -6,6 +6,7 @@ import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
 import { element } from 'prop-types';
 import LessonForm from '../components/LessonPage/LessonForm';
+import LessonCreate from '../components/LessonPage/CreateForm';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -33,6 +34,7 @@ const Router = [
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'lesson-form', element: <LessonForm /> },
+      { path: 'lesson-create', element: <LessonCreate /> },
     ],
   },
 
