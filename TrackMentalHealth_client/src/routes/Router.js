@@ -9,6 +9,7 @@ import UserProfile from '../components/adminPage/UserProfile';
 import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
 import LessonForm from '../components/LessonPage/LessonForm';
+import LessonCreate from '../components/LessonPage/CreateForm';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -39,6 +40,7 @@ const Router = [
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'lesson-form', element: <LessonForm /> },
+      { path: 'lesson-create', element: <LessonCreate /> },
       { path: 'question/option/create', element: <OptionPage /> },
     ],
   },
