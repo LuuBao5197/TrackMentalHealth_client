@@ -5,6 +5,9 @@ import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
 import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
 import { element } from 'prop-types';
+import UserProfile from '../components/adminPage/UserProfile';
+import UserList from '../components/adminPage/UserList';
+import UserDetail from '../components/adminPage/UserDetail';
 import LessonForm from '../components/LessonPage/LessonForm';
 import LessonCreate from '../components/LessonPage/CreateForm';
 
@@ -22,6 +25,9 @@ const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
+const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
+const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
+const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const Router = [
   // 🟢 Public: Không cần đăng nhập
   {
@@ -35,10 +41,10 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'lesson-form', element: <LessonForm /> },
       { path: 'lesson-create', element: <LessonCreate /> },
+      { path: 'question/option/create', element: <OptionPage /> },
     ],
   },
 
-  
   // 🔐 Private: Cần đăng nhập
   {
     path: '/',
@@ -53,23 +59,45 @@ const Router = [
           { path: 'icons', element: <Icons /> },
           { path: 'ui/typography', element: <TypographyPage /> },
           { path: 'ui/shadow', element: <Shadow /> },
+          { path: 'admin/users', element: <UserProfile /> },
+          { path: 'admin/users/role/:roleId', element: <UserList /> },
+          { path: 'admin/users/profile/:id', element: <UserDetail /> },
+          { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
 
+  //USER
   {
     path: '/user',
     element: <UserLayout />,
     children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
       {
         element: <ProtectedRoute allowedRoles={[2]} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
+
         ],
       },
     ],
   },
+  // test_designer 
+  {
+    path: '/testDesigner',
+    element: <FullLayout />,
+    children: [
+      { path: 'test/create', element: <TestPage /> },
+      { path: 'test/edit/:id', element: <TestPage /> },
+      { path: 'question/create', element: <QuestionPage /> },
+      { path: 'question/edit/:id"', element: <QuestionPage /> },
+      { path: 'question/option/create', element: <OptionPage /> },
+      { path: 'question/option/edit/:id"', element: <OptionPage /> },
+    ]
+
+  }
 ];
 export default Router;

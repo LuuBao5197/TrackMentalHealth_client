@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
-const AuthLogin = ({ title, subtitle, subtext, formik }) => (
+const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => (
 
     <form onSubmit={formik.handleSubmit}>
         <Box display="flex" justifyContent="center" mb={3}>
@@ -73,6 +73,14 @@ const AuthLogin = ({ title, subtitle, subtext, formik }) => (
         )}
 
         {subtext}
+
+        {errorMessage && (
+            <Box mt={2}>
+                <Typography color="error" variant="body1" textAlign="center">
+                    {errorMessage}
+                </Typography>
+            </Box>
+        )}
 
         <Stack>
             <Box>

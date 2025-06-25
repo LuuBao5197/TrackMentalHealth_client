@@ -42,19 +42,26 @@ const LoginForm = () => {
                 });
 
                 const { token } = response.data;
+                console.log('Token from response:', token);
+
+                // ✅ Lưu token vào localStorage
+                localStorage.setItem('token', token);
+
                 const decoded = jwtDecode(token);
-
                 dispatch(setCredentials({ user: decoded, token }));
-                console.log('Dispatched credentials:', decoded);
+                console.log('Decoded token:', decoded);
 
-                if (decoded.roleId.id === 1) {
-                    console.log('Redirect to dashboard');
+                if (decoded.roles && decoded.roles.includes('ROLE_ADMIN')) {
                     navigate('/dashboard');
-                } else if (decoded.roleId.id === 2) {
+                } else if (decoded.roleId.id === 1) {
                     navigate('/user/homepage');
                 }
             } catch (err) {
-                setErrorMessage('Login failed');
+                if (err.response && err.response.status === 401) {
+                    setErrorMessage('Invalid email or password');
+                } else {
+                    setErrorMessage('Login failed. Please try again later.');
+                }
             }
         }
     });
@@ -163,9 +170,28 @@ const LoginForm = () => {
         //     </Box>
         // </form>
         <AuthLogin
-            title="Welcome Back"
+            title="Welcome"
             subtext="Please login to continue"
+            subtitle={
+                <Stack direction="row" spacing={1} justifyContent="center" mt={3}>
+                    <Typography color="textSecondary" variant="h6" fontWeight="500">
+                        New to Track Mental Health?
+                    </Typography>
+                    <Typography
+                        component="a"
+                        href="/TrackMentalHealth/auth/register"
+                        fontWeight="500"
+                        sx={{
+                            textDecoration: 'none',
+                            color: 'primary.main',
+                        }}
+                    >
+                        Create an account
+                    </Typography>
+                </Stack>
+            }
             formik={formik}
+            errorMessage={errorMessage}
         />
     );
 };
