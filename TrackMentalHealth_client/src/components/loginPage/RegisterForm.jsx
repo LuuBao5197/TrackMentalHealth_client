@@ -121,8 +121,10 @@ const RegisterForm = () => {
 
                             console.log('📨 Sending OTP to:', email);
 
-                            await axios.post('http://localhost:9999/api/users/forgot-password', {
-                                params: { email }
+                            axios.post('http://localhost:9999/api/users/send-otp-register', null, {
+                                params: { email: email }
+                            }, {
+                                headers: { Authorization: undefined }
                             });
 
                             setOtpSent(true);
@@ -156,9 +158,8 @@ const RegisterForm = () => {
                             size="small"
                             onClick={async () => {
                                 try {
-                                    const res = await axios.post('http://localhost:9999/api/users/verify-otp', {
-                                        email: formik.values.email,
-                                        otp,
+                                    const res = await axios.post('http://localhost:9999/api/users/verify-otp-register', null, {
+                                        params: { email: formik.values.email, otp: otp }
                                     });
 
                                     if (res.data.verified) {
