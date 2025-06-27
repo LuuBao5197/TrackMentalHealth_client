@@ -170,8 +170,6 @@ const LoginForm = () => {
         //     </Box>
         // </form>
         <AuthLogin
-            title="Welcome"
-            subtext="Please login to continue"
             subtitle={
                 <Stack direction="row" spacing={1} justifyContent="center" mt={3}>
                     <Typography color="textSecondary" variant="h6" fontWeight="500">
