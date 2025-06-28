@@ -20,7 +20,7 @@ const TestForm = () => {
       instructions: ''
     },
     validationSchema: Yup.object({
-      id: Yup.number().required('ID is required'),
+      // id: Yup.number().required('ID is required'),
       title: Yup.string().required('Title is required'),
       description: Yup.string().required('Description is required'),
       instructions: Yup.string().required('Instructions are required')
@@ -78,7 +78,7 @@ const TestForm = () => {
       <h3>{isEditMode ? 'Edit Test' : 'Create Test'}</h3>
       <form onSubmit={formik.handleSubmit}>
         {[
-          { name: 'id', type: 'number', label: 'ID', disabled: isEditMode },
+          { name: 'id', type: 'number', label: 'ID', disabled: isEditMode, readonly: true },
           { name: 'title', label: 'Title' },
           { name: 'description', label: 'Description' },
           { name: 'instructions', label: 'Instructions' }
@@ -100,17 +100,6 @@ const TestForm = () => {
             ) : null}
           </div>
         ))}
-
-        {/* {!isEditMode && (
-          <>
-            <div className="mb-3">
-              <strong>Created By:</strong> {currentUserId}
-            </div>
-            <div className="mb-3">
-              <strong>Created At:</strong> {new Date().toLocaleString()}
-            </div>
-          </>
-        )} */}
 
         <button type="submit" className="btn btn-primary">
           {isEditMode ? 'Update' : 'Create'}

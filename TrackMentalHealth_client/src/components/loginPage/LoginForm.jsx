@@ -40,8 +40,7 @@ const LoginForm = () => {
                     email: values.email,
                     password: values.password,
                 });
-
-                const { token } = response.data;
+                const {token} = response.data;
                 console.log('Token from response:', token);
 
                 // ✅ Lưu token vào localStorage
