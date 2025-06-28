@@ -81,15 +81,21 @@ const getMenuItemsByRole = (role) => {
   const MenuitemsTestDesigner = [
     {
       navlabel: true,
-      subheader: 'Test Designer',
+      subheader: 'Test Overview',
     },
-
     {
       id: uniqueId(),
-      title: 'Management Test',
+      title: 'Create Test',
       icon: IconLayoutDashboard,
       href: '/testDesigner/test/create',
     },
+    {
+      id: uniqueId(),
+      title: 'View All Test',
+      icon: IconLayoutDashboard,
+      href: '/testDesigner/test/create',
+    },
+    
   ];
   switch (role) {
     case 'ADMIN':
