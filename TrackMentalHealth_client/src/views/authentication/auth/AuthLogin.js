@@ -10,9 +10,16 @@ import {
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
-const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => (
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import { useState } from 'react';
 
-    <form onSubmit={formik.handleSubmit}>
+const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => {
+    const [showPassword, setShowPassword] = useState(false);
+
+    return (<form onSubmit={formik.handleSubmit}>
         <Box display="flex" justifyContent="center" mb={3}>
             <svg
                 id="cat"
@@ -118,7 +125,7 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => (
                 <CustomTextField
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onFocus={() => {
@@ -136,6 +143,19 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => (
                     helperText={formik.touched.password && formik.errors.password}
                     variant="outlined"
                     fullWidth
+                    InputProps={{
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    edge="end"
+                                >
+                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
                 />
             </Box>
             <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>
@@ -172,7 +192,7 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => (
         </Box>
 
         {subtitle}
-    </form>
-);
+    </form>);
+};
 
 export default AuthLogin;
