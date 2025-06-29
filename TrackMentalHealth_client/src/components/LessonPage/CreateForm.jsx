@@ -1,156 +1,162 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useFormik } from 'formik';
-import * as Yup from 'yup';
 import axios from 'axios';
 
 const LessonCreate = () => {
-  const [users, setUsers] = useState([]);
-
-  // Gọi API để lấy danh sách user từ backend
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get('http://localhost:9999/api/lesson/users'); // Đổi URL nếu cần
-        setUsers(response.data);
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách người dùng:', error);
-      }
-    };
-
-    fetchUsers();
-  }, []);
+  const [steps, setSteps] = useState([
+    { title: '', content: '', mediaType: 'Video', mediaUrl: '' },
+  ]);
 
   const formik = useFormik({
     initialValues: {
       title: '',
       description: '',
-      status: true,
-      createdAt: '',
-      updatedAt: '',
-      createdById: ''
+      status: false,
     },
-    validationSchema: Yup.object({
-      title: Yup.string().required('Vui lòng nhập tiêu đề'),
-      description: Yup.string().required('Vui lòng nhập mô tả'),
-      status: Yup.boolean().required(),
-      createdAt: Yup.string().required('Vui lòng chọn ngày tạo'),
-      updatedAt: Yup.string().required('Vui lòng chọn ngày cập nhật'),
-      createdById: Yup.number()
-        .required('Vui lòng chọn người tạo')
-        .typeError('Vui lòng chọn người tạo hợp lệ')
-    }),
-    onSubmit: async (values, { resetForm }) => {
-      const payload = {
-        title: values.title,
-        description: values.description,
-        status: values.status,
-        createdAt: new Date(values.createdAt).toISOString(),
-        updatedAt: new Date(values.updatedAt).toISOString(),
-        createdBy: { id: parseInt(values.createdById) }
+    onSubmit: async (values) => {
+      const user = JSON.parse(localStorage.getItem('credentials'));
+      const userId = user?.id || user?.sub || ''; // fallback nếu bạn lưu token dưới `sub`
+
+      const now = new Date().toISOString();
+
+      const lessonData = {
+        ...values,
+        createdById: userId,
+        createdAt: now,
+        updatedAt: now,
+        steps: steps,
       };
 
-      console.log('Payload gửi đi:', payload);
-
       try {
-        await axios.post('http://localhost:9999/api/lesson/', payload);
-        alert('Tạo bài học thành công!');
-        resetForm();
+        await axios.post('http://localhost:9999/api/lessons/save', lessonData);
+        alert('✅ Tạo bài học thành công!');
       } catch (error) {
-        console.error('Lỗi khi tạo bài học:', error.response?.data || error.message);
-        alert('Tạo bài học thất bại!');
+        console.error('❌ Lỗi khi tạo bài học:', error);
+        alert('❌ Có lỗi xảy ra khi tạo bài học.');
       }
-    }
+    },
   });
 
+  const handleStepChange = (index, field, value) => {
+    const updatedSteps = [...steps];
+    updatedSteps[index][field] = value;
+    setSteps(updatedSteps);
+  };
+
+  const addStep = () => {
+    setSteps([...steps, { title: '', content: '', mediaType: 'Video', mediaUrl: '' }]);
+  };
+
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', boxShadow: '0 0 10px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
-      <h2 style={{ marginBottom: '20px' }}>Tạo Bài Học</h2>
-      <form onSubmit={formik.handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label>Tiêu đề:</label>
-          <input
-            type="text"
-            name="title"
-            value={formik.values.title}
-            onChange={formik.handleChange}
-            style={{ width: '100%', padding: '8px' }}
-          />
-          {formik.touched.title && formik.errors.title && <div style={{ color: 'red' }}>{formik.errors.title}</div>}
-        </div>
+    <div className="container my-5" style={{ maxWidth: '850px' }}>
+      <div className="card shadow">
+        <div className="card-body p-4">
+          <h2 className="mb-4 text-primary">📝 Tạo Bài Học Mới</h2>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label>Mô tả:</label>
-          <textarea
-            name="description"
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            style={{ width: '100%', padding: '8px' }}
-          />
-          {formik.touched.description && formik.errors.description && <div style={{ color: 'red' }}>{formik.errors.description}</div>}
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label>Trạng thái:</label>
-          <select
-            name="status"
-            value={formik.values.status}
-            onChange={formik.handleChange}
-            style={{ width: '100%', padding: '8px' }}
-          >
-            <option value={true}>Hoạt động</option>
-            <option value={false}>Không hoạt động</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label>Ngày tạo:</label>
-          <input
-            type="datetime-local"
-            name="createdAt"
-            value={formik.values.createdAt}
-            onChange={formik.handleChange}
-            style={{ width: '100%', padding: '8px' }}
-          />
-          {formik.touched.createdAt && formik.errors.createdAt && <div style={{ color: 'red' }}>{formik.errors.createdAt}</div>}
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label>Ngày cập nhật:</label>
-          <input
-            type="datetime-local"
-            name="updatedAt"
-            value={formik.values.updatedAt}
-            onChange={formik.handleChange}
-            style={{ width: '100%', padding: '8px' }}
-          />
-          {formik.touched.updatedAt && formik.errors.updatedAt && <div style={{ color: 'red' }}>{formik.errors.updatedAt}</div>}
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-            <label>Người tạo:</label>
-            <select
-                name="createdById"
-                value={formik.values.createdById}
-                onChange={formik.handleChange}
-                style={{ width: '100%', padding: '8px' }}
-            >
-                <option value="">-- Chọn người tạo --</option>
-                {users.map(user => (
-                <option key={user.id} value={user.id}>
-                    {user.username} 
-                </option>
-                ))}
-            </select>
-            {formik.touched.createdById && formik.errors.createdById && (
-                <div style={{ color: 'red' }}>{formik.errors.createdById}</div>
-            )}
+          <form onSubmit={formik.handleSubmit}>
+            <div className="row g-3 mb-4">
+              <div className="col-md-12">
+                <label className="form-label">Tiêu đề bài học</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="title"
+                  onChange={formik.handleChange}
+                  value={formik.values.title}
+                  required
+                />
+              </div>
+              <div className="col-12">
+                <label className="form-label">Mô tả</label>
+                <textarea
+                  className="form-control"
+                  name="description"
+                  rows="3"
+                  onChange={formik.handleChange}
+                  value={formik.values.description}
+                ></textarea>
+              </div>
+              <div className="form-check mt-3 ms-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  name="status"
+                  onChange={formik.handleChange}
+                  checked={formik.values.status}
+                  id="statusCheck"
+                />
+                <label className="form-check-label" htmlFor="statusCheck">
+                  Kích hoạt bài học
+                </label>
+              </div>
             </div>
 
+            <hr />
+            <h4 className="text-secondary">📚 Các Bước Học</h4>
 
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px' }}>
-          Tạo mới
-        </button>
-      </form>
+            {steps.map((step, index) => (
+              <div key={index} className="border rounded p-3 mb-4 bg-light">
+                <h5 className="mb-3">Bước {index + 1}</h5>
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    placeholder="Tiêu đề bước"
+                    className="form-control"
+                    value={step.title}
+                    onChange={(e) => handleStepChange(index, 'title', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-2">
+                  <textarea
+                    placeholder="Nội dung bước"
+                    className="form-control"
+                    value={step.content}
+                    onChange={(e) => handleStepChange(index, 'content', e.target.value)}
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div className="mb-2 row g-2">
+                  <div className="col-md-4">
+                    <select
+                      className="form-select"
+                      value={step.mediaType}
+                      onChange={(e) => handleStepChange(index, 'mediaType', e.target.value)}
+                    >
+                      <option value="Video">Video</option>
+                      <option value="Image">Hình ảnh</option>
+                      <option value="Audio">Âm thanh</option>
+                    </select>
+                  </div>
+                  <div className="col-md-8">
+                    <input
+                      type="text"
+                      placeholder="Media URL"
+                      className="form-control"
+                      value={step.mediaUrl}
+                      onChange={(e) => handleStepChange(index, 'mediaUrl', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="btn btn-outline-secondary mb-3"
+              onClick={addStep}
+            >
+              + Thêm bước học
+            </button>
+
+            <div>
+              <button type="submit" className="btn btn-primary w-100">
+                🚀 Tạo bài học
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
