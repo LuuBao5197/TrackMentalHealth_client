@@ -11,6 +11,10 @@ import UserDetail from '../components/adminPage/UserDetail';
 import LessonCreate from '../components/LessonPage/CreateForm';
 import LessonDetails from '../components/LessonPage/LessonDetail';
 import HomePageTest from '../components/LessonPage/AllForm';
+import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
+import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
+import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
+
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -29,7 +33,7 @@ const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
-const SocialPage = Loadable(lazy(()=> import('../components/miniSocialPage/NewsFeed')))
+const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
   // 🟢 Public: Không cần đăng nhập
   {
@@ -48,7 +52,7 @@ const Router = [
     ],
   },
 
-  // 🔐 Private: Cần đăng nhập
+  //🔐 Private: Cần đăng nhập
   {
     path: '/',
     element: <FullLayout />,
@@ -79,36 +83,54 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
-       { path: 'social', element: <SocialPage /> },
+
       {
         element: <ProtectedRoute allowedRoles={[2]} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
-
+          { path: 'write-diary', element: <WriteDiaryPage /> },
+          { path: 'history', element: <DiaryHistoryPage /> },
+          { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
         ],
       },
     ],
   },
-  // test_designer 
   {
-    path: '/testDesigner',
-    element: <FullLayout />,
-    children: [
-      { path: 'test/create', element: <TestPage /> },
-      { path: 'test/edit/:id', element: <TestPage /> },
-      { path: 'question/create', element: <QuestionPage /> },
-      { path: 'question/edit/:id"', element: <QuestionPage /> },
-      { path: 'question/option/create', element: <OptionPage /> },
-      { path: 'question/option/edit/:id"', element: <OptionPage /> },
-    ]
+  path: '/user',
+  element: <UserLayout />,
+  children: [
+    { path: 'homepage1', element: <HomePage /> },
+    { path: 'register', element: <Register /> },
+    { path: 'social', element: <SocialPage /> },
+    {
+      element: <ProtectedRoute allowedRoles={[2]} />,
+      children: [
+        { path: 'homepage', element: <HomePage /> },
 
-  }, 
-  {
-    path: '/',
+      ],
+    },
+  ],
+  },
+// test_designer 
+{
+  path: '/testDesigner',
+    element: <FullLayout />,
+      children: [
+        { path: 'test/create', element: <TestPage /> },
+        { path: 'test/edit/:id', element: <TestPage /> },
+        { path: 'question/create', element: <QuestionPage /> },
+        { path: 'question/edit/:id"', element: <QuestionPage /> },
+        { path: 'question/option/create', element: <OptionPage /> },
+        { path: 'question/option/edit/:id"', element: <OptionPage /> },
+      ]
+
+},
+{
+  path: '/',
     element: <BlankLayout />,
-    children: [
+      children: [
         { path: 'social', element: <SocialPage /> },
-    ]
-  }
+      ]
+}
 ];
 export default Router;
