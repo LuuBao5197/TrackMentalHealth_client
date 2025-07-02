@@ -29,6 +29,7 @@ const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
+const SocialPage = Loadable(lazy(()=> import('../components/miniSocialPage/NewsFeed')))
 const Router = [
   // 🟢 Public: Không cần đăng nhập
   {
@@ -78,6 +79,7 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
+       { path: 'social', element: <SocialPage /> },
       {
         element: <ProtectedRoute allowedRoles={[2]} />,
         children: [
@@ -100,6 +102,13 @@ const Router = [
       { path: 'question/option/edit/:id"', element: <OptionPage /> },
     ]
 
+  }, 
+  {
+    path: '/',
+    element: <BlankLayout />,
+    children: [
+        { path: 'social', element: <SocialPage /> },
+    ]
   }
 ];
 export default Router;
