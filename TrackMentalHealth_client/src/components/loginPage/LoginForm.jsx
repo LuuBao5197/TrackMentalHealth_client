@@ -45,15 +45,12 @@ const LoginForm = () => {
 
                 // ✅ Lưu token vào localStorage
                 localStorage.setItem('token', token);
-
                 const decoded = jwtDecode(token);
                 dispatch(setCredentials({ user: decoded, token }));
                 console.log('Decoded token:', decoded);
-
-                if (decoded.roles && decoded.roles.includes('ROLE_ADMIN')) {
-                    navigate('/dashboard');
-                } else if (decoded.roleId.id === 1) {
-                    navigate('/user/homepage');
+                navigate("/dashboard");
+                if(decoded.roleId.roleName == "User"){
+                    navigate("/user/social")
                 }
             } catch (err) {
                 if (err.response && err.response.status === 401) {
