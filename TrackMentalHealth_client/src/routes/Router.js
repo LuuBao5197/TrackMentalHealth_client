@@ -11,6 +11,10 @@ import UserDetail from '../components/adminPage/UserDetail';
 import LessonCreate from '../components/LessonPage/CreateForm';
 import LessonDetails from '../components/LessonPage/LessonDetail';
 import HomePageTest from '../components/LessonPage/AllForm';
+import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
+import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
+import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
+
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -30,63 +34,67 @@ const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')))
 const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const Router = [
-  // 🟢 Public: Không cần đăng nhập
-  {
-    path: '/auth',
-    element: <BlankLayout />,
-    children: [
-      { path: 'login', element: <Login /> },
-      { path: 'register', element: <Register /> },
-      { path: 'forgot-password', element: <ForgotPasswordFlow /> },
-      { path: '404', element: <Error /> },
-      { path: '*', element: <Navigate to="/auth/404" replace /> },
-      { path: 'lesson-create', element: <LessonCreate /> },
-      { path: 'homepagetest', element: <HomePageTest /> },
-      { path: 'lesson/:id', element: <LessonDetails /> },
-      { path: 'question/option/create', element: <OptionPage /> },
-    ],
-  },
+  //🟢 Public: Không cần đăng nhập
+  // {
+  //   path: '/auth',
+  //   element: <BlankLayout />,
+  //   children: [
+  //     { path: 'login', element: <Login /> },
+  //     { path: 'register', element: <Register /> },
+  //     { path: 'forgot-password', element: <ForgotPasswordFlow /> },
+  //     { path: '404', element: <Error /> },
+  //     { path: '*', element: <Navigate to="/auth/404" replace /> },
+  //     { path: 'lesson-create', element: <LessonCreate /> },
+  //     { path: 'homepagetest', element: <HomePageTest /> },
+  //     { path: 'lesson/:id', element: <LessonDetails /> },
+  //     { path: 'question/option/create', element: <OptionPage /> },
+  //   ],
+  // },
 
-  // 🔐 Private: Cần đăng nhập
-  {
-    path: '/',
-    element: <FullLayout />,
-    children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      {
-        element: <ProtectedRoute allowedRoles={[1]} />,
-        children: [
-          { path: 'dashboard', element: <Dashboard /> },
-          { path: 'sample-page', element: <SamplePage /> },
-          { path: 'icons', element: <Icons /> },
-          { path: 'ui/typography', element: <TypographyPage /> },
-          { path: 'ui/shadow', element: <Shadow /> },
-          { path: 'admin/users', element: <UserProfile /> },
-          { path: 'admin/users/role/:roleId', element: <UserList /> },
-          { path: 'admin/users/profile/:id', element: <UserDetail /> },
-          { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
-        ],
-      },
-      { path: '*', element: <Navigate to="/auth/404" replace /> },
-    ],
-  },
+  // //🔐 Private: Cần đăng nhập
+  // {
+  //   path: '/',
+  //   element: <FullLayout />,
+  //   children: [
+  //     { index: true, element: <Navigate to="/dashboard" replace /> },
+  //     {
+  //       element: <ProtectedRoute allowedRoles={[1]} />,
+  //       children: [
+  //         { path: 'dashboard', element: <Dashboard /> },
+  //         { path: 'sample-page', element: <SamplePage /> },
+  //         { path: 'icons', element: <Icons /> },
+  //         { path: 'ui/typography', element: <TypographyPage /> },
+  //         { path: 'ui/shadow', element: <Shadow /> },
+  //         { path: 'admin/users', element: <UserProfile /> },
+  //         { path: 'admin/users/role/:roleId', element: <UserList /> },
+  //         { path: 'admin/users/profile/:id', element: <UserDetail /> },
+  //         { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
+  //       ],
+  //     },
+  //     { path: '*', element: <Navigate to="/auth/404" replace /> },
+  //   ],
+  // },
 
   //USER
   {
-    path: '/user',
-    element: <UserLayout />,
-    children: [
-      { path: 'homepage1', element: <HomePage /> },
-      { path: 'register', element: <Register /> },
-      {
-        element: <ProtectedRoute allowedRoles={[2]} />,
-        children: [
-          { path: 'homepage', element: <HomePage /> },
+  path: '/user',
+  element: <UserLayout />,
+  children: [
+    { path: 'homepage1', element: <HomePage /> },
+    { path: 'register', element: <Register /> },
+    
+    {
+      element: <ProtectedRoute allowedRoles={[2]} />,
+      children: [
+        { path: 'homepage', element: <HomePage /> },
+        { path: 'write-diary', element: <WriteDiaryPage /> },
+        { path: 'history', element: <DiaryHistoryPage /> },
+        { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
+      ],
+    },
+  ],
+},
 
-        ],
-      },
-    ],
-  },
   // test_designer 
   {
     path: '/testDesigner',
