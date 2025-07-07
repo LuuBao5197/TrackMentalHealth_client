@@ -85,7 +85,7 @@ const Router = [
       { path: 'register', element: <Register /> },
 
       {
-        element: <ProtectedRoute allowedRoles={[2]} />,
+        element: <ProtectedRoute allowedRoles={['User']} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
