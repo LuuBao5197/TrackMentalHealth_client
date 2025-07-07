@@ -156,7 +156,7 @@ h6 {
 }
 
 .header .logo img {
-  max-height: 36px;
+  /* max-height: 100px; */
   margin-right: 8px;
 }
 
@@ -177,7 +177,7 @@ h6 {
 .header .btn-getstarted,
 .header .btn-getstarted:focus {
   color: var(--contrast-color);
-  background: var(--accent-color);
+  background: var(--contrast-color);
   font-size: 14px;
   padding: 8px 26px;
   margin: 0;
@@ -2994,6 +2994,3 @@ section,
 /*--------------------------------------------------------------
 # Starter Section Section
 --------------------------------------------------------------*/
-.starter-section {
-  /* Add your styles here */
-}

@@ -96,41 +96,41 @@ const Router = [
     ],
   },
   {
-  path: '/user',
-  element: <UserLayout />,
-  children: [
-    { path: 'homepage1', element: <HomePage /> },
-    { path: 'register', element: <Register /> },
-    { path: 'social', element: <SocialPage /> },
-    {
-      element: <ProtectedRoute allowedRoles={[2]} />,
-      children: [
-        { path: 'homepage', element: <HomePage /> },
+    path: '/user',
+    element: <UserLayout />,
+    children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
+      { path: 'social', element: <SocialPage /> },
+      {
+        element: <ProtectedRoute allowedRoles={[2]} />,
+        children: [
+          { path: 'homepage', element: <HomePage /> },
 
-      ],
-    },
-  ],
+        ],
+      },
+    ],
   },
-// test_designer 
-{
-  path: '/testDesigner',
+  // test_designer 
+  {
+    path: '/testDesigner',
     element: <FullLayout />,
-      children: [
-        { path: 'test/create', element: <TestPage /> },
-        { path: 'test/edit/:id', element: <TestPage /> },
-        { path: 'question/create', element: <QuestionPage /> },
-        { path: 'question/edit/:id"', element: <QuestionPage /> },
-        { path: 'question/option/create', element: <OptionPage /> },
-        { path: 'question/option/edit/:id"', element: <OptionPage /> },
-      ]
+    children: [
+      { path: 'test/create', element: <TestPage /> },
+      { path: 'test/edit/:id', element: <TestPage /> },
+      { path: 'question/create', element: <QuestionPage /> },
+      { path: 'question/edit/:id"', element: <QuestionPage /> },
+      { path: 'question/option/create', element: <OptionPage /> },
+      { path: 'question/option/edit/:id"', element: <OptionPage /> },
+    ]
 
-},
-{
-  path: '/',
+  },
+  {
+    path: '/',
     element: <BlankLayout />,
-      children: [
-        { path: 'social', element: <SocialPage /> },
-      ]
-}
+    children: [
+      { path: 'social', element: <SocialPage /> },
+    ]
+  }
 ];
 export default Router;
