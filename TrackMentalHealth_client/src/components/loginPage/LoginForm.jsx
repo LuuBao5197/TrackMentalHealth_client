@@ -50,6 +50,7 @@ const LoginForm = () => {
                 console.log('Decoded token:', decoded);
                 navigate("/dashboard");
                 if(decoded.roleId.roleName == "User"){
+                    alert("Login success");
                     navigate("/user/social")
                 }
             } catch (err) {
