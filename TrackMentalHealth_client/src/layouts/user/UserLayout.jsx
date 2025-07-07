@@ -21,8 +21,11 @@ import useScrollTopButton from '../../hooks/useScrollTopButton';
 import useAOS from '../../hooks/useAOS';
 import usePreloader from '../../hooks/usePreloader';
 import { Outlet } from 'react-router';
+import { useSelector } from 'react-redux';
 const UserLayout = () => {
   // Thêm class vào body
+  const userRole = useSelector((state) => state.auth.user);
+  console.log(userRole);
   useEffect(() => {
     document.body.classList.add('index-page');
 
