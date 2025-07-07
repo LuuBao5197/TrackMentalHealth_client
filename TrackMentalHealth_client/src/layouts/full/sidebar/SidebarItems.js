@@ -1,11 +1,15 @@
 import React from 'react';
-import Menuitems from './MenuItems';
+import getMenuItemsByRole from './MenuItems';
 import { useLocation } from 'react-router';
 import { Box, List } from '@mui/material';
 import NavItem from './NavItem';
 import NavGroup from './NavGroup/NavGroup';
+import { useSelector } from 'react-redux';
 
 const SidebarItems = () => {
+  const userRole = useSelector((state) => state.auth.user);
+  console.log('Role:', userRole); // admin, user, guest,...
+  const Menuitems = getMenuItemsByRole(userRole);
   const { pathname } = useLocation();
   const pathDirect = pathname;
 

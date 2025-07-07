@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const LessonManager = () => {
   const [lessons, setLessons] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:9999/api/lesson/')
+    axios.get('http://localhost:9999/api/lessons')
       .then(response => setLessons(response.data))
-      .catch(error => console.error('Error fetching lessons:', error));
+      .catch(error => console.error('Lỗi khi tải danh sách bài học:', error));
   }, []);
 
   return (
@@ -28,19 +29,19 @@ const LessonManager = () => {
               display: 'flex',
               flexDirection: 'column'
             }}>
-              <img
-                src={lesson.image || 'https://via.placeholder.com/300x180.png?text=No+Image'}
-                alt="Lesson"
-                style={{ width: '100%', height: '180px', objectFit: 'cover' }}
-              />
               <div style={{ padding: '15px' }}>
                 <h3 style={{ fontSize: '18px', marginBottom: '10px' }}>{lesson.title}</h3>
                 <p style={{ fontSize: '14px', color: '#555' }}>
                   {lesson.description?.substring(0, 100)}...
                 </p>
-                <a href={`/lesson/${lesson.id}`} style={{ marginTop: '10px', display: 'inline-block', color: '#007bff', textDecoration: 'none' }}>
+                <Link to={`/auth/lesson/${lesson.id}`} style={{
+                  marginTop: '10px',
+                  display: 'inline-block',
+                  color: '#007bff',
+                  textDecoration: 'none'
+                }}>
                   Xem thêm →
-                </a>
+                </Link>
               </div>
             </div>
           ))
@@ -48,6 +49,6 @@ const LessonManager = () => {
       </div>
     </div>
   );
-}
+};
 
 export default LessonManager;

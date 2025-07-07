@@ -40,21 +40,17 @@ const LoginForm = () => {
                     email: values.email,
                     password: values.password,
                 });
-
-                const { token } = response.data;
+                const {token} = response.data;
                 console.log('Token from response:', token);
 
                 // ✅ Lưu token vào localStorage
                 localStorage.setItem('token', token);
-
                 const decoded = jwtDecode(token);
                 dispatch(setCredentials({ user: decoded, token }));
                 console.log('Decoded token:', decoded);
-
-                if (decoded.roles && decoded.roles.includes('ROLE_ADMIN')) {
-                    navigate('/dashboard');
-                } else if (decoded.roles && decoded.roles.includes('ROLE_USER')) {
-                    navigate('/user/homepage');
+                navigate("/dashboard");
+                if(decoded.roleId.roleName == "ROLE_USER"){
+                    navigate("/user/social")
                 }
             } catch (err) {
                 if (err.response && err.response.status === 401) {
