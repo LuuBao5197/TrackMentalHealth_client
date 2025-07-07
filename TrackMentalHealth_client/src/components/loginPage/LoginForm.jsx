@@ -48,8 +48,7 @@ const LoginForm = () => {
                 const decoded = jwtDecode(token);
                 dispatch(setCredentials({ user: decoded, token }));
                 console.log('Decoded token:', decoded);
-                navigate("/dashboard");
-                if(decoded.roleId.roleName == "User"){
+                if(decoded.role == "User"){
                     alert("Login success");
                     navigate("/user/social")
                 }
