@@ -58,6 +58,7 @@ const UserLayout = () => {
     <div>
       <Header/>
       <HeroPage />
+      <Portfolio/>
       {/* <AboutSection />
       <HowWeWork/>
       <Portfolio/>
