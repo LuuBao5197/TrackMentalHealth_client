@@ -43,14 +43,17 @@ const LoginForm = () => {
                 const {token} = response.data;
                 console.log('Token from response:', token);
 
-                // ✅ Lưu token vào localStorage
                 localStorage.setItem('token', token);
+                // localStorage.setItem("user", JSON.stringify(decoded));
                 const decoded = jwtDecode(token);
                 dispatch(setCredentials({ user: decoded, token }));
                 console.log('Decoded token:', decoded);
-                navigate("/dashboard");
-                if(decoded.roleId.roleName == "ROLE_USER"){
+                if(decoded.role == "USER"){
+                    alert("Login successful");
                     navigate("/user/social")
+                } else if(decoded.role == "ADMIN"){
+                    alert("Login successful");
+                    navigate("/dashboard");
                 }
             } catch (err) {
                 if (err.response && err.response.status === 401) {

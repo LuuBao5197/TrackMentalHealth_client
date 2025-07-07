@@ -59,7 +59,7 @@ const Router = [
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       {
-        element: <ProtectedRoute allowedRoles={[1]} />,
+        element: <ProtectedRoute allowedRoles={['ADMIN']} />,
         children: [
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
@@ -103,7 +103,7 @@ const Router = [
     { path: 'register', element: <Register /> },
     { path: 'social', element: <SocialPage /> },
     {
-      element: <ProtectedRoute allowedRoles={[2]} />,
+      element: <ProtectedRoute allowedRoles={['USER']} />,
       children: [
         { path: 'homepage', element: <HomePage /> },
 
