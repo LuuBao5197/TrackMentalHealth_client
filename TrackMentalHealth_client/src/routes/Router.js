@@ -58,8 +58,9 @@ const Router = [
     element: <FullLayout />,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
+      { path: 'dashboard', element: <Dashboard /> },
       {
-        element: <ProtectedRoute allowedRoles={[1]} />,
+        element: <ProtectedRoute allowedRoles={['Admin']} />,
         children: [
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
