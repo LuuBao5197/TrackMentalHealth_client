@@ -35,47 +35,47 @@ const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQues
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const Router = [
   //🟢 Public: Không cần đăng nhập
-  // {
-  //   path: '/auth',
-  //   element: <BlankLayout />,
-  //   children: [
-  //     { path: 'login', element: <Login /> },
-  //     { path: 'register', element: <Register /> },
-  //     { path: 'forgot-password', element: <ForgotPasswordFlow /> },
-  //     { path: '404', element: <Error /> },
-  //     { path: '*', element: <Navigate to="/auth/404" replace /> },
-  //     { path: 'lesson-create', element: <LessonCreate /> },
-  //     { path: 'homepagetest', element: <HomePageTest /> },
-  //     { path: 'lesson/:id', element: <LessonDetails /> },
-  //     { path: 'question/option/create', element: <OptionPage /> },
-  //   ],
-  // },
+  {
+    path: '/auth',
+    element: <BlankLayout />,
+    children: [
+      { path: 'login', element: <Login /> },
+      { path: 'register', element: <Register /> },
+      { path: 'forgot-password', element: <ForgotPasswordFlow /> },
+      { path: '404', element: <Error /> },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
+      { path: 'lesson-create', element: <LessonCreate /> },
+      { path: 'homepagetest', element: <HomePageTest /> },
+      { path: 'lesson/:id', element: <LessonDetails /> },
+      { path: 'question/option/create', element: <OptionPage /> },
+    ],
+  },
 
-  // //🔐 Private: Cần đăng nhập
-  // {
-  //   path: '/',
-  //   element: <FullLayout />,
-  //   children: [
-  //     { index: true, element: <Navigate to="/dashboard" replace /> },
-  //     {
-  //       element: <ProtectedRoute allowedRoles={[1]} />,
-  //       children: [
-  //         { path: 'dashboard', element: <Dashboard /> },
-  //         { path: 'sample-page', element: <SamplePage /> },
-  //         { path: 'icons', element: <Icons /> },
-  //         { path: 'ui/typography', element: <TypographyPage /> },
-  //         { path: 'ui/shadow', element: <Shadow /> },
-  //         { path: 'admin/users', element: <UserProfile /> },
-  //         { path: 'admin/users/role/:roleId', element: <UserList /> },
-  //         { path: 'admin/users/profile/:id', element: <UserDetail /> },
-  //         { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
-  //       ],
-  //     },
-  //     { path: '*', element: <Navigate to="/auth/404" replace /> },
-  //   ],
-  // },
+  //🔐 Private: Cần đăng nhập
+  {
+    path: '/',
+    element: <FullLayout />,
+    children: [
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+      {
+        element: <ProtectedRoute allowedRoles={[1]} />,
+        children: [
+          { path: 'dashboard', element: <Dashboard /> },
+          { path: 'sample-page', element: <SamplePage /> },
+          { path: 'icons', element: <Icons /> },
+          { path: 'ui/typography', element: <TypographyPage /> },
+          { path: 'ui/shadow', element: <Shadow /> },
+          { path: 'admin/users', element: <UserProfile /> },
+          { path: 'admin/users/role/:roleId', element: <UserList /> },
+          { path: 'admin/users/profile/:id', element: <UserDetail /> },
+          { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
+        ],
+      },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
+    ],
+  },
 
-  //USER
+ // USER
   {
   path: '/user',
   element: <UserLayout />,
