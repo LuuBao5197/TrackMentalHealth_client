@@ -3,7 +3,7 @@ import LessonManager from './LessonManager';
 import ArticleManager from '../ArticlePage/ArticleManager';
 import ExerciseManager from '../ExercisePage/ExerciseManager';
 
-const HomePageTest = () => {
+const AllForm = () => {
   const [activeTab, setActiveTab] = useState('Lesson'); // Đặt mặc định là Lesson
 
   return (
@@ -33,4 +33,4 @@ const HomePageTest = () => {
   );
 };
 
-export default HomePageTest;
+export default AllForm;
