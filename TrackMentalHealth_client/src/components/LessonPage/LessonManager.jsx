@@ -35,12 +35,11 @@ const LessonManager = () => {
           data-layout="masonry"
           data-sort="original-order"
         >
-
-          {/* Danh sách bài học */}
           <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
             {filteredLessons.map((lesson) => {
-              const imageUrl = lesson.photo
-                ? `http://localhost:9999/uploads/${lesson.photo}`
+              // ✅ Ảnh sẽ lấy từ Cloudinary hoặc fallback nếu thiếu
+              const imageUrl = lesson.photo?.startsWith('http')
+                ? lesson.photo
                 : 'assets/img/default-lesson.webp';
 
               return (
@@ -68,7 +67,6 @@ const LessonManager = () => {
                       </div>
                     </div>
                     <div className="portfolio-content">
-                      <span className="category">{lesson.category}</span>
                       <h3>{lesson.title}</h3>
                       <p>{lesson.description?.substring(0, 100)}...</p>
                     </div>
