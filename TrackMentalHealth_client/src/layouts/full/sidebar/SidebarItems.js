@@ -10,6 +10,7 @@ const SidebarItems = () => {
   const userRole = useSelector((state) => state.auth.user);
   console.log('Role:', userRole); // admin, user, guest,...
   const Menuitems = getMenuItemsByRole(userRole);
+  
   const { pathname } = useLocation();
   const pathDirect = pathname;
 
