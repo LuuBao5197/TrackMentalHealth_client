@@ -31,10 +31,10 @@ const Register = Loadable(lazy(() => import('../views/authentication/Register'))
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
-const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')));
-const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')));
-const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')));
 
+const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
+const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
+const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
   //🟢 Public: Không cần đăng nhập
   {
@@ -85,6 +85,25 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
+
+
+      {
+        element: <ProtectedRoute allowedRoles={['User']} />,
+        children: [
+          { path: 'homepage', element: <HomePage /> },
+          { path: 'write-diary', element: <WriteDiaryPage /> },
+          { path: 'history', element: <DiaryHistoryPage /> },
+          { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
+        ],
+      },
+    ],
+  },
+  {
+    path: '/user',
+    element: <UserLayout />,
+    children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
       { path: 'social', element: <SocialPage /> },
       {
         element: <ProtectedRoute allowedRoles={['User', 2]} />, // gộp role User và 2
@@ -111,12 +130,12 @@ const Router = [
       { path: 'question/option/edit/:id', element: <OptionPage /> },
     ],
   },
-
   {
     path: '/',
     element: <BlankLayout />,
     children: [
       { path: 'social', element: <SocialPage /> },
+
     ],
   },
 ];
