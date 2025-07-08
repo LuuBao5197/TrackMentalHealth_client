@@ -23,16 +23,11 @@ import usePreloader from '../../hooks/usePreloader';
 
 import { Outlet } from 'react-router';
 import { useSelector } from 'react-redux';
+import AllForm from '../../components/LessonPage/AllForm';
 const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
   console.log(userRole);
-
-
-import { Outlet, useLocation } from 'react-router-dom';
-
-const UserLayout = () => {
-  const location = useLocation();
 
   // Xác định có đang ở trang chính /user hay không
   const isHomePage =
@@ -57,7 +52,7 @@ const UserLayout = () => {
     <div>
       <Header/>
       <HeroPage />
-      <Portfolio/>
+      <AllForm/>
       {/* <AboutSection />
       <HowWeWork/>
       <Portfolio/>
