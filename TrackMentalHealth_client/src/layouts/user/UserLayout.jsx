@@ -20,23 +20,13 @@ import useMobileNavToggle from '../../hooks/useMobileNavToggle';
 import useScrollTopButton from '../../hooks/useScrollTopButton';
 import useAOS from '../../hooks/useAOS';
 import usePreloader from '../../hooks/usePreloader';
-
-import { Outlet } from 'react-router';
 import { useSelector } from 'react-redux';
+import { Outlet, useLocation } from 'react-router-dom';
 const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
   console.log(userRole);
-
-
-import { Outlet, useLocation } from 'react-router-dom';
-
-const UserLayout = () => {
   const location = useLocation();
-
-  // Xác định có đang ở trang chính /user hay không
-  const isHomePage =
-    location.pathname === '/user' || location.pathname === '/TrackMentalHealth/user';
 
   // Add/remove class vào body
   useEffect(() => {
