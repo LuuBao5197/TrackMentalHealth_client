@@ -7,16 +7,16 @@ const Footer = () => {
         <div className="row gy-4">
           <div className="col-lg-4 col-md-6 footer-about">
             <a href="/" className="logo d-flex align-items-center">
-              <span className="sitename">MyWebsite</span>
+              <span className="sitename">Track Mental Health</span>
             </a>
             <div className="footer-contact pt-3">
-              <p>A108 Adam Street</p>
-              <p>New York, NY 535022</p>
+              <p>21Bis Hau Giang Street</p>
+              <p>Tan Son Nhat, TP.HCM</p>
               <p className="mt-3">
-                <strong>Phone:</strong> <span>+1 5589 55488 55</span>
+                <strong>Phone:</strong> <span>+84 962442723</span>
               </p>
               <p>
-                <strong>Email:</strong> <span>info@example.com</span>
+                <strong>Email:</strong> <span>trackmentalhealth5AESN@gmail.com</span>
               </p>
             </div>
             <div className="social-links d-flex mt-4">
@@ -32,52 +32,47 @@ const Footer = () => {
             <ul>
               <li><a href="#">Home</a></li>
               <li><a href="#">About us</a></li>
-              <li><a href="#">Services</a></li>
-              <li><a href="#">Terms of service</a></li>
-              <li><a href="#">Privacy policy</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Lesson</a></li>
+              <li><a href="#">Test</a></li>
             </ul>
           </div>
 
           <div className="col-lg-2 col-md-3 footer-links">
             <h4>Our Services</h4>
             <ul>
-              <li><a href="#">Web Design</a></li>
-              <li><a href="#">Web Development</a></li>
-              <li><a href="#">Product Management</a></li>
-              <li><a href="#">Marketing</a></li>
-              <li><a href="#">Graphic Design</a></li>
+              <li><a href="#">Register psychologist</a></li>
+              <li><a href="#">Register content_creator</a></li>
+              <li><a href="#">Register test designer</a></li>
+              <li><a href="#">Register users</a></li>
             </ul>
           </div>
 
           <div className="col-lg-2 col-md-3 footer-links">
-            <h4>Hic solutasetp</h4>
+            <h4>Advance Feature</h4>
             <ul>
-              <li><a href="#">Molestiae accusamus iure</a></li>
-              <li><a href="#">Excepturi dignissimos</a></li>
-              <li><a href="#">Suscipit distinctio</a></li>
-              <li><a href="#">Dilecta</a></li>
-              <li><a href="#">Sit quas consectetur</a></li>
+              <li><a href="#">Connect psychologist </a></li>
+              <li><a href="#">Chat with AI expert</a></li>
+              
             </ul>
           </div>
 
           <div className="col-lg-2 col-md-3 footer-links">
-            <h4>Nobis illum</h4>
+            <h4>Comunity</h4>
             <ul>
-              <li><a href="#">Ipsam</a></li>
-              <li><a href="#">Laudantium dolorum</a></li>
-              <li><a href="#">Dinera</a></li>
-              <li><a href="#">Trodelas</a></li>
-              <li><a href="#">Flexo</a></li>
+              <li><a href="#">Mental Social</a></li>
+              <li><a href="#">Feedback about website</a></li>
+ 
             </ul>
           </div>
         </div>
       </div>
 
       <div className="container copyright text-center mt-4">
-        <p>© <span>Copyright</span> <strong className="px-1 sitename">MyWebsite</strong> <span>All Rights Reserved</span></p>
+        <p>© <span>Copyright</span> <strong className="px-1 sitename">Track Mental Health</strong> <span>All Rights Reserved</span></p>
         <div className="credits">
-          Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-        </div>
+          Designed by Team 1 - T1.2308AO -  <a href="https://aptech.fpt.edu.vn/">FPT APTECH TPHCM</a>
+        </div>  
       </div>
     </footer>
   );

@@ -54,6 +54,14 @@ const LoginForm = () => {
                 } else if(decoded.role == "ADMIN"){
                     alert("Login successful");
                     navigate("/dashboard");
+                } else if(decoded.role == "PSYCHOLOGIST"){
+                    alert("Login successful");
+                    navigate("/dashboard");
+                } else if(
+                    decoded.role == "CONTENT_CREATOR"
+                ){
+                    alert("Login successful");
+                    navigate("/dashboard");
                 }
             } catch (err) {
                 if (err.response && err.response.status === 401) {
