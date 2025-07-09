@@ -88,8 +88,7 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
-
-
+      { path: 'social', element: <SocialPage /> },
       {
         element: <ProtectedRoute allowedRoles={['USER']} />,
         children: [
@@ -97,22 +96,6 @@ const Router = [
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
           { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
-        ],
-      },
-    ],
-  },
-  {
-    path: '/user',
-    element: <UserLayout />,
-    children: [
-      { path: 'homepage1', element: <HomePage /> },
-      { path: 'register', element: <Register /> },
-      { path: 'social', element: <SocialPage /> },
-      {
-        element: <ProtectedRoute allowedRoles={['USER']} />,
-        children: [
-          { path: 'homepage', element: <HomePage /> },
-
         ],
       },
     ],
@@ -136,7 +119,7 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { path: 'social', element: <SocialPage /> },
-
+      { path: 'user/edit-profile/:userId', element: <EditProfile /> },
     ],
   },
 ];
