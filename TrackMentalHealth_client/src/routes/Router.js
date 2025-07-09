@@ -14,6 +14,7 @@ import HomePageTest from '../components/LessonPage/AllForm';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
+import EditProfile from '../components/adminPage/EditProfile.jsx';
 
 
 /* ***Layouts**** */
@@ -70,6 +71,7 @@ const Router = [
           { path: 'admin/users/role/:roleId', element: <UserList /> },
           { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
+          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> }
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
@@ -96,41 +98,41 @@ const Router = [
     ],
   },
   {
-  path: '/user',
-  element: <UserLayout />,
-  children: [
-    { path: 'homepage1', element: <HomePage /> },
-    { path: 'register', element: <Register /> },
-    { path: 'social', element: <SocialPage /> },
-    {
-      element: <ProtectedRoute allowedRoles={['USER']} />,
-      children: [
-        { path: 'homepage', element: <HomePage /> },
+    path: '/user',
+    element: <UserLayout />,
+    children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
+      { path: 'social', element: <SocialPage /> },
+      {
+        element: <ProtectedRoute allowedRoles={['USER']} />,
+        children: [
+          { path: 'homepage', element: <HomePage /> },
 
-      ],
-    },
-  ],
+        ],
+      },
+    ],
   },
-// test_designer 
-{
-  path: '/testDesigner',
+  // test_designer 
+  {
+    path: '/testDesigner',
     element: <FullLayout />,
-      children: [
-        { path: 'test/create', element: <TestPage /> },
-        { path: 'test/edit/:id', element: <TestPage /> },
-        { path: 'question/create', element: <QuestionPage /> },
-        { path: 'question/edit/:id"', element: <QuestionPage /> },
-        { path: 'question/option/create', element: <OptionPage /> },
-        { path: 'question/option/edit/:id"', element: <OptionPage /> },
-      ]
+    children: [
+      { path: 'test/create', element: <TestPage /> },
+      { path: 'test/edit/:id', element: <TestPage /> },
+      { path: 'question/create', element: <QuestionPage /> },
+      { path: 'question/edit/:id"', element: <QuestionPage /> },
+      { path: 'question/option/create', element: <OptionPage /> },
+      { path: 'question/option/edit/:id"', element: <OptionPage /> },
+    ]
 
-},
-{
-  path: '/',
+  },
+  {
+    path: '/',
     element: <BlankLayout />,
-      children: [
-        { path: 'social', element: <SocialPage /> },
-      ]
-}
+    children: [
+      { path: 'social', element: <SocialPage /> },
+    ]
+  }
 ];
 export default Router;

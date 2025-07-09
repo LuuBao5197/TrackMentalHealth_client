@@ -55,7 +55,7 @@ const Profile = () => {
         <MenuItem onClick={() => {
           console.log("User object:", userRole);
           if (userRole && userRole.userId) {
-            navigate(`/admin/users/profile/${userRole.userId}`);
+            navigate(`/admin/users/edit-profile/${userRole.userId}`);
           } else {
             alert("User ID not found in localStorage");
           }
