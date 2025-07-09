@@ -44,7 +44,7 @@ const UserLayout = () => {
     <div>
       <Header />
       <HeroPage />
-      <AboutSection />
+      {/* <AboutSection />
       <HowWeWork/>
       <Portfolio/>
       <Services/>
@@ -52,11 +52,12 @@ const UserLayout = () => {
       <CallToAction2/>
       <Pricing/>
       <FAQ/>
-      <TeamSection/>
+      <TeamSection/> */}
       {/* <Testimonials/> */}
-      <ContactSection/>
+      {/* <ContactSection/> */}
+        <Outlet />
       <Footer />
-       <Outlet />
+     
     </div>
   );
 };
