@@ -12,54 +12,56 @@ const ExerciseManager = () => {
   }, []);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1 style={{ marginBottom: '30px' }}>Danh sách bài tập</h1>
-
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-        {exercises.length === 0 ? (
-          <p>Đang tải dữ liệu hoặc không có bài tập nào.</p>
-        ) : (
-          exercises.map(ex => (
-            <div key={ex.id} style={{
-              width: '300px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              backgroundColor: '#fff',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <div style={{ padding: '15px' }}>
-                <h3 style={{ fontSize: '18px', marginBottom: '10px' }}>{ex.title}</h3>
-                <p style={{ fontSize: '14px', color: '#555' }}>
-                  {ex.instruction?.substring(0, 100)}...
-                </p>
-                <p style={{ fontSize: '12px', color: '#888' }}>
-                  Thời lượng ước tính: {ex.estimatedDuration} phút
-                </p>
-                <p style={{ fontSize: '12px', color: '#888' }}>
-                  Media: {ex.mediaType} ({ex.mediaUrl})
-                </p>
-                <p style={{ fontSize: '12px', color: '#aaa' }}>
-                  Ngày tạo: {new Date(ex.createdAt).toLocaleString()}
-                </p>
-                <p style={{ fontSize: '12px', color: '#888' }}>
-                  Trạng thái: {ex.status === "false" ? "Ẩn" : "Hiển thị"}
-                </p>
-                <Link to={`/auth/exercise/${ex.id}`} style={{
-                  marginTop: '10px',
-                  display: 'inline-block',
-                  color: '#007bff',
-                  textDecoration: 'none'
-                }}>
-                  Xem thêm →
-                </Link>
-              </div>
-            </div>
-          ))
-        )}
+    <section id="portfolio" className="portfolio section">
+      <div className="container section-title" data-aos="fade-up">
+        <h2>Danh sách bài tập</h2>
+        <p>Thực hành và nâng cao kỹ năng qua các bài tập</p>
       </div>
-    </div>
+
+      <div className="container" data-aos="fade-up" data-aos-delay="100">
+        <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
+          {exercises.length === 0 ? (
+            <p>Đang tải dữ liệu hoặc không có bài tập nào.</p>
+          ) : (
+            exercises.map(ex => {
+              const imageUrl = ex.mediaUrl?.startsWith('http')
+                ? ex.mediaUrl
+                : 'assets/img/default-exercise.webp';
+
+              return (
+                <div
+                  key={ex.id}
+                  className="col-lg-6 col-md-6 portfolio-item isotope-item filter-exercise"
+                >
+                  <div className="portfolio-card">
+                    <div className="portfolio-image">
+                      <img
+                        src={imageUrl}
+                        className="img-fluid"
+                        alt={ex.title}
+                        loading="lazy"
+                      />
+                      <div className="portfolio-overlay">
+                        <div className="portfolio-actions">
+                          <Link to={`/auth/exercise/${ex.id}`} className="details-link">
+                            <i className="bi bi-arrow-right"></i>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="portfolio-content">
+                      <span className="category">{ex.mediaType}</span>
+                      <h3>{ex.title}</h3>
+                      <p>{ex.instruction?.substring(0, 100)}...</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 
