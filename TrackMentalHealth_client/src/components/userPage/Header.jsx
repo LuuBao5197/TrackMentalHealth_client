@@ -7,7 +7,9 @@ import { useEffect } from "react";
 import { logout } from "../../redux/slices/authSlice";
 import { useNavigate } from "react-router";
 import imgLogo from '@assets/images/logos/logoTMH.png';
+import '@assets/css/Logo.css'; // Assuming you have a CSS file for header styles
 const Header = () => {
+  const userRole = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userInfo = useSelector((state) => state.auth.user);
@@ -27,6 +29,14 @@ const Header = () => {
     }
   }
 
+  const handleEditProfile = () => {
+    console.log("User object:", userRole);
+    if (userRole && userRole.userId) {
+      navigate(`/user/edit-profile/${userRole.userId}`);
+    } else {
+      alert("User ID not found in localStorage");
+    }
+  };
 
   const handleLogout = () => {
     // Xử lý logout
@@ -39,8 +49,10 @@ const Header = () => {
     <header id="header" className="header d-flex align-items-center fixed-top">
       <div className="container position-relative d-flex align-items-center justify-content-between">
 
-        <a href="/" className="logo d-flex align-items-center me-auto me-xl-0">
-          <h1 className="sitename"><img src={imgLogo} className="img-fluid" width={150}/></h1>
+        <a href="/" className="logo-wrapper">
+          <h1 className="sitename">
+            <img src={imgLogo} alt="Logo" className="logo-img" />
+          </h1>
         </a>
 
         <nav id="navmenu" className="navmenu">
@@ -69,15 +81,15 @@ const Header = () => {
               <img
                 src={user.avatar}
                 alt="Hi Avatar"
-                width="100"
-                height="60"
+                width="70"
+                height="70"
                 className="rounded-circle me-2"
               />
-              <span className="d-none d-md-inline">{user.fullname}</span>
-              <i className="bi bi-chevron-down ms-1"></i>
+              {/* <span className="d-none d-md-inline">{user.fullname}</span> */}
+              {/* <i className="bi bi-chevron-down ms-1"></i> */}
             </a>
             <ul className="dropdown-menu dropdown-menu-end shadow">
-              <li><a className="dropdown-item" href="/profile">Edit Profile</a></li>
+              <li><button className="dropdown-item" onClick={handleEditProfile}>Edit Profile</button></li>
               <li><hr className="dropdown-divider" /></li>
               <li><button className="dropdown-item" onClick={handleLogout}>Logout</button></li>
             </ul>

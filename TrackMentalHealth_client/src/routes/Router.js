@@ -14,6 +14,8 @@ import HomePageTest from '../components/LessonPage/AllForm';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
+import EditProfile from '../components/adminPage/EditProfile.jsx';
+
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -61,7 +63,7 @@ const Router = [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
       {
-        element: <ProtectedRoute allowedRoles={['Admin']} />,
+        element: <ProtectedRoute allowedRoles={['ADMIN']} />,
         children: [
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
@@ -72,6 +74,7 @@ const Router = [
           { path: 'admin/users/role/:roleId', element: <UserList /> },
           { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
+          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> }
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
@@ -85,28 +88,9 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
-
-
-      {
-        element: <ProtectedRoute allowedRoles={['User']} />,
-        children: [
-          { path: 'homepage', element: <HomePage /> },
-          { path: 'write-diary', element: <WriteDiaryPage /> },
-          { path: 'history', element: <DiaryHistoryPage /> },
-          { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
-        ],
-      },
-    ],
-  },
-  {
-    path: '/user',
-    element: <UserLayout />,
-    children: [
-      { path: 'homepage1', element: <HomePage /> },
-      { path: 'register', element: <Register /> },
       { path: 'social', element: <SocialPage /> },
       {
-        element: <ProtectedRoute allowedRoles={['User', 2]} />, // gộp role User và 2
+        element: <ProtectedRoute allowedRoles={['USER']} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
@@ -135,7 +119,7 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { path: 'social', element: <SocialPage /> },
-
+      { path: 'user/edit-profile/:userId', element: <EditProfile /> },
     ],
   },
 ];
