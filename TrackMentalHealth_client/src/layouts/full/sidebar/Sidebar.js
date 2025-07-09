@@ -1,5 +1,5 @@
 import { useMediaQuery, Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
-import logo from '../../../assets/images/logos/dark1-logo.svg';
+import logo from '../../../assets/images/logos/TrackMentalHealthLogoAdmin1.svg';
 import SidebarItems from './SidebarItems';
 import { Upgrade } from './Updrade';
 
@@ -42,7 +42,7 @@ const MSidebar = (props) => {
 
       {/* Upgrade section at bottom (only for mobile or always if you want) */}
       <Box sx={{ p: 2 }}>
-        <Upgrade />
+        {/* <Upgrade /> */}
       </Box>
     </Box>
   );

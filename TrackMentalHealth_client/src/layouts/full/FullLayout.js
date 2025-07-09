@@ -71,16 +71,16 @@ const FullLayout = () => {
               © 2025 All rights reserved by
               <Link target="_blank" href="https://www.adminmart.com">
                 <span>
-                  AdminMart.com
+                  Track Mental Health
                 </span>
               </Link>
               </Typography>
               
               <Typography>
-                .Distributed by
+                .Distributed by 
               <Link target="_blank" href="https://themewagon.com">
                 <span>
-                  ThemeWagon
+                Five super ranger
                 </span>
               </Link>
             </Typography>

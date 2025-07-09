@@ -4,19 +4,21 @@ import axios from 'axios';
 
 const LessonCreate = () => {
   const [steps, setSteps] = useState([
-    { title: '', content: '', mediaType: 'Video', mediaUrl: '' },
+    { title: '', content: '', mediaType: 'video', mediaUrl: '' },
   ]);
+
+  const [uploading, setUploading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
       title: '',
       description: '',
       status: false,
+      photo: '',
     },
     onSubmit: async (values) => {
       const user = JSON.parse(localStorage.getItem('credentials'));
-      const userId = user?.id || user?.sub || ''; // fallback nếu bạn lưu token dưới `sub`
-
+      const userId = user?.id || user?.sub || '';
       const now = new Date().toISOString();
 
       const lessonData = {
@@ -24,7 +26,10 @@ const LessonCreate = () => {
         createdById: userId,
         createdAt: now,
         updatedAt: now,
-        steps: steps,
+        lessonSteps: steps.map((step, index) => ({
+          stepNumber: index + 1,
+          ...step,
+        })),
       };
 
       try {
@@ -44,7 +49,26 @@ const LessonCreate = () => {
   };
 
   const addStep = () => {
-    setSteps([...steps, { title: '', content: '', mediaType: 'Video', mediaUrl: '' }]);
+    setSteps([...steps, { title: '', content: '', mediaType: 'video', mediaUrl: '' }]);
+  };
+
+  const handleUpload = async (file, onSuccess) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
+    try {
+      const res = await axios.post('http://localhost:9999/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const url = res.data.url;
+      onSuccess(url);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('❌ Upload thất bại!');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -66,6 +90,7 @@ const LessonCreate = () => {
                   required
                 />
               </div>
+
               <div className="col-12">
                 <label className="form-label">Mô tả</label>
                 <textarea
@@ -76,6 +101,31 @@ const LessonCreate = () => {
                   value={formik.values.description}
                 ></textarea>
               </div>
+
+              <div className="col-12">
+                <label className="form-label">Ảnh đại diện bài học (file)</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleUpload(file, (url) => formik.setFieldValue('photo', url));
+                    }
+                  }}
+                />
+                {formik.values.photo && (
+                  <div className="mt-2">
+                    <img
+                      src={formik.values.photo}
+                      alt="Preview"
+                      style={{ maxHeight: '150px' }}
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="form-check mt-3 ms-2">
                 <input
                   className="form-check-input"
@@ -97,6 +147,7 @@ const LessonCreate = () => {
             {steps.map((step, index) => (
               <div key={index} className="border rounded p-3 mb-4 bg-light">
                 <h5 className="mb-3">Bước {index + 1}</h5>
+
                 <div className="mb-2">
                   <input
                     type="text"
@@ -107,6 +158,7 @@ const LessonCreate = () => {
                     required
                   />
                 </div>
+
                 <div className="mb-2">
                   <textarea
                     placeholder="Nội dung bước"
@@ -116,6 +168,7 @@ const LessonCreate = () => {
                     rows="3"
                   ></textarea>
                 </div>
+
                 <div className="mb-2 row g-2">
                   <div className="col-md-4">
                     <select
@@ -123,19 +176,28 @@ const LessonCreate = () => {
                       value={step.mediaType}
                       onChange={(e) => handleStepChange(index, 'mediaType', e.target.value)}
                     >
-                      <option value="Video">Video</option>
-                      <option value="Image">Hình ảnh</option>
-                      <option value="Audio">Âm thanh</option>
+                      <option value="video">Video</option>
+                      <option value="photo">Hình ảnh</option>
+                      <option value="audio">Âm thanh</option>
                     </select>
                   </div>
                   <div className="col-md-8">
                     <input
-                      type="text"
-                      placeholder="Media URL"
+                      type="file"
                       className="form-control"
-                      value={step.mediaUrl}
-                      onChange={(e) => handleStepChange(index, 'mediaUrl', e.target.value)}
+                      accept="video/*,image/*,audio/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          handleUpload(file, (url) =>
+                            handleStepChange(index, 'mediaUrl', url)
+                          );
+                        }
+                      }}
                     />
+                    {step.mediaUrl && (
+                      <small className="text-muted d-block mt-1">{step.mediaUrl}</small>
+                    )}
                   </div>
                 </div>
               </div>
@@ -150,8 +212,12 @@ const LessonCreate = () => {
             </button>
 
             <div>
-              <button type="submit" className="btn btn-primary w-100">
-                🚀 Tạo bài học
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={uploading}
+              >
+                {uploading ? '⏳ Đang upload...' : '🚀 Tạo bài học'}
               </button>
             </div>
           </form>
