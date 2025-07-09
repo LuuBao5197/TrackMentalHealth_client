@@ -1,5 +1,5 @@
 import {
-  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus
+  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconPercentage, IconTypography, IconUserPlus
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -8,7 +8,7 @@ const getMenuItemsByRole = (role) => {
   const Menuitems = [
     {
       navlabel: true,
-      subheader: 'Home',
+      subheader: 'MAIN',
     },
 
     {
@@ -31,12 +31,12 @@ const getMenuItemsByRole = (role) => {
     },
     {
       navlabel: true,
-      subheader: 'Utilities',
+      subheader: 'Config system',
     },
     {
       id: uniqueId(),
-      title: 'Typography',
-      icon: IconTypography,
+      title: 'Approval Thresholds ',
+      icon: IconPercentage,
       href: '/ui/typography',
     },
     {
@@ -98,10 +98,12 @@ const getMenuItemsByRole = (role) => {
     
   ];
   switch (role) {
-    case 'ADMIN':
+    case 'Admin':
       return Menuitems;
-    case 'TEST_DESIGNER':
+    case 'Test_designer':
       return MenuitemsTestDesigner;
+    case 'Psycholigist':
+      return MenuitemsPsy;
     default:
       return Menuitems;
   }

@@ -1,36 +1,55 @@
 import React, { useState } from 'react';
-import LessonManager from './LessonManager';
+
+import LessonManager from '../LessonPage/LessonManager';
 import ArticleManager from '../ArticlePage/ArticleManager';
 import ExerciseManager from '../ExercisePage/ExerciseManager';
 
-const HomePageTest = () => {
-  const [activeTab, setActiveTab] = useState('Lesson'); // Đặt mặc định là Lesson
+const AllForm = () => {
+  // ✅ Mặc định hiển thị Lesson
+  const [activeFilter, setActiveFilter] = useState('filter-frontend');
+
+  const renderContent = () => {
+    switch (activeFilter) {
+      case 'filter-frontend':
+        return <LessonManager />;
+      case 'filter-backend':
+        return <ArticleManager />;
+      case 'filter-design':
+        return <ExerciseManager />;
+      default:
+        return <LessonManager />; // fallback an toàn
+    }
+  };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Trang chính</h2>
-
-      {/* Nút chọn */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        marginBottom: '20px',
-        gap: '10px'
-        }}>
-        <button style={{ flex: 1 }} onClick={() => setActiveTab('Lesson')}>Lesson</button>
-        <button style={{ flex: 1 }} onClick={() => setActiveTab('Article')}>Article</button>
-        <button style={{ flex: 1 }} onClick={() => setActiveTab('Exercise')}>Exercise</button>
+    <section id="portfolio" className="portfolio section">
+      {/* Bộ lọc */}
+      <div className="portfolio-filters-container" data-aos="fade-up" data-aos-delay="200">
+        <ul className="portfolio-filters isotope-filters">
+          {[
+            { label: 'Lesson', value: 'filter-frontend' },
+            { label: 'Article', value: 'filter-backend' },
+            { label: 'Exercise', value: 'filter-design' },
+          ].map((filter) => (
+            <li
+              key={filter.value}
+              data-filter={filter.value}
+              className={activeFilter === filter.value ? 'filter-active' : ''}
+              onClick={() => setActiveFilter(filter.value)}
+              style={{ cursor: 'pointer' }}
+            >
+              {filter.label}
+            </li>
+          ))}
+        </ul>
       </div>
 
-
-      {/* Hiển thị nội dung */}
-      <div>
-        {activeTab === 'Lesson' && <LessonManager />}
-        {activeTab === 'Article' && <ArticleManager />}
-        {activeTab === 'Exercise' && <ExerciseManager />}
+      {/* Nội dung tương ứng */}
+      <div className="container" data-aos="fade-up" data-aos-delay="300">
+        {renderContent()}
       </div>
-    </div>
+    </section>
   );
 };
 
-export default HomePageTest;
+export default AllForm;
