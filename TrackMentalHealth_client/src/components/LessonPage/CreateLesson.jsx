@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 
-const LessonCreate = () => {
+const CreateLesson = () => {
   const [steps, setSteps] = useState([
     { title: '', content: '', mediaType: 'video', mediaUrl: '' },
   ]);
@@ -78,80 +78,83 @@ const LessonCreate = () => {
           <h2 className="mb-4 text-primary">📝 Tạo Bài Học Mới</h2>
 
           <form onSubmit={formik.handleSubmit}>
-            <div className="row g-3 mb-4">
-              <div className="col-md-12">
-                <label className="form-label">Tiêu đề bài học</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="title"
-                  onChange={formik.handleChange}
-                  value={formik.values.title}
-                  required
-                />
-              </div>
+            {/* Tiêu đề */}
+            <div className="mb-3">
+              <label className="form-label">Tiêu đề bài học</label>
+              <input
+                type="text"
+                className="form-control"
+                name="title"
+                onChange={formik.handleChange}
+                value={formik.values.title}
+                required
+              />
+            </div>
 
-              <div className="col-12">
-                <label className="form-label">Mô tả</label>
-                <textarea
-                  className="form-control"
-                  name="description"
-                  rows="3"
-                  onChange={formik.handleChange}
-                  value={formik.values.description}
-                ></textarea>
-              </div>
+            {/* Mô tả */}
+            <div className="mb-3">
+              <label className="form-label">Mô tả</label>
+              <textarea
+                className="form-control"
+                name="description"
+                rows="4"
+                onChange={formik.handleChange}
+                value={formik.values.description}
+              />
+            </div>
 
-              <div className="col-12">
-                <label className="form-label">Ảnh đại diện bài học (file)</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      handleUpload(file, (url) => formik.setFieldValue('photo', url));
-                    }
-                  }}
-                />
-                {formik.values.photo && (
-                  <div className="mt-2">
-                    <img
-                      src={formik.values.photo}
-                      alt="Preview"
-                      style={{ maxHeight: '150px' }}
-                    />
-                  </div>
-                )}
-              </div>
+            {/* Ảnh đại diện */}
+            <div className="mb-3">
+              <label className="form-label">Ảnh đại diện bài học (file)</label>
+              <input
+                type="file"
+                className="form-control"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleUpload(file, (url) => formik.setFieldValue('photo', url));
+                  }
+                }}
+              />
+              {formik.values.photo && (
+                <div className="mt-2">
+                  <img
+                    src={formik.values.photo}
+                    alt="Preview"
+                    style={{ maxHeight: '150px' }}
+                  />
+                </div>
+              )}
+            </div>
 
-              <div className="form-check mt-3 ms-2">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  name="status"
-                  onChange={formik.handleChange}
-                  checked={formik.values.status}
-                  id="statusCheck"
-                />
-                <label className="form-check-label" htmlFor="statusCheck">
-                  Kích hoạt bài học
-                </label>
-              </div>
+            {/* Trạng thái */}
+            <div className="form-check mb-4">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                name="status"
+                onChange={formik.handleChange}
+                checked={formik.values.status}
+                id="statusCheck"
+              />
+              <label className="form-check-label" htmlFor="statusCheck">
+                Kích hoạt bài học
+              </label>
             </div>
 
             <hr />
-            <h4 className="text-secondary">📚 Các Bước Học</h4>
+            <h4 className="text-secondary mb-3">📚 Các Bước Học</h4>
 
             {steps.map((step, index) => (
               <div key={index} className="border rounded p-3 mb-4 bg-light">
                 <h5 className="mb-3">Bước {index + 1}</h5>
 
+                {/* Tiêu đề bước */}
                 <div className="mb-2">
+                  <label className="form-label">Tiêu đề bước</label>
                   <input
                     type="text"
-                    placeholder="Tiêu đề bước"
                     className="form-control"
                     value={step.title}
                     onChange={(e) => handleStepChange(index, 'title', e.target.value)}
@@ -159,18 +162,22 @@ const LessonCreate = () => {
                   />
                 </div>
 
+                {/* Nội dung bước */}
                 <div className="mb-2">
+                  <label className="form-label">Nội dung bước</label>
                   <textarea
-                    placeholder="Nội dung bước"
                     className="form-control"
                     value={step.content}
                     onChange={(e) => handleStepChange(index, 'content', e.target.value)}
-                    rows="3"
-                  ></textarea>
+                    rows="5"
+                    placeholder="Nhập nội dung, có thể nhấn Enter để xuống dòng"
+                  />
                 </div>
 
-                <div className="mb-2 row g-2">
+                {/* Media */}
+                <div className="row g-2">
                   <div className="col-md-4">
+                    <label className="form-label">Loại media</label>
                     <select
                       className="form-select"
                       value={step.mediaType}
@@ -181,7 +188,9 @@ const LessonCreate = () => {
                       <option value="audio">Âm thanh</option>
                     </select>
                   </div>
+
                   <div className="col-md-8">
+                    <label className="form-label">Tệp media</label>
                     <input
                       type="file"
                       className="form-control"
@@ -205,21 +214,19 @@ const LessonCreate = () => {
 
             <button
               type="button"
-              className="btn btn-outline-secondary mb-3"
+              className="btn btn-outline-secondary mb-4"
               onClick={addStep}
             >
               + Thêm bước học
             </button>
 
-            <div>
-              <button
-                type="submit"
-                className="btn btn-primary w-100"
-                disabled={uploading}
-              >
-                {uploading ? '⏳ Đang upload...' : '🚀 Tạo bài học'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="btn btn-primary w-100"
+              disabled={uploading}
+            >
+              {uploading ? '⏳ Đang upload...' : '🚀 Tạo bài học'}
+            </button>
           </form>
         </div>
       </div>
@@ -227,4 +234,4 @@ const LessonCreate = () => {
   );
 };
 
-export default LessonCreate;
+export default CreateLesson;
