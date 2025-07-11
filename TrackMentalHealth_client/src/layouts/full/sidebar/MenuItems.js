@@ -1,5 +1,12 @@
 import {
-  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconTypography, IconUserPlus
+  IconAperture, IconCopy, IconLayoutDashboard, IconLogin, IconMoodHappy, IconPercentage, IconTypography,
+  IconUserPlus, IconCalendarCheck,
+  IconClipboardCheck,
+  IconBook,
+  IconFileCheck,
+  IconListCheck,
+  IconFileText,
+  IconNotes,
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -8,7 +15,7 @@ const getMenuItemsByRole = (role) => {
   const Menuitems = [
     {
       navlabel: true,
-      subheader: 'Home',
+      subheader: 'MAIN',
     },
 
     {
@@ -31,12 +38,12 @@ const getMenuItemsByRole = (role) => {
     },
     {
       navlabel: true,
-      subheader: 'Utilities',
+      subheader: 'Config system',
     },
     {
       id: uniqueId(),
-      title: 'Typography',
-      icon: IconTypography,
+      title: 'Approval Thresholds ',
+      icon: IconPercentage,
       href: '/ui/typography',
     },
     {
@@ -95,13 +102,77 @@ const getMenuItemsByRole = (role) => {
       icon: IconLayoutDashboard,
       href: '/testDesigner/test/create',
     },
-    
+
   ];
+  const MenuitemsPsy = [
+    {
+      navlabel: true,
+      subheader: 'Psychologist Management',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Appointments',
+      icon: IconCalendarCheck, // 📅 biểu tượng lịch hẹn
+      href: '/psychologist/appointments',
+    },
+    {
+      id: uniqueId(),
+      title: 'Review Tests',
+      icon: IconClipboardCheck, // ✅ kiểm tra bài test
+      href: '/psychologist/review/tests',
+    },
+    {
+      id: uniqueId(),
+      title: 'Review Lessons',
+      icon: IconBook, // 📖 biểu tượng bài học
+      href: '/psychologist/review/lessons',
+    },
+    {
+      id: uniqueId(),
+      title: 'Review Exercises',
+      icon: IconListCheck, // 📋 danh sách bài tập
+      href: '/psychologist/review/exercises',
+    },
+    {
+      id: uniqueId(),
+      title: 'Review Blogs',
+      icon: IconNotes, // 📝 biểu tượng ghi chú/bài viết
+      href: '/psychologist/review/blogs',
+    },
+  ];
+ const MenuitemsContentCreator = [
+  {
+    navlabel: true,
+    subheader: 'Content Creator Management',
+  },
+  {
+    id: uniqueId(),
+    title: 'Manage Lessons',
+    icon: IconBook, // 📖 Biểu tượng bài học
+    href: '/content/lessons',
+  },
+  {
+    id: uniqueId(),
+    title: 'Manage Practices',
+    icon: IconListCheck, // ✅ Bài tập, danh sách luyện tập
+    href: '/content/practices',
+  },
+  {
+    id: uniqueId(),
+    title: 'Approval Progress',
+    icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+    href: '/content/approval-progress',
+  },
+];
   switch (role) {
     case 'ADMIN':
       return Menuitems;
     case 'TEST_DESIGNER':
       return MenuitemsTestDesigner;
+    case 'PSYCHOLOGIST':
+      return MenuitemsPsy;
+    case "CONTENT_CREATOR":
+      return MenuitemsContentCreator;
     default:
       return Menuitems;
   }

@@ -20,12 +20,14 @@ import useMobileNavToggle from '../../hooks/useMobileNavToggle';
 import useScrollTopButton from '../../hooks/useScrollTopButton';
 import useAOS from '../../hooks/useAOS';
 import usePreloader from '../../hooks/usePreloader';
-import { Outlet } from 'react-router';
 import { useSelector } from 'react-redux';
+
+import { Outlet, useLocation } from 'react-router-dom';
 const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
   console.log(userRole);
+  // Add/remove class vào body
   useEffect(() => {
     document.body.classList.add('index-page');
 
@@ -57,7 +59,6 @@ const UserLayout = () => {
       {/* <ContactSection/> */}
         <Outlet />
       <Footer />
-     
     </div>
   );
 };
