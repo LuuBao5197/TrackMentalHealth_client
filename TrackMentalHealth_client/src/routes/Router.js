@@ -12,6 +12,7 @@ import LessonCreate from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetails from '../components/LessonPage/LessonDetail';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
+
 import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
@@ -43,7 +44,6 @@ const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQues
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
-  //🟢 Public: Không cần đăng nhập
   {
     path: '/auth',
     element: <BlankLayout />,
@@ -88,8 +88,6 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
-
-  // 🧑 USER
   {
     path: '/user',
     element: <UserLayout />,
@@ -103,7 +101,7 @@ const Router = [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-          { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
+         
         ],
       },
     ],
