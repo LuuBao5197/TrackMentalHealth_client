@@ -2,7 +2,24 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 
+import { jwtDecode } from 'jwt-decode';
+
+
 const CreateLesson = () => {
+  // Giải mã token để lấy userId
+  const token = localStorage.getItem('token'); // hoặc sessionStorage.getItem('token')
+  let userId = null;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      userId = decoded.contentCreatorId; // ✅ Sửa tại đây
+    } catch (error) {
+      console.error('Token không hợp lệ:', error);
+    }
+  }
+
+
   const [steps, setSteps] = useState([
     { title: '', content: '', mediaType: 'video', mediaUrl: '' },
   ]);
@@ -17,13 +34,12 @@ const CreateLesson = () => {
       photo: '',
     },
     onSubmit: async (values) => {
-      const user = JSON.parse(localStorage.getItem('credentials'));
-      const userId = user?.id || user?.sub || '';
+
       const now = new Date().toISOString();
 
       const lessonData = {
         ...values,
-        createdById: userId,
+        createdBy: userId, 
         createdAt: now,
         updatedAt: now,
         lessonSteps: steps.map((step, index) => ({
@@ -31,9 +47,11 @@ const CreateLesson = () => {
           ...step,
         })),
       };
+      
 
       try {
-        await axios.post('http://localhost:9999/api/lessons/save', lessonData);
+        console.log("Dữ liệu gửi lên:", lessonData);
+        await axios.post('http://localhost:9999/api/lesson/save', lessonData);
         alert('✅ Tạo bài học thành công!');
       } catch (error) {
         console.error('❌ Lỗi khi tạo bài học:', error);

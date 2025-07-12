@@ -8,7 +8,7 @@ const LessonDetail = () => {
   const [lesson, setLesson] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:9999/api/lessons/${id}`)
+    axios.get(`http://localhost:9999/api/lesson/${id}`)
       .then(res => {
         setLesson(res.data);
       })

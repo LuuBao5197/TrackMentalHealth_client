@@ -9,7 +9,7 @@ const LessonManager = () => {
   const lessonsPerPage = 6;
 
   useEffect(() => {
-    axios.get('http://localhost:9999/api/lessons')
+    axios.get('http://localhost:9999/api/lesson')
       .then(response => setLessons(response.data))
       .catch(error => console.error('Lỗi khi tải danh sách bài học:', error));
   }, []);
