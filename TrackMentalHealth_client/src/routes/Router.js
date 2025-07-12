@@ -15,6 +15,7 @@ import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
+import ChatList from '../components/chatPage/ChatList.jsx';
 
 
 /* ***Layouts**** */
@@ -52,6 +53,8 @@ const Router = [
       { path: 'homepagetest', element: <HomePageTest /> },
       { path: 'lesson/:id', element: <LessonDetails /> },
       { path: 'question/option/create', element: <OptionPage /> },
+      { path: "chat", element: <ChatList /> }
+
     ],
   },
 
@@ -74,7 +77,7 @@ const Router = [
           { path: 'admin/users/role/:roleId', element: <UserList /> },
           { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
-          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> }
+          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
