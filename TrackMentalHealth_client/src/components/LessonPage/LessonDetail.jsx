@@ -3,12 +3,12 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { BsBell } from 'react-icons/bs'; // đảm bảo bạn đã cài react-icons
 
-const LessonDetails = () => {
+const LessonDetail = () => {
   const { id } = useParams();
   const [lesson, setLesson] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:9999/api/lessons/${id}`)
+    axios.get(`http://localhost:9999/api/lesson/${id}`)
       .then(res => {
         setLesson(res.data);
       })
@@ -54,10 +54,10 @@ const LessonDetails = () => {
           .map((step) => (
             <div key={step.id} className="mb-5">
               <h4 className="fw-semibold text-secondary mb-2">
-                Bước {step.stepNumber}: {step.title}
+                Step {step.stepNumber}
               </h4>
-              <p>{step.content || `Nội dung bước ${step.stepNumber} (cập nhật?)`}</p>
-
+              <p>{step.title}</p>
+              
               {step.mediaType === 'video' ? (
                 <video
                   controls
@@ -68,9 +68,12 @@ const LessonDetails = () => {
                 <img
                   src={step.mediaUrl}
                   alt={step.title}
-                  className="img-fluid rounded shadow-sm"
+                  className="img-fluid rounded shadow-sm mx-auto d-block"
                 />
               )}
+
+              {(step.content || `Nội dung bước ${step.stepNumber} (cập nhật?)`)}
+
             </div>
           ))
       ) : (
@@ -81,4 +84,4 @@ const LessonDetails = () => {
   );
 };
 
-export default LessonDetails;
+export default LessonDetail;

@@ -8,14 +8,20 @@ import { element } from 'prop-types';
 import UserProfile from '../components/adminPage/UserProfile';
 import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
-import LessonCreate from '../components/LessonPage/CreateForm';
+import LessonCreate from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetails from '../components/LessonPage/LessonDetail';
-import HomePageTest from '../components/LessonPage/AllForm';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
+
 import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import ChatList from '../components/chatPage/ChatList.jsx';
+import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
+import LessonDetail from '../components/LessonPage/LessonDetail';
+import ArticleDetail from '../components/ArticlePage/ArticleDetail.jsx';
+import CreateArticle from '../components/ArticlePage/CreateArticle.jsx';
+import CreateExercise from '../components/ExercisePage/CreateExercise.jsx';
+import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
 
 
 /* ***Layouts**** */
@@ -39,7 +45,6 @@ const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQues
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
-  //🟢 Public: Không cần đăng nhập
   {
     path: '/auth',
     element: <BlankLayout />,
@@ -49,9 +54,12 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
-      { path: 'lesson-create', element: <LessonCreate /> },
-      { path: 'homepagetest', element: <HomePageTest /> },
-      { path: 'lesson/:id', element: <LessonDetails /> },
+      { path: 'create-lesson', element: <CreateLesson /> },
+      { path: 'create-exercise', element: <CreateExercise /> },
+      { path: 'create-article', element: <CreateArticle/> },
+      { path: 'lesson/:id', element: <LessonDetail /> },
+      { path: 'exercise/:id', element: <ExerciseDetail /> },
+      { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'question/option/create', element: <OptionPage /> },
       { path: "chat", element: <ChatList /> }
 
@@ -83,8 +91,6 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
-
-  // 🧑 USER
   {
     path: '/user',
     element: <UserLayout />,
@@ -98,7 +104,7 @@ const Router = [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-          { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
+         
         ],
       },
     ],
