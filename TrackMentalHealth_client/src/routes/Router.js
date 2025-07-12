@@ -4,16 +4,11 @@ import Loadable from '../layouts/full/shared/loadable/Loadable';
 import ForgotPasswordFlow from '../components/loginPage/ForgotPasswordFlow';
 import PendingRegistrations from '../components/loginPage/PendingRegistrations';
 import ProtectedRoute from './ProtectedRoute';
-import { element } from 'prop-types';
 import UserProfile from '../components/adminPage/UserProfile';
 import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
-import LessonCreate from '../components/LessonPage/CreateLesson.jsx';
-import LessonDetails from '../components/LessonPage/LessonDetail';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
-
-import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetail from '../components/LessonPage/LessonDetail';
