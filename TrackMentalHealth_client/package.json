@@ -15,6 +15,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@minchat/react-chat-ui": "^1.2.13",
     "@mui/icons-material": "^5.17.1",
     "@mui/lab": "5.0.0-alpha.133",
     "@mui/material": "5.13.4",

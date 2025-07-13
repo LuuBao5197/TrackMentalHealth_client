@@ -13,7 +13,6 @@ import LessonDetails from '../components/LessonPage/LessonDetail';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 
-import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import ChatList from '../components/chatPage/ChatList.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
@@ -22,6 +21,7 @@ import ArticleDetail from '../components/ArticlePage/ArticleDetail.jsx';
 import CreateArticle from '../components/ArticlePage/CreateArticle.jsx';
 import CreateExercise from '../components/ExercisePage/CreateExercise.jsx';
 import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
+import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
 
 
 /* ***Layouts**** */
@@ -61,8 +61,8 @@ const Router = [
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'question/option/create', element: <OptionPage /> },
-      { path: "chat", element: <ChatList /> }
-
+      { path: "chat", element: <ChatList /> },      
+      { path: "chatai", element: <ChatWithAI /> },
     ],
   },
 

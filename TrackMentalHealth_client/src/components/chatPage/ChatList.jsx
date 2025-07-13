@@ -239,7 +239,7 @@ function ChatList() {
 
             {/* Button Chat AI */}
             <button
-                onClick={() => navigate('/chatwithai')}
+                onClick={() => navigate('/auth/chatai')}
                 className="btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
                 style={{
                     position: "fixed",
