@@ -13,7 +13,6 @@ import LessonDetails from '../components/LessonPage/LessonDetail';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 
-import UpdateDiaryPage from '../components/userPage/UpdateDiaryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetail from '../components/LessonPage/LessonDetail';

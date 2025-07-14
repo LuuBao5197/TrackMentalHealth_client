@@ -3,6 +3,7 @@ import axios from 'axios';
 import PostItem from '../miniSocialPage/PostItem';
 import PostModalForm from '../miniSocialPage/PostModalForm';
 import { useSelector } from 'react-redux';
+import { getUserInfo } from '../../api/userAPI';
 
 function NewsFeed() {
   const [posts, setPosts] = useState([]);
@@ -11,6 +12,21 @@ function NewsFeed() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const userRole = useSelector((state) => state.auth.user?.role);
+  const userInfo = useSelector((state) => state.auth.user);
+  const userID = userInfo.userId;
+  const [user, setUser] = useState({});
+  useEffect(() => {
+    fetchData(userID);
+  }, [])
+  const fetchData = async (userID) => {
+    try {
+      const res = await getUserInfo(userID);
+      console.log(res.data);
+      setUser(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
   console.log("userRole: ", userRole);
   const fetchPosts = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -60,7 +76,13 @@ function NewsFeed() {
     <div className="container py-4">
       <div className="card shadow-sm p-3 mb-4">
         <div className="d-flex align-items-center">
-          <img src="https://via.placeholder.com/40" className="rounded-circle me-2" alt="avatar" />
+          <img 
+          src={user.avatar} 
+          className="rounded-circle me-2" 
+          alt="avatar" 
+          width="60"
+          height="60" 
+          />
           <button className="form-control text-start" onClick={() => setShowModal(true)}>
             Bạn đang nghĩ gì thế?
           </button>
