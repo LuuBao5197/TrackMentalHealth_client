@@ -21,6 +21,7 @@ import ArticleDetail from '../components/ArticlePage/ArticleDetail.jsx';
 import CreateArticle from '../components/ArticlePage/CreateArticle.jsx';
 import CreateExercise from '../components/ExercisePage/CreateExercise.jsx';
 import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
+import EditLesson from '../components/LessonPage/EditLesson.jsx';
 
 
 /* ***Layouts**** */
@@ -59,6 +60,7 @@ const Router = [
       { path: 'lesson/:id', element: <LessonDetail /> },
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
+      { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
       { path: 'question/option/create', element: <OptionPage /> },
     ],
   },
