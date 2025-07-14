@@ -22,6 +22,7 @@ import CreateArticle from '../components/ArticlePage/CreateArticle.jsx';
 import CreateExercise from '../components/ExercisePage/CreateExercise.jsx';
 import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
 import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
+import EditLesson from '../components/LessonPage/EditLesson.jsx';
 
 
 /* ***Layouts**** */
@@ -60,6 +61,7 @@ const Router = [
       { path: 'lesson/:id', element: <LessonDetail /> },
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
+      { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
       { path: 'question/option/create', element: <OptionPage /> },
       { path: "chat", element: <ChatList /> },      
       { path: "chatai", element: <ChatWithAI /> },

@@ -22,7 +22,7 @@ const PendingRegistrations = () => {
     const roleMap = {
         1: "User",
         2: "Admin",
-        3: "Content CreatorC",
+        3: "Content Creator",
         4: "Test Designer",
         5: "Psychologist",
     };
@@ -76,28 +76,47 @@ const PendingRegistrations = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
+                                <TableCell sx={{ width: 120 }}>Avatar</TableCell>
                                 <TableCell>Full Name</TableCell>
                                 <TableCell>Email</TableCell>
                                 <TableCell>Role</TableCell>
                                 <TableCell>Submitted At</TableCell>
-                                <TableCell>Avatar</TableCell>
                                 <TableCell>Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {pendingUsers.map((user) => (
-                                <TableRow key={user.pendingId}>
+                                <TableRow
+                                    key={user.pendingId}
+                                    hover
+                                    sx={{
+                                        transition: "background-color 0.3s",
+                                        '&:hover': {
+                                            backgroundColor: "#f0f4ff", 
+                                            cursor: "pointer"
+                                        }
+                                    }}>
+                                    <TableCell>
+                                        {user.avatar ? (
+                                            <img
+                                                src={user.avatar}
+                                                alt="avatar"
+                                                width={80}
+                                                height={80}
+                                                style={{
+                                                    borderRadius: "50%",
+                                                    objectFit: "cover",
+                                                    boxShadow: "0px 0px 6px rgba(0,0,0,0.2)"
+                                                }}
+                                            />
+                                        ) : (
+                                            <Typography variant="caption">No avatar</Typography>
+                                        )}
+                                    </TableCell>
                                     <TableCell>{user.fullName}</TableCell>
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>{roleMap[user.roleId] || "Unknown"}</TableCell>
                                     <TableCell>{new Date(user.submittedAt).toLocaleString()}</TableCell>
-                                    <TableCell>
-                                        {user.avatar ? (
-                                            <img src={user.avatar} alt="avatar" width={50} height={50} style={{ borderRadius: "50%" }} />
-                                        ) : (
-                                            "No avatar"
-                                        )}
-                                    </TableCell>
                                     <TableCell>
                                         <Button
                                             variant="contained"
@@ -112,6 +131,7 @@ const PendingRegistrations = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
             )}
         </Paper>
     );

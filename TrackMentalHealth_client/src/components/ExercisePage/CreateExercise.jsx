@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+
+// ...
+
+const token = localStorage.getItem('token');
+let contentCreatorId = null;
+
+if (token) {
+  try {
+    const decoded = jwtDecode(token);
+    contentCreatorId = decoded.contentCreatorId; // hoặc tên field phù hợp trong token
+  } catch (err) {
+    console.error('❌ Token không hợp lệ:', err);
+  }
+}
 
 const CreateExercise = () => {
   const [uploading, setUploading] = useState(false);
@@ -16,20 +31,20 @@ const CreateExercise = () => {
     },
     onSubmit: async (values) => {
       const now = new Date().toISOString();
-
+    
       if (!values.mediaUrl) {
         alert('❌ Bạn cần upload tệp media trước khi tạo bài tập.');
         return;
       }
-
+    
       const exerciseData = {
         ...values,
         status: values.status.toString(),
         estimatedDuration: parseInt(values.estimatedDuration || 0, 10),
-        createdById: null,
+        createdById: contentCreatorId, // ✅ Gán đúng người tạo
         createdAt: now,
       };
-
+    
       try {
         console.log('📦 Dữ liệu gửi:', exerciseData);
         await axios.post('http://localhost:9999/api/exercise/', exerciseData);
@@ -39,7 +54,7 @@ const CreateExercise = () => {
         console.error('❌ Lỗi khi tạo bài tập:', error.response?.data || error.message);
         alert('❌ Có lỗi xảy ra khi tạo bài tập.');
       }
-    },
+    },    
   });
 
   const handleUpload = async (file) => {
