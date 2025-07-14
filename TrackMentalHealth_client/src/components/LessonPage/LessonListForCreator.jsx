@@ -122,12 +122,20 @@ const LessonListForCreator = () => {
                         <img src={imageUrl} className="img-fluid" alt={lesson.title} loading="lazy" />
                         <div className="portfolio-overlay">
                           <div className="portfolio-actions">
+                            {/* Link xem chi tiết bài học */}
                             <Link to={`/auth/lesson/${lesson.id}`} className="details-link">
                               <i className="bi bi-arrow-right"></i>
                             </Link>
-                            <Link to={`/auth/lesson/${lesson.id}`} className="details-link">
-                            <i className="bi bi-pencil"></i>
+
+                            {/* Link chỉnh sửa bài học */}
+                            <Link
+                              to={`/auth/lesson/edit/${lesson.id}`}
+                              state={{ lesson }}
+                              className="details-link"
+                            >
+                              <i className="bi bi-pencil"></i>
                             </Link>
+
                           </div>
                         </div>
                       </div>
