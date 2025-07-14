@@ -63,6 +63,7 @@ function ChatList() {
         const fetchNotifications = async () => {
             try {
                 const data = await getNotificationsByUserId(currentUserId);
+                
                 setNotifications(data);
 
                 // Filter unread notifications
