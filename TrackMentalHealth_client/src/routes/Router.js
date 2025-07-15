@@ -14,12 +14,14 @@ import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 
 import EditProfile from '../components/adminPage/EditProfile.jsx';
+import ChatList from '../components/chatPage/ChatList.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetail from '../components/LessonPage/LessonDetail';
 import ArticleDetail from '../components/ArticlePage/ArticleDetail.jsx';
 import CreateArticle from '../components/ArticlePage/CreateArticle.jsx';
 import CreateExercise from '../components/ExercisePage/CreateExercise.jsx';
 import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
+import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
 import EditLesson from '../components/LessonPage/EditLesson.jsx';
 
 
@@ -61,6 +63,8 @@ const Router = [
       { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
       { path: 'question/option/create', element: <OptionPage /> },
+      { path: "chat", element: <ChatList /> },      
+      { path: "chatai", element: <ChatWithAI /> },
     ],
   },
 
@@ -83,7 +87,7 @@ const Router = [
           { path: 'admin/users/role/:roleId', element: <UserList /> },
           { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
-          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> }
+          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
