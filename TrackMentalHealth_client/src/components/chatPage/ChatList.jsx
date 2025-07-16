@@ -9,8 +9,6 @@ import {
 } from "../../api/api";
 import {useNavigate} from "react-router-dom";
 import {showAlert} from "../../utils/showAlert";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBell} from '@fortawesome/free-regular-svg-icons';
 import { getCurrentUserId } from '../../utils/getCurrentUserID';
 
 function ChatList() {
