@@ -55,6 +55,7 @@
     "redux-persist": "^6.0.0",
     "sockjs-client": "^1.6.1",
     "sweetalert2": "^11.22.2",
+    "sweetalert2": "^11.6.13",
     "swiper": "^11.2.8",
     "yup": "^1.6.1"
   },
