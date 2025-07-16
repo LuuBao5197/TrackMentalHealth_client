@@ -1,0 +1,36 @@
+.chat-ai-button {
+  animation: floatUp 3s ease-in-out infinite;
+  position: relative;
+  transition: all 0.3s ease-in-out;
+  z-index: 1050;
+}
+
+.chat-ai-button:hover {
+  transform: scale(1.1);
+  background-color: #0b5ed7 !important;
+  box-shadow:
+    0 8px 20px rgba(0, 123, 255, 0.4),
+    0 0 12px rgba(0, 123, 255, 0.6),
+    0 0 20px rgba(0, 123, 255, 0.4);
+}
+
+.chat-ai-button:active {
+  transform: scale(0.96);
+  box-shadow:
+    0 4px 12px rgba(0, 123, 255, 0.6),
+    0 0 10px rgba(0, 123, 255, 0.4);
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* Optional: luôn có glow */
+.glow {
+  box-shadow:
+    0 0 12px rgba(0, 123, 255, 0.5),
+    0 0 24px rgba(0, 123, 255, 0.4),
+    0 0 36px rgba(0, 123, 255, 0.3);
+}
