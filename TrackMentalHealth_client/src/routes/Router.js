@@ -21,6 +21,8 @@ import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
 import EditLesson from '../components/LessonPage/EditLesson.jsx';
 import { element } from 'prop-types';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
+import EditExercise from '../components/ExercisePage/EditExercise.jsx';
+import EditArticle from '../components/ArticlePage/EditArticle.jsx';
 
 
 /* ***Layouts**** */
@@ -60,6 +62,8 @@ const Router = [
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
+      { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
+      { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
       { path: "chat", element: <ChatList /> },
       { path: "chatlist", element: <ChatList /> },      
