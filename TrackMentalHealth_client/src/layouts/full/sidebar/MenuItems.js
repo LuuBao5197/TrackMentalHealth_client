@@ -7,6 +7,9 @@ import {
   IconListCheck,
   IconFileText,
   IconNotes,
+  IconTestPipe,
+  IconDropletQuestion,
+  IconInputX,
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -93,14 +96,26 @@ const getMenuItemsByRole = (role) => {
     {
       id: uniqueId(),
       title: 'Create Test',
-      icon: IconLayoutDashboard,
+      icon: IconTestPipe,
       href: '/testDesigner/test/create',
     },
     {
       id: uniqueId(),
-      title: 'View All Test',
+      title: 'Create Question',
       icon: IconLayoutDashboard,
-      href: '/testDesigner/test/create',
+      href: '/testDesigner/question/create',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create Option For Question',
+      icon: IconDropletQuestion,
+      href: '/testDesigner/question/option/create',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create Test By ImportFile',
+      icon: IconInputX,
+      href: '/testDesigner/test/importfile',
     },
 
   ];

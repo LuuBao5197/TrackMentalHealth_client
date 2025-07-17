@@ -29,26 +29,43 @@ const FullTestFormWithPreview = () => {
           options: Yup.array()
             .of(
               Yup.object().shape({
-                optionText: Yup.string().required('Đáp án là bắt buộc'),
+                optionText: Yup.string().trim('Không chỉ được chứa khoảng trắng').required('Đáp án là bắt buộc'),
                 scoreValue: Yup.number()
                   .required('Điểm là bắt buộc')
-                  .min(1, 'Điểm phải từ 1 đến 4')
-                  .max(4, 'Điểm phải từ 1 đến 4'),
+                  .typeError('Điểm phải là số'),
                 optionOrder: Yup.number()
               })
             )
-            .min(1, 'Cần ít nhất 1 đáp án')
+            .min(2, 'Cần ít nhất 2 đáp án')
             .max(4, 'Tối đa 4 đáp án')
             .test(
-              'unique-scores',
-              'Các đáp án phải có điểm số khác nhau (1-4)',
+              'unique-and-valid-scores',
+              'Điểm phải khác nhau và nằm trong khoảng từ 1 đến N (số lượng đáp án)',
+              function (options) {
+                if (!Array.isArray(options)) return false;
+                const scores = options.map(o => o.scoreValue);
+
+                // 1. Check all are numbers in range 1..N
+                const isValidRange = scores.every(score => typeof score === 'number' && score >= 1 && score <= options.length);
+
+                // 2. Check no duplicates
+                const isUnique = new Set(scores).size === scores.length;
+
+                return isValidRange && isUnique;
+              }
+            )
+            .test(
+              'unique-optionText',
+              'Các đáp án không được trùng nội dung',
               (options) => {
-                const scores = options.map((o) => o.scoreValue);
-                return new Set(scores).size === scores.length;
+                const texts = options.map((o) => o.optionText?.trim().toLowerCase());
+                if (texts.some(text => !text)) return false;
+                return new Set(texts).size === texts.length;
               }
             )
         })
-      ).min(1, 'Cần ít nhất 1 câu hỏi')
+      )
+        .min(1, 'Cần ít nhất 1 câu hỏi')
         .test(
           'unique-questionText',
           'Các câu hỏi không được trùng nội dung',
@@ -58,7 +75,32 @@ const FullTestFormWithPreview = () => {
           }
         )
     }),
-    onSubmit: async (values) => {
+    // (Toàn bộ nội dung bạn gửi ở trên vẫn giữ nguyên, chỉ highlight phần sửa)
+
+    onSubmit: async (values, { setTouched }) => {
+      const errors = await formik.validateForm();
+
+      if (Object.keys(errors).length > 0) {
+        const touchedQuestions = values.questions.map((q) => ({
+          questionText: true,
+          questionType: true,
+          options: q.options.map(() => ({
+            optionText: true,
+            scoreValue: true
+          }))
+        }));
+
+        setTouched({
+          title: true,
+          description: true,
+          instructions: true,
+          questions: touchedQuestions
+        });
+
+        alert('Vui lòng kiểm tra lại thông tin trước khi lưu!');
+        return;
+      }
+
       const payload = {
         ...values,
         questions: values.questions.map((q, qIdx) => ({
@@ -85,6 +127,9 @@ const FullTestFormWithPreview = () => {
         alert('Có lỗi xảy ra khi lưu dữ liệu!');
       }
     }
+
+
+
   });
 
   useEffect(() => {
@@ -114,7 +159,7 @@ const FullTestFormWithPreview = () => {
               <h5>Câu {qIdx + 1}: {q.questionText}</h5>
               {q.options.map((opt, oIdx) => (
                 <div key={oIdx} className="form-check">
-                  <input className="form-check-input" type="radio" name={`question_${qIdx}`} />
+                  <input className="form-check-input" type="radio" name={`question_${qIdx}`} disabled />
                   <label className="form-check-label">
                     {opt.optionText} <small className="text-muted">(Điểm: {opt.scoreValue})</small>
                   </label>
@@ -128,19 +173,26 @@ const FullTestFormWithPreview = () => {
           <div className="mb-3">
             <label className="form-label">Tiêu đề</label>
             <input type="text" className="form-control" name="title" value={formik.values.title} onChange={formik.handleChange} />
+            {formik.touched.title && formik.errors.title && <div className="text-danger">{formik.errors.title}</div>}
           </div>
           <div className="mb-3">
             <label className="form-label">Mô tả</label>
             <textarea className="form-control" name="description" value={formik.values.description} onChange={formik.handleChange}></textarea>
+            {formik.touched.description && formik.errors.description && <div className="text-danger">{formik.errors.description}</div>}
           </div>
           <div className="mb-3">
             <label className="form-label">Hướng dẫn</label>
             <textarea className="form-control" name="instructions" value={formik.values.instructions} onChange={formik.handleChange}></textarea>
+            {formik.touched.instructions && formik.errors.instructions && <div className="text-danger">{formik.errors.instructions}</div>}
           </div>
 
           <FormikProvider value={formik}>
             <FieldArray name="questions" render={({ push, remove }) => (
               <div>
+                {typeof formik.errors.questions === 'string' && formik.touched.questions && (
+                  <div className="text-danger mb-2">{formik.errors.questions}</div>
+                )}
+
                 {formik.values.questions.map((q, qIdx) => (
                   <div key={qIdx} className="card p-3 mb-3">
                     <h5>Câu hỏi {qIdx + 1}</h5>
@@ -152,6 +204,9 @@ const FullTestFormWithPreview = () => {
                       value={q.questionText}
                       onChange={formik.handleChange}
                     />
+                    {formik.touched.questions?.[qIdx]?.questionText && formik.errors.questions?.[qIdx]?.questionText && (
+                      <div className="text-danger">{formik.errors.questions[qIdx].questionText}</div>
+                    )}
                     <input
                       type="text"
                       placeholder="Loại câu hỏi"
@@ -160,10 +215,17 @@ const FullTestFormWithPreview = () => {
                       value={q.questionType}
                       onChange={formik.handleChange}
                     />
+                    {formik.touched.questions?.[qIdx]?.questionType && formik.errors.questions?.[qIdx]?.questionType && (
+                      <div className="text-danger">{formik.errors.questions[qIdx].questionType}</div>
+                    )}
 
                     <FieldArray name={`questions[${qIdx}].options`} render={({ push, remove }) => (
                       <div>
                         <h6>Đáp án</h6>
+                        {/* ✅ Nếu toàn bộ options bị thiếu thì hiển thị lỗi */}
+                        {typeof formik.errors.questions?.[qIdx]?.options === 'string' && formik.touched.questions?.[qIdx]?.options && (
+                          <div className="text-danger mb-2">{formik.errors.questions[qIdx].options}</div>
+                        )}
                         {q.options.map((opt, oIdx) => {
                           const currentScores = q.options.map(o => o.scoreValue);
                           const isDuplicate = currentScores.filter(score => score === opt.scoreValue).length > 1;
@@ -178,8 +240,16 @@ const FullTestFormWithPreview = () => {
                                   name={`questions[${qIdx}].options[${oIdx}].optionText`}
                                   value={opt.optionText}
                                   onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur} // 👈 đảm bảo Formik biết field này được "touch"
                                 />
+                                {formik.touched.questions?.[qIdx]?.options?.[oIdx]?.optionText &&
+                                  formik.errors.questions?.[qIdx]?.options?.[oIdx]?.optionText && (
+                                    <div className="text-danger mt-1">
+                                      {formik.errors.questions[qIdx].options[oIdx].optionText}
+                                    </div>
+                                  )}
                               </div>
+
                               <div className="col-md-3">
                                 <input
                                   type="number"

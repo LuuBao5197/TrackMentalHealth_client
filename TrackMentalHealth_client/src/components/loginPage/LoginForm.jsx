@@ -60,6 +60,9 @@ const LoginForm = () => {
                 } else if(decoded.role == "CONTENT_CREATOR"){
                     alert("Login successful");
                     navigate("/dashboard");
+                }else if(decoded.role == "TEST_DESIGNER"){
+                    alert("Login successful");
+                    navigate("/dashboard");
                 }
             } catch (err) {
                 if (err.response && err.response.status === 401) {
