@@ -12,6 +12,20 @@ export default defineConfig({
     react(),        // Nếu muốn dùng SWC: đổi thành @vitejs/plugin-react-swc
   ],
 
+   define: {
+    global: {}, // Fix lỗi 'global is not defined' do dùng @stomp/stompjs
+  },
+
+   server: {
+    proxy: {
+      '/ws': {
+        target: 'http://localhost:9999',
+        changeOrigin: true,
+        ws: true, 
+      },
+    }
+  },
+
   resolve: {
     alias: {
       src: resolve(__dirname, 'src'),

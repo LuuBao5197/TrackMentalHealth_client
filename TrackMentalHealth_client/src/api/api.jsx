@@ -5,6 +5,7 @@ const Appointment_url = 'http://localhost:9999/api/appointment/';
 const psy_url = 'http://localhost:9999/api/psychologist/';
 const ai_url = 'http://localhost:9999/api/chatai/';
 const notification_url = 'http://localhost:9999/api/notification/';
+const chatGroup_url ="http://localhost:9999/api/chatgroup/";
 
 export const getMessagesBySessionId= async (id) => {
     try {
@@ -189,6 +190,66 @@ export const changeStatusNotification = async (id) => {
         throw error;
     }
 };
+
+//chat group
+export const getAllChatGroup = async () => {
+    try {
+        const response = await axios.get(chatGroup_url+"findAll");
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+//get chat group by creator id
+export const getChatGroupByCreatorId = async (id) => {
+    try {
+        const response = await axios.get(chatGroup_url+"createdBy/"+id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+//delete my group
+export const deleteGroupById = async (id) => {
+    try {
+        const response = await axios.delete(chatGroup_url+"delete/"+id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+//add new group
+export const createNewGroup = async (data) => {
+    try {
+        console.log("Sending group:", data); // kiểm tra kỹ
+        const response = await axios.post(chatGroup_url + "create", data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+//update group
+export const updateGroupById = async (id,data) => {
+    try {
+        console.log("Sending group:", data); // kiểm tra kỹ
+        const response = await axios.put(chatGroup_url + "edit/"+id, data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+
 
 
 
