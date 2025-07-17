@@ -138,7 +138,13 @@ const ExerciseListForCreator = () => {
                             <Link to={`/auth/exercise/${exercise.id}`} className="details-link">
                               <i className="bi bi-arrow-right"></i>
                             </Link>
-                            <Link to={`/auth/exercise/${exercise.id}`} className="details-link">
+
+                            {/* Link chỉnh sửa bài học */}
+                            <Link
+                              to={`/auth/exercise/edit/${exercise.id}`}
+                              state={{ exercise }}
+                              className="details-link"
+                            >
                               <i className="bi bi-pencil"></i>
                             </Link>
                           </div>
