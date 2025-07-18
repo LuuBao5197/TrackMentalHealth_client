@@ -95,6 +95,12 @@ const getMenuItemsByRole = (role) => {
     },
     {
       id: uniqueId(),
+      title: 'List Test',
+      icon: IconTestPipe,
+      href: '/testDesigner/test/',
+    },
+    {
+      id: uniqueId(),
       title: 'Create Test',
       icon: IconTestPipe,
       href: '/testDesigner/test/create',
@@ -107,7 +113,7 @@ const getMenuItemsByRole = (role) => {
     },
     {
       id: uniqueId(),
-      title: 'Create Option For Question',
+      title: 'Create Test Full',
       icon: IconDropletQuestion,
       href: '/testDesigner/question/option/create',
     },
@@ -155,30 +161,30 @@ const getMenuItemsByRole = (role) => {
       href: '/psychologist/review/blogs',
     },
   ];
- const MenuitemsContentCreator = [
-  {
-    navlabel: true,
-    subheader: 'Content Creator Management',
-  },
-  {
-    id: uniqueId(),
-    title: 'Manage Lessons',
-    icon: IconBook, // 📖 Biểu tượng bài học
-    href: '/content/lessons',
-  },
-  {
-    id: uniqueId(),
-    title: 'Manage Practices',
-    icon: IconListCheck, // ✅ Bài tập, danh sách luyện tập
-    href: '/content/practices',
-  },
-  {
-    id: uniqueId(),
-    title: 'Approval Progress',
-    icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
-    href: '/content/approval-progress',
-  },
-];
+  const MenuitemsContentCreator = [
+    {
+      navlabel: true,
+      subheader: 'Content Creator Management',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Lessons',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/content/lessons',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Practices',
+      icon: IconListCheck, // ✅ Bài tập, danh sách luyện tập
+      href: '/content/practices',
+    },
+    {
+      id: uniqueId(),
+      title: 'Approval Progress',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/content/approval-progress',
+    },
+  ];
   switch (role) {
     case 'ADMIN':
       return Menuitems;
