@@ -1,0 +1,17 @@
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100px;         /* Tăng chiều cao logo wrapper một chút */
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+.logo-img {
+  width: 600px;         /* Logo to rõ hơn */
+  max-width: 100%;      /* Responsive không vỡ khung */
+  height: auto;
+  object-fit: contain;
+  filter: brightness(1.2) contrast(1.1);
+}

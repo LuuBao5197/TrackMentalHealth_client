@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 const SidebarItems = () => {
   const userRole = useSelector((state) => state.auth.user);
   console.log('Role:', userRole); // admin, user, guest,...
-  const Menuitems = getMenuItemsByRole(userRole);
+  const Menuitems = getMenuItemsByRole(userRole.role);
   
   const { pathname } = useLocation();
   const pathDirect = pathname;

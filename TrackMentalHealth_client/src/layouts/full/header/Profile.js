@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -10,77 +11,65 @@ import {
   ListItemIcon,
   ListItemText
 } from '@mui/material';
-
 import { IconListCheck, IconMail, IconUser } from '@tabler/icons-react';
-
 import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 
 const Profile = () => {
+  const userRole = useSelector((state) => state.auth.user);
+
   const [anchorEl2, setAnchorEl2] = useState(null);
+  const navigate = useNavigate();
+
   const handleClick2 = (event) => {
     setAnchorEl2(event.currentTarget);
   };
+
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
 
+  // const handleMyProfile = () => {
+  //   const user = JSON.parse(localStorage.getItem('user'));
+  //   console.log("User object: ", user); // Kiểm tra ID
+  //   if (user && user.id) {
+  //     navigate(`/admin/users/profile/${user.id}`); // ✅ Không có console.log() ở đây
+  //   } else {
+  //     alert("User ID not found in localStorage");
+  //   }
+  //   handleClose2();
+  // };
+
   return (
     <Box>
-      <IconButton
-        size="large"
-        aria-label="show 11 new notifications"
-        color="inherit"
-        aria-controls="msgs-menu"
-        aria-haspopup="true"
-        sx={{
-          ...(typeof anchorEl2 === 'object' && {
-            color: 'primary.main',
-          }),
-        }}
-        onClick={handleClick2}
-      >
-        <Avatar
-          src={ProfileImg}
-          alt={ProfileImg}
-          sx={{
-            width: 35,
-            height: 35,
-          }}
-        />
+      <IconButton size="large" color="inherit" onClick={handleClick2}>
+        <Avatar src={ProfileImg} alt="Profile" sx={{ width: 35, height: 35 }} />
       </IconButton>
-      {/* ------------------------------------------- */}
-      {/* Message Dropdown */}
-      {/* ------------------------------------------- */}
+
       <Menu
-        id="msgs-menu"
         anchorEl={anchorEl2}
-        keepMounted
         open={Boolean(anchorEl2)}
         onClose={handleClose2}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        sx={{
-          '& .MuiMenu-paper': {
-            width: '200px',
-          },
-        }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem>
-          <ListItemIcon>
-            <IconUser width={20} />
-          </ListItemIcon>
+        <MenuItem onClick={() => {
+          console.log("User object:", userRole);
+          if (userRole && userRole.userId) {
+            navigate(`/admin/users/edit-profile/${userRole.userId}`);
+          } else {
+            alert("User ID not found in localStorage");
+          }
+          handleClose2();
+        }}>
+          <ListItemIcon><IconUser width={20} /></ListItemIcon>
           <ListItemText>My Profile</ListItemText>
         </MenuItem>
         <MenuItem>
-          <ListItemIcon>
-            <IconMail width={20} />
-          </ListItemIcon>
+          <ListItemIcon><IconMail width={20} /></ListItemIcon>
           <ListItemText>My Account</ListItemText>
         </MenuItem>
         <MenuItem>
-          <ListItemIcon>
-            <IconListCheck width={20} />
-          </ListItemIcon>
+          <ListItemIcon><IconListCheck width={20} /></ListItemIcon>
           <ListItemText>My Tasks</ListItemText>
         </MenuItem>
         <Box mt={1} py={1} px={2}>

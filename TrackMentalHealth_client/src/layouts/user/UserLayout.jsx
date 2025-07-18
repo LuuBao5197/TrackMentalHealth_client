@@ -21,7 +21,7 @@ import useScrollTopButton from '../../hooks/useScrollTopButton';
 import useAOS from '../../hooks/useAOS';
 import usePreloader from '../../hooks/usePreloader';
 import { useSelector } from 'react-redux';
-import AllForm from '../../components/LessonPage/AllForm';
+
 import { Outlet, useLocation } from 'react-router-dom';
 const UserLayout = () => {
   // Thêm class vào body
@@ -44,7 +44,7 @@ const UserLayout = () => {
 
   return (
     <div>
-      <Header/>
+      <Header />
       <HeroPage />
       {/* <AboutSection />
       <HowWeWork/>

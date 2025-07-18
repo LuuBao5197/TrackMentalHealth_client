@@ -8,9 +8,8 @@ import { element } from 'prop-types';
 import UserProfile from '../components/adminPage/UserProfile';
 import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
-import LessonCreate from '../components/LessonPage/CreateForm';
+import LessonCreate from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetails from '../components/LessonPage/LessonDetail';
-import HomePageTest from '../components/LessonPage/AllForm';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 import MoodHistoryPage from '../components/userPage/MoodHistoryPage.jsx';
@@ -45,9 +44,12 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
-      { path: 'lesson-create', element: <LessonCreate /> },
-      { path: 'homepagetest', element: <HomePageTest /> },
-      { path: 'lesson/:id', element: <LessonDetails /> },
+      { path: 'create-lesson', element: <CreateLesson /> },
+      { path: 'create-exercise', element: <CreateExercise /> },
+      { path: 'create-article', element: <CreateArticle/> },
+      { path: 'lesson/:id', element: <LessonDetail /> },
+      { path: 'exercise/:id', element: <ExerciseDetail /> },
+      { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'question/option/create', element: <OptionPage /> },
     ],
   },
@@ -60,7 +62,7 @@ const Router = [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
       {
-        element: <ProtectedRoute allowedRoles={['Admin']} />,
+        element: <ProtectedRoute allowedRoles={['ADMIN']} />,
         children: [
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
@@ -71,6 +73,7 @@ const Router = [
           { path: 'admin/users/role/:roleId', element: <UserList /> },
           { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
+          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> }
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
@@ -84,10 +87,9 @@ const Router = [
     children: [
       { path: 'homepage1', element: <HomePage /> },
       { path: 'register', element: <Register /> },
-
-
+      { path: 'social', element: <SocialPage /> },
       {
-        element: <ProtectedRoute allowedRoles={['User']} />,
+        element: <ProtectedRoute allowedRoles={['USER']} />,
         children: [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
@@ -134,7 +136,7 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { path: 'social', element: <SocialPage /> },
-
+      { path: 'user/edit-profile/:userId', element: <EditProfile /> },
     ],
   },
 ];
