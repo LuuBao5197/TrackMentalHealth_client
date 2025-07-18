@@ -1,19 +1,32 @@
 import React from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const CreateArticle = () => {
+  const token = localStorage.getItem('token');
+  let userId = null;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      userId = decoded.userId;
+    } catch (error) {
+      console.error('❌ Token không hợp lệ:', error);
+    }
+  }
+
   const formik = useFormik({
     initialValues: {
       title: '',
       content: '',
-      status: false,
     },
     onSubmit: async (values) => {
       const articleData = {
         ...values,
-        author: null, // Không lấy từ localStorage nữa
-        createdAt: '2005-01-01T00:00:00', // đúng dữ liệu mẫu bạn muốn
+        author: userId,
+        status: false, // 👈 luôn gửi mặc định là false
+        createdAt: new Date().toISOString(),
       };
 
       try {
@@ -21,6 +34,7 @@ const CreateArticle = () => {
         alert('✅ Tạo bài viết thành công!');
         formik.resetForm();
       } catch (error) {
+        console.log('📤 Dữ liệu gửi đi:', articleData);
         console.error('❌ Lỗi khi tạo bài viết:', error);
         alert('❌ Có lỗi xảy ra khi tạo bài viết.');
       }
@@ -34,7 +48,6 @@ const CreateArticle = () => {
           <h2 className="mb-4 text-primary">📝 Tạo Bài Viết Mới</h2>
 
           <form onSubmit={formik.handleSubmit}>
-            {/* Tiêu đề */}
             <div className="mb-3">
               <label className="form-label">Tiêu đề bài viết</label>
               <input
@@ -47,7 +60,6 @@ const CreateArticle = () => {
               />
             </div>
 
-            {/* Nội dung */}
             <div className="mb-3">
               <label className="form-label">Nội dung bài viết</label>
               <textarea
@@ -60,22 +72,6 @@ const CreateArticle = () => {
               />
             </div>
 
-            {/* Trạng thái */}
-            <div className="form-check mb-4">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                name="status"
-                onChange={formik.handleChange}
-                checked={formik.values.status}
-                id="statusCheck"
-              />
-              <label className="form-check-label" htmlFor="statusCheck">
-                Kích hoạt bài viết
-              </label>
-            </div>
-
-            {/* Nút submit */}
             <button type="submit" className="btn btn-success w-100">
               🚀 Tạo bài viết
             </button>

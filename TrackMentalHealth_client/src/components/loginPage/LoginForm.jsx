@@ -57,9 +57,10 @@ const LoginForm = () => {
                 } else if(decoded.role == "PSYCHOLOGIST"){
                     alert("Login successful");
                     navigate("/dashboard");
-                } else if(
-                    decoded.role == "CONTENT_CREATOR"
-                ){
+                } else if(decoded.role == "CONTENT_CREATOR"){
+                    alert("Login successful");
+                    navigate("/dashboard");
+                }else if(decoded.role == "TEST_DESIGNER"){
                     alert("Login successful");
                     navigate("/dashboard");
                 }
