@@ -114,7 +114,7 @@ const Router = [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-
+          { path: 'history-mood', element: <MoodHistoryPage /> },
         ],
       },
     ],
