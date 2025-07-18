@@ -44,6 +44,7 @@ const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')))
 const ImportTestPage = Loadable(lazy(()=> import('../components/testPage/ImportTestExcel.jsx')))
 const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
+const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
   {
@@ -130,7 +131,8 @@ const Router = [
           { path: 'question/edit/:id', element: <QuestionPage /> },
           { path: 'question/option/create', element: <OptionPage /> },
           { path: 'question/option/edit/:id', element: <OptionPage /> },
-          { path: 'test/importfile', element: <ImportTestPage/>}
+          { path: 'test/importfile', element: <ImportTestPage/>},
+          { path: 'test/', element: <TestListPage/>}
 
         ],
       },
