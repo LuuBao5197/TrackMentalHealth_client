@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -90,8 +91,7 @@ const HeroPage = () => {
             <h3 className="mb-4 fw-bold">
               {todayMood ? "💬 Cảm xúc của bạn hôm nay" : "💬 Hôm nay bạn cảm thấy thế nào?"}
             </h3>
-
-            <div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
+<div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
               {moodLevels.map((m) => (
                 <button
                   key={m.id}
@@ -168,9 +168,9 @@ const HeroPage = () => {
           <FeatureBox
             icon={<BsPencilSquare />}
             title="Lịch sử cảm xúc"
-            text="Xem biểu đồ và lịch sử cảm xúc của bạn."
+text="Xem biểu đồ và lịch sử cảm xúc của bạn."
             delay="400"
-            link="/user/mood-history"
+            link="history-mood"
           />
 
         </div>
@@ -194,4 +194,3 @@ const FeatureBox = ({ icon, title, text, delay, link }) => (
 );
 
 export default HeroPage;
- 
