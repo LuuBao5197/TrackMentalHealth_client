@@ -38,3 +38,13 @@ export const updateMood = (id, data) => {
 export const getMoodByUserAndDate = (userId, date) => {
   return axios.get(`${API_URL}/user/${userId}/date/${date}`, getAuthHeaders());
 };
+// Lấy tất cả cảm xúc của user đang đăng nhập (lịch sử mood)
+export const getMyMoods = () => {
+  return axios.get(`${API_URL}/my`, getAuthHeaders());
+};
+
+// Lấy thống kê biểu đồ cảm xúc theo user đang đăng nhập
+export const getMoodStatistics = () => {
+  return axios.get(`${API_URL}/my/statistics`, getAuthHeaders());
+};
+

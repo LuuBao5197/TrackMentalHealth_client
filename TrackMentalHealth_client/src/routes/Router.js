@@ -13,7 +13,7 @@ import LessonDetails from '../components/LessonPage/LessonDetail';
 import HomePageTest from '../components/LessonPage/AllForm';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
-
+import MoodHistoryPage from '../components/userPage/MoodHistoryPage.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -110,7 +110,7 @@ const Router = [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-          { path: 'edit-diary/:id', element: <UpdateDiaryPage /> },
+          {path: "mood-history", element: <MoodHistoryPage />},
         ],
       },
     ],
