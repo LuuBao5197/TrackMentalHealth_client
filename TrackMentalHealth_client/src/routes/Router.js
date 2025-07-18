@@ -9,6 +9,7 @@ import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
+import MoodHistoryPage from '../components/userPage/MoodHistoryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import ChatList from '../components/chatPage/ChatList.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
@@ -23,7 +24,6 @@ import { element } from 'prop-types';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
 import EditExercise from '../components/ExercisePage/EditExercise.jsx';
 import EditArticle from '../components/ArticlePage/EditArticle.jsx';
-
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -47,6 +47,7 @@ const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOption
 const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
+
   {
     path: '/auth',
     element: <BlankLayout />,
@@ -98,6 +99,8 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
+
+
   {
     path: '/user',
     element: <UserLayout />,
@@ -112,6 +115,24 @@ const Router = [
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
 
+        ],
+      },
+    ],
+  },
+  {
+    path: '/user',
+    element: <UserLayout />,
+    children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
+      { path: 'social', element: <SocialPage /> },
+      {
+        element: <ProtectedRoute allowedRoles={['User', 2]} />, // gộp role User và 2
+        children: [
+          { path: 'homepage', element: <HomePage /> },
+          { path: 'write-diary', element: <WriteDiaryPage /> },
+          { path: 'history', element: <DiaryHistoryPage /> },
+          {path: "mood-history", element: <MoodHistoryPage />},
         ],
       },
     ],

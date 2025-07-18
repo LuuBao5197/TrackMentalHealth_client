@@ -1,4 +1,3 @@
-// src/pages/HeroPage.jsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -26,6 +25,8 @@ const HeroPage = () => {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [todayMood, setTodayMood] = useState(null);
+  const [aiSuggestion, setAiSuggestion] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     getMoodLevels()
@@ -39,6 +40,7 @@ const HeroPage = () => {
           setTodayMood(mood);
           setSelectedMoodId(mood.moodLevel.id);
           setNote(mood.note || '');
+          setAiSuggestion(mood.aiSuggestion || '');
         }
       })
       .catch(err => console.error("Lỗi kiểm tra mood hôm nay:", err));
@@ -48,26 +50,33 @@ const HeroPage = () => {
     e.preventDefault();
     if (!selectedMoodId) return alert("Vui lòng chọn cảm xúc");
 
+    const selectedMood = moodLevels.find(m => m.id === selectedMoodId);
     const mood = {
       date: new Date().toISOString().split("T")[0],
       note,
-      moodLevel: { id: selectedMoodId },
+      moodLevel: {
+        id: selectedMoodId,
+        name: selectedMood?.name || "",
+      },
     };
 
     setLoading(true);
     try {
       if (todayMood) {
         const updated = await updateMood(todayMood.id, { ...mood, id: todayMood.id });
-        alert("✅ Cập nhật cảm xúc thành công!");
         setTodayMood(updated.data);
+        setAiSuggestion(updated.data.aiSuggestion || '✅ Cập nhật cảm xúc thành công!');
+        setShowModal(true);
       } else {
         const created = await createMood(mood);
-        alert("✅ Ghi nhận cảm xúc thành công!");
         setTodayMood(created.data);
+        setAiSuggestion(created.data.aiSuggestion || '✅ Ghi nhận cảm xúc thành công!');
+        setShowModal(true);
       }
     } catch (err) {
       console.error("Lỗi tạo/cập nhật mood:", err);
-      alert("❌ Lỗi ghi cảm xúc");
+      setAiSuggestion("❌ Lỗi khi ghi nhận cảm xúc.");
+      setShowModal(true);
     } finally {
       setLoading(false);
     }
@@ -87,9 +96,7 @@ const HeroPage = () => {
                 <button
                   key={m.id}
                   type="button"
-                  className={`btn rounded-pill py-3 px-4 border shadow-sm ${
-                    selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'
-                  }`}
+                  className={`btn rounded-pill py-3 px-4 border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
                   style={{ width: '110px', height: '110px', fontSize: '1rem' }}
                   onClick={() => setSelectedMoodId(m.id)}
                 >
@@ -121,6 +128,28 @@ const HeroPage = () => {
           </div>
         </div>
 
+        {/* ✅ Modal hiển thị gợi ý từ AI */}
+        {showModal && (
+          <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">🤖 Gợi ý từ AI</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <p>{aiSuggestion}</p>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-primary" onClick={() => setShowModal(false)}>
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="row feature-boxes">
           <FeatureBox
             icon={<BsPen />}
@@ -138,11 +167,12 @@ const HeroPage = () => {
           />
           <FeatureBox
             icon={<BsPencilSquare />}
-            title="Cập nhật nhật ký"
-            text="Bổ sung hay thay đổi suy nghĩ trong nhật ký."
+            title="Lịch sử cảm xúc"
+            text="Xem biểu đồ và lịch sử cảm xúc của bạn."
             delay="400"
-            link="/user/edit-diary"
+            link="/user/mood-history"
           />
+
         </div>
       </div>
     </section>
@@ -164,3 +194,4 @@ const FeatureBox = ({ icon, title, text, delay, link }) => (
 );
 
 export default HeroPage;
+ 

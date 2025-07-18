@@ -57,8 +57,13 @@ const UserLayout = () => {
       <TeamSection/> */}
       {/* <Testimonials/> */}
       {/* <ContactSection/> */}
+
         <Outlet />
       <Footer />
+
+       <Outlet />
+      <Footer />
+
     </div>
   );
 };
