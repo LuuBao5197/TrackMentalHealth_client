@@ -8,9 +8,9 @@ const TestForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
-  const currentUserId = 1; // giả lập user id đăng nhập
+  const currentUserId = 1;
 
-  const [loading, setLoading] = useState(isEditMode); // chỉ load khi edit
+  const [loading, setLoading] = useState(isEditMode);
 
   const formik = useFormik({
     initialValues: {
@@ -20,7 +20,6 @@ const TestForm = () => {
       instructions: ''
     },
     validationSchema: Yup.object({
-      // id: Yup.number().required('ID is required'),
       title: Yup.string().required('Title is required'),
       description: Yup.string().required('Description is required'),
       instructions: Yup.string().required('Instructions are required')
@@ -40,7 +39,7 @@ const TestForm = () => {
           await axios.post('http://localhost:9999/api/test/', payload);
           alert('Test created!');
         }
-        navigate('/test/list'); // chuyển về danh sách
+        navigate('/test/list');
       } catch (err) {
         alert('Error occurred!');
         console.error(err);
@@ -48,7 +47,6 @@ const TestForm = () => {
     }
   });
 
-  // Nếu đang ở chế độ edit, tự động load dữ liệu
   useEffect(() => {
     const fetchTest = async () => {
       try {
@@ -77,19 +75,27 @@ const TestForm = () => {
     <div className="container mt-4">
       <h3>{isEditMode ? 'Edit Test' : 'Create Test'}</h3>
       <form onSubmit={formik.handleSubmit}>
+        {/* Hidden ID input */}
+        {isEditMode && (
+          <input
+            type="hidden"
+            name="id"
+            value={formik.values.id}
+          />
+        )}
+
+        {/* Visible form fields */}
         {[
-          { name: 'id', type: 'number', label: 'ID', disabled: isEditMode, readonly: true },
           { name: 'title', label: 'Title' },
           { name: 'description', label: 'Description' },
           { name: 'instructions', label: 'Instructions' }
-        ].map(({ name, label, type = 'text', disabled = false }) => (
+        ].map(({ name, label }) => (
           <div className="mb-3" key={name}>
             <label htmlFor={name} className="form-label">{label}</label>
             <input
               id={name}
               name={name}
-              type={type}
-              disabled={disabled}
+              type="text"
               className={`form-control ${formik.touched[name] && formik.errors[name] ? 'is-invalid' : ''}`}
               value={formik.values[name]}
               onChange={formik.handleChange}

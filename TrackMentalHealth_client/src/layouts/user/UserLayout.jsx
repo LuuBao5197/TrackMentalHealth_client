@@ -61,9 +61,6 @@ const UserLayout = () => {
         <Outlet />
       <Footer />
 
-       <Outlet />
-      <Footer />
-
     </div>
   );
 };

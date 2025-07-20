@@ -101,21 +101,15 @@ const getMenuItemsByRole = (role) => {
     },
     {
       id: uniqueId(),
-      title: 'Create Test',
+      title: 'Create Result For Test',
       icon: IconTestPipe,
-      href: '/testDesigner/test/create',
+      href: '/testDesigner/test/testResult/create',
     },
     {
       id: uniqueId(),
-      title: 'Create Question',
-      icon: IconLayoutDashboard,
-      href: '/testDesigner/question/create',
-    },
-    {
-      id: uniqueId(),
-      title: 'Create Test Full',
+      title: 'Create Test',
       icon: IconDropletQuestion,
-      href: '/testDesigner/question/option/create',
+      href: '/testDesigner/test/create',
     },
     {
       id: uniqueId(),
