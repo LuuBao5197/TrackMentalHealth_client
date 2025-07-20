@@ -42,7 +42,6 @@ const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const ImportTestPage = Loadable(lazy(()=> import('../components/testPage/ImportTestExcel.jsx')))
-const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
 const TestResultForm = Loadable(lazy(()=> import('../components/testPage/TestResultForm.jsx')))

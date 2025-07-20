@@ -68,12 +68,12 @@ const TestList = () => {
   };
 
   const handleDelete = async (testId) => {
-    if (window.confirm('Are you sure you want to delete this test?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xoá không?')) {
       try {
         await axios.delete(`http://localhost:9999/api/test/${testId}`);
         fetchTests(currentPage - 1);
       } catch (error) {
-        console.error('Delete failed:', error);
+        console.error('Xoá thất bại:', error);
       }
     }
   };
@@ -81,20 +81,38 @@ const TestList = () => {
   const columns = [
     {
       name: 'Title',
-      selector: (row) => row.title,
+      selector: row => row.title,
       sortable: true,
+      center: true,
+      maxWidth: '200px',
     },
     {
       name: 'Description',
-      selector: (row) => row.description,
+      selector: row => row.description,
+      sortable: true,
+      center: true,
+      maxWidth: '250px',
     },
     {
       name: 'Instructions',
-      selector: (row) => row.instructions,
+      sortable: true,
+      selector: row => row.instructions,
+      center: true,
+      maxWidth: '250px',
+    },
+    {
+      name: 'Status',
+      sortable: true,
+      selector: row => row.status,
+      center: true,
+      maxWidth: '200px',
     },
     {
       name: 'Actions',
-      cell: (row) => (
+      center: true,
+      button: true,
+      maxWidth: '250px',
+      cell: row => (
         <div className="btn-group">
           <button className="btn btn-sm btn-outline-primary" onClick={() => handleDetail(row)}>
             <IconEye size={18} />
@@ -110,13 +128,40 @@ const TestList = () => {
     },
   ];
 
+  const customStyles = {
+    rows: {
+      style: {
+        minHeight: '52px',
+        maxHeight: '52px',
+        alignItems: 'center',
+      },
+    },
+    headCells: {
+      style: {
+        fontWeight: 'bold',
+        textAlign: 'center',
+        justifyContent: 'center',
+        whiteSpace: 'nowrap',
+      },
+    },
+    cells: {
+      style: {
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        textAlign: 'center',
+        justifyContent: 'center',
+        maxWidth: '100%',
+      },
+    },
+  };
+
   return (
     <div className="container mt-4">
       <h3 className="mb-3">Danh sách bài Test</h3>
 
-      {/* Search input with icon */}
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <div className="input-group w-25">
+      <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div className="input-group" style={{ minWidth: '250px' }}>
           <span className="input-group-text">
             <IconSearch size={18} />
           </span>
@@ -136,6 +181,7 @@ const TestList = () => {
       <DataTable
         columns={columns}
         data={tests}
+        customStyles={customStyles}
         progressPending={loading}
         pagination
         paginationServer
@@ -148,6 +194,7 @@ const TestList = () => {
         striped
         responsive
         noDataComponent="Không có dữ liệu"
+
       />
     </div>
   );
