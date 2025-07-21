@@ -128,7 +128,12 @@ const ArticleListForCreator = () => {
                             <Link to={`/auth/article/${article.id}`} className="details-link">
                               <i className="bi bi-arrow-right"></i>
                             </Link>
-                            <Link to={`/auth/article/${article.id}`} className="edit-icon-link">
+                            {/* Link chỉnh sửa bài học */}
+                            <Link
+                              to={`/auth/article/edit/${article.id}`}
+                              state={{ article }}
+                              className="details-link"
+                            >
                               <i className="bi bi-pencil"></i>
                             </Link>
                           </div>

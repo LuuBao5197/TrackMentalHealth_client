@@ -9,6 +9,7 @@ import UserList from '../components/adminPage/UserList';
 import UserDetail from '../components/adminPage/UserDetail';
 import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
+import MoodHistoryPage from '../components/userPage/MoodHistoryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
 import ChatList from '../components/chatPage/ChatList.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
@@ -19,12 +20,15 @@ import CreateExercise from '../components/ExercisePage/CreateExercise.jsx';
 import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
 import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
 import EditLesson from '../components/LessonPage/EditLesson.jsx';
+import { element } from 'prop-types';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
 import ChatGroup from '../components/chatPage/ChatGroup.jsx';
 import Appointments from '../components/appointmentPage/Appointments.jsx';
 import UpdateAppointment from '../components/appointmentPage/UpdateAppointment.jsx';
 import CreateAppointment from '../components/appointmentPage/CreateAppointment.jsx';
 
+import EditExercise from '../components/ExercisePage/EditExercise.jsx';
+import EditArticle from '../components/ArticlePage/EditArticle.jsx';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -42,11 +46,13 @@ const Register = Loadable(lazy(() => import('../views/authentication/Register'))
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
-
-const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
+const ImportTestPage = Loadable(lazy(()=> import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
+const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
+const TestResultForm = Loadable(lazy(()=> import('../components/testPage/TestResultForm.jsx')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
+
   {
     path: '/auth',
     element: <BlankLayout />,
@@ -58,11 +64,13 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'create-lesson', element: <CreateLesson /> },
       { path: 'create-exercise', element: <CreateExercise /> },
-      { path: 'create-article', element: <CreateArticle/> },
+      { path: 'create-article', element: <CreateArticle /> },
       { path: 'lesson/:id', element: <LessonDetail /> },
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
+      { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
+      { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
       { path: "chat/list", element: <ChatList /> },      
       { path: "chat/ai", element: <ChatWithAI /> },
@@ -72,6 +80,10 @@ const Router = [
       { path: "appointment/:userId", element: <Appointments /> },
       { path: "appointment/edit/:appointmentid", element: <UpdateAppointment /> },
       { path: "appointment/create/:userId", element: <CreateAppointment /> },
+      { path: "chat", element: <ChatList /> },
+      { path: "chatlist", element: <ChatList /> },      
+      { path: "chatai", element: <ChatWithAI /> },
+      { path: "chat/:id", element: <ChatWithUser /> },
     ],
   },
 
@@ -100,6 +112,8 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
+
+
   {
     path: '/user',
     element: <UserLayout />,
@@ -113,7 +127,25 @@ const Router = [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-         
+          { path: 'history-mood', element: <MoodHistoryPage /> },
+        ],
+      },
+    ],
+  },
+  {
+    path: '/user',
+    element: <UserLayout />,
+    children: [
+      { path: 'homepage1', element: <HomePage /> },
+      { path: 'register', element: <Register /> },
+      { path: 'social', element: <SocialPage /> },
+      {
+        element: <ProtectedRoute allowedRoles={['User', 2]} />, // gộp role User và 2
+        children: [
+          { path: 'homepage', element: <HomePage /> },
+          { path: 'write-diary', element: <WriteDiaryPage /> },
+          { path: 'history', element: <DiaryHistoryPage /> },
+          {path: "mood-history", element: <MoodHistoryPage />},
         ],
       },
     ],
@@ -124,12 +156,19 @@ const Router = [
     path: '/testDesigner',
     element: <FullLayout />,
     children: [
-      { path: 'test/create', element: <TestPage /> },
-      { path: 'test/edit/:id', element: <TestPage /> },
-      { path: 'question/create', element: <QuestionPage /> },
-      { path: 'question/edit/:id', element: <QuestionPage /> },
-      { path: 'question/option/create', element: <OptionPage /> },
-      { path: 'question/option/edit/:id', element: <OptionPage /> },
+      {
+        element: <ProtectedRoute allowedRoles={['TEST_DESIGNER']} />,
+        children: [
+          { path: 'test/', element: <TestListPage/>},
+          { path: 'test/edit/:id', element: <TestPage /> },
+          { path: 'test/create', element: <OptionPage /> },
+          { path: 'test/edit/:id', element: <OptionPage /> },
+          { path: 'test/importfile', element: <ImportTestPage/>},
+          { path: 'test/testResult/create', element: <TestResultForm/>}
+
+        ],
+      },
+
     ],
   },
   {
