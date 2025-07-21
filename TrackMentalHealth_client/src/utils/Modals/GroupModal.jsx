@@ -31,8 +31,8 @@ function GroupModal({ show, onClose, onSubmit, initialData = {} }) {
             return showAlert("Group name is required", "warning");
         }
 
-        if(formData.maxMember<=1){
-            return showAlert("Max members is must be greater than 1","warning");
+        if (formData.maxMember <= 1) {
+            return showAlert("Max members is must be greater than 1", "warning");
         }
 
         const payload = {
@@ -83,14 +83,27 @@ function GroupModal({ show, onClose, onSubmit, initialData = {} }) {
                     )}
 
                     <Form.Group className="mb-3">
-                        <Form.Label>Avatar URL</Form.Label>
+                        <Form.Label>Avatar</Form.Label>
                         <Form.Control
-                            name="avt"
-                            value={formData.avt}
-                            onChange={handleChange}
-                            placeholder="https://example.com/image.png"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const imageUrl = URL.createObjectURL(file);
+                                    setFormData({ ...formData, avt: imageUrl });
+                                }
+                            }}
                         />
+                        {formData.avt && (
+                            <img
+                                src={formData.avt}
+                                alt="Avatar Preview"
+                                style={{ width: "100px", height: "100px", marginTop: "10px", objectFit: "cover", borderRadius: "50%" }}
+                            />
+                        )}
                     </Form.Group>
+
                 </Form>
             </Modal.Body>
             <Modal.Footer>

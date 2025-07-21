@@ -20,6 +20,10 @@ import ExerciseDetail from '../components/ExercisePage/ExerciseDetail.jsx';
 import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
 import EditLesson from '../components/LessonPage/EditLesson.jsx';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
+import ChatGroup from '../components/chatPage/ChatGroup.jsx';
+import Appointments from '../components/appointmentPage/Appointments.jsx';
+import UpdateAppointment from '../components/appointmentPage/UpdateAppointment.jsx';
+import CreateAppointment from '../components/appointmentPage/CreateAppointment.jsx';
 
 
 /* ***Layouts**** */
@@ -60,9 +64,14 @@ const Router = [
       { path: 'article/:id', element: <ArticleDetail /> },
       { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
       { path: 'question/option/create', element: <OptionPage /> },
-      { path: "chatlist", element: <ChatList /> },      
-      { path: "chatai", element: <ChatWithAI /> },
-      { path: "chat/:id", element: <ChatWithUser /> },
+      { path: "chat/list", element: <ChatList /> },      
+      { path: "chat/ai", element: <ChatWithAI /> },
+      { path: "chat/:sessionId", element: <ChatWithUser /> },
+      { path: "chat/group/:groupId", element: <ChatGroup /> },
+      //appointment
+      { path: "appointment/:userId", element: <Appointments /> },
+      { path: "appointment/edit/:appointmentid", element: <UpdateAppointment /> },
+      { path: "appointment/create/:userId", element: <CreateAppointment /> },
     ],
   },
 

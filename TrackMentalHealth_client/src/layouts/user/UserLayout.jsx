@@ -26,7 +26,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
-  console.log(userRole);
+  console.log(userRole.userId);
   // Add/remove class vào body
   useEffect(() => {
     document.body.classList.add('index-page');
@@ -45,7 +45,7 @@ const UserLayout = () => {
   return (
     <div>
       <Header />
-      <HeroPage />
+      {/* <HeroPage /> */}
       {/* <AboutSection />
       <HowWeWork/>
       <Portfolio/>

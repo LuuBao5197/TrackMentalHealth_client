@@ -9,7 +9,7 @@ const chatGroup_url ="http://localhost:9999/api/chatgroup/";
 
 export const getMessagesBySessionId= async (id) => {
     try {
-        const response = await axios.get(chat_url+""+id);
+        const response = await axios.get(chat_url+id);
         console.log(response.data);
         return response.data;
         // console.log(response.data);
@@ -24,7 +24,6 @@ export const getChatSessionsByUserId= async (id) => {
         const response = await axios.get(chat_url+"session/"+id);
         console.log(response.data);
         return response.data;
-        // console.log(response.data);
     } catch (error) {
         console.error('Lỗi khi gọi API:', error);
         throw error;
@@ -35,26 +34,6 @@ export const getChatSessionsByUserId= async (id) => {
 export const getChatSessionsByTwoUserId= async (id1,id2) => {
     try {
         const response = await axios.get(chat_url+`session/${id1}/${id2}`);
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
-        throw error;
-    }
-};
-
-export const sendMessage = async (id, message) => {
-    try {
-        const response = await axios.post(
-            `${chat_url}${id}`,
-            { message: message }, // nếu backend expects JSON {"message":"..."}
-            {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -215,6 +194,31 @@ export const getChatGroupByCreatorId = async (id) => {
     }
 };
 
+//get group by id group
+export const getChatGroupById = async (id) => {
+    try {
+        const response = await axios.get(chatGroup_url+id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+//get msg from group id
+export const getMessagesByGroupId = async (id) => {
+    try {
+        const response = await axios.get(chatGroup_url+"messages/"+id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+
 //delete my group
 export const deleteGroupById = async (id) => {
     try {
@@ -248,6 +252,19 @@ export const updateGroupById = async (id,data) => {
         throw error;
     }
 };
+
+//seen message
+export const changeStatusIsRead = async (sessionId, receiverId) => {
+    try {
+        const response = await axios.put(`${chat_url}changeStatus/${sessionId}/${receiverId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi khi cập nhật trạng thái isRead:", error);
+        throw error;
+    }
+};
+
+
 
 
 
