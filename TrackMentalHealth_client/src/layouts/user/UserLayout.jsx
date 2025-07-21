@@ -45,7 +45,6 @@ const UserLayout = () => {
   return (
     <div>
       <Header />
-      <HeroPage />
       {/* <AboutSection />
       <HowWeWork/>
       <Portfolio/>
@@ -58,10 +57,7 @@ const UserLayout = () => {
       {/* <Testimonials/> */}
       {/* <ContactSection/> */}
 
-        <Outlet />
-      <Footer />
-
-       <Outlet />
+      <Outlet />
       <Footer />
 
     </div>
