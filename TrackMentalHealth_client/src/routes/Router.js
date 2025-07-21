@@ -42,9 +42,9 @@ const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const ImportTestPage = Loadable(lazy(()=> import('../components/testPage/ImportTestExcel.jsx')))
-const QuestionPage = Loadable(lazy(() => import('../components/testPage/TestQuestion')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
+const TestResultForm = Loadable(lazy(()=> import('../components/testPage/TestResultForm.jsx')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
 
@@ -146,14 +146,12 @@ const Router = [
       {
         element: <ProtectedRoute allowedRoles={['TEST_DESIGNER']} />,
         children: [
-          { path: 'test/create', element: <TestPage /> },
+          { path: 'test/', element: <TestListPage/>},
           { path: 'test/edit/:id', element: <TestPage /> },
-          { path: 'question/create', element: <QuestionPage /> },
-          { path: 'question/edit/:id', element: <QuestionPage /> },
-          { path: 'question/option/create', element: <OptionPage /> },
-          { path: 'question/option/edit/:id', element: <OptionPage /> },
+          { path: 'test/create', element: <OptionPage /> },
+          { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage/>},
-          { path: 'test/', element: <TestListPage/>}
+          { path: 'test/testResult/create', element: <TestResultForm/>}
 
         ],
       },

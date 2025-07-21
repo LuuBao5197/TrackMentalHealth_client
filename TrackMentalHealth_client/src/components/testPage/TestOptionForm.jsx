@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import { useFormik, FormikProvider, FieldArray } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import Loadable from '../../layouts/full/shared/loadable/Loadable';
+// const OptionPage = Loadable(lazy(() => import('../testPage/ImportTestExcel')))
 
 const FullTestFormWithPreview = () => {
   const { id } = useParams();
@@ -37,7 +39,7 @@ const FullTestFormWithPreview = () => {
               })
             )
             .min(2, 'Cần ít nhất 2 đáp án')
-            .max(4, 'Tối đa 4 đáp án')
+            // .max(4, 'Tối đa 4 đáp án')
             .test(
               'unique-and-valid-scores',
               'Điểm phải khác nhau và nằm trong khoảng từ 1 đến N (số lượng đáp án)',
@@ -46,7 +48,7 @@ const FullTestFormWithPreview = () => {
                 const scores = options.map(o => o.scoreValue);
 
                 // 1. Check all are numbers in range 1..N
-                const isValidRange = scores.every(score => typeof score === 'number' && score >= 1 && score <= options.length);
+                const isValidRange = scores.every(score => typeof score === 'number' && score >= 0 && score <= options.length);
 
                 // 2. Check no duplicates
                 const isUnique = new Set(scores).size === scores.length;
@@ -142,6 +144,7 @@ const FullTestFormWithPreview = () => {
 
   return (
     <div className="container mt-4">
+      {/* <OptionPage /> */}
       <h3>{isEditMode ? 'Cập nhật' : 'Tạo'} bài thi</h3>
 
       <button className="btn btn-warning mb-3" onClick={() => setPreviewMode(!previewMode)}>
@@ -229,7 +232,7 @@ const FullTestFormWithPreview = () => {
                         {q.options.map((opt, oIdx) => {
                           const currentScores = q.options.map(o => o.scoreValue);
                           const isDuplicate = currentScores.filter(score => score === opt.scoreValue).length > 1;
-                          const isOutOfRange = opt.scoreValue < 1 || opt.scoreValue > 4;
+                          const isOutOfRange = opt.scoreValue < 0 || opt.scoreValue > q.options.length;
                           return (
                             <div key={oIdx} className="row mb-2">
                               <div className="col-md-5">
@@ -253,7 +256,7 @@ const FullTestFormWithPreview = () => {
                               <div className="col-md-3">
                                 <input
                                   type="number"
-                                  placeholder="Điểm (1-4)"
+                                  placeholder="Điểm > 0 "
                                   className={`form-control ${(isDuplicate || isOutOfRange) ? 'is-invalid' : ''}`}
                                   name={`questions[${qIdx}].options[${oIdx}].scoreValue`}
                                   value={opt.scoreValue}
@@ -265,7 +268,7 @@ const FullTestFormWithPreview = () => {
                                 {(isDuplicate || isOutOfRange) && (
                                   <div className="invalid-feedback">
                                     {isOutOfRange
-                                      ? 'Điểm phải nằm trong khoảng từ 1 đến 4'
+                                      ? 'Điểm phải > 0 và không lớn hơn số lượng đáp án'
                                       : 'Điểm này đã bị trùng trong đáp án'}
                                   </div>
                                 )}
@@ -276,19 +279,17 @@ const FullTestFormWithPreview = () => {
                             </div>
                           );
                         })}
-                        {q.options.length < 4 && (
-                          <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={() => {
-                              const usedScores = q.options.map(o => o.scoreValue);
-                              const availableScore = [1, 2, 3, 4].find(s => !usedScores.includes(s)) || 0;
-                              push({ optionText: '', scoreValue: availableScore, optionOrder: q.options.length + 1 });
-                            }}
-                          >
-                            + Thêm đáp án
-                          </button>
-                        )}
+                        <button
+                          className="btn btn-secondary"
+                          type="button"
+                          onClick={() => {
+                            const usedScores = q.options.map(o => o.scoreValue);
+                            const nextScore = usedScores.length + 1;
+                            push({ optionText: '', scoreValue: nextScore, optionOrder: q.options.length + 1 });
+                          }}
+                        >
+                          + Thêm đáp án
+                        </button>
                       </div>
                     )} />
                     <hr />
