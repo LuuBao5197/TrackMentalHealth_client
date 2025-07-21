@@ -106,7 +106,7 @@ const LessonListForCreator = () => {
 
       <section id="portfolio" className="portfolio section">
         <div className="container section-title" data-aos="fade-up">
-          <h2>Danh sách bài học</h2>
+          <h2>Danh sách bài học bạn đã tạo</h2>
           <p>Khám phá các bài học bạn đã tạo</p>
         </div>
 
