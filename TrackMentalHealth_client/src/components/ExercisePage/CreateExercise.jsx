@@ -3,15 +3,13 @@ import { useFormik } from 'formik';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-// ...
-
 const token = localStorage.getItem('token');
 let contentCreatorId = null;
 
 if (token) {
   try {
     const decoded = jwtDecode(token);
-    contentCreatorId = decoded.contentCreatorId; // hoặc tên field phù hợp trong token
+    contentCreatorId = decoded.contentCreatorId;
   } catch (err) {
     console.error('❌ Token không hợp lệ:', err);
   }
@@ -28,23 +26,25 @@ const CreateExercise = () => {
       mediaType: '',
       estimatedDuration: 0,
       status: false,
+      photo: '',
     },
     onSubmit: async (values) => {
       const now = new Date().toISOString();
-    
+
       if (!values.mediaUrl) {
         alert('❌ Bạn cần upload tệp media trước khi tạo bài tập.');
         return;
       }
-    
+
       const exerciseData = {
         ...values,
         status: values.status.toString(),
         estimatedDuration: parseInt(values.estimatedDuration || 0, 10),
-        createdById: contentCreatorId, // ✅ Gán đúng người tạo
+        createdById: contentCreatorId,
         createdAt: now,
+        photo: values.photo,
       };
-    
+
       try {
         console.log('📦 Dữ liệu gửi:', exerciseData);
         await axios.post('http://localhost:9999/api/exercise/', exerciseData);
@@ -54,10 +54,10 @@ const CreateExercise = () => {
         console.error('❌ Lỗi khi tạo bài tập:', error.response?.data || error.message);
         alert('❌ Có lỗi xảy ra khi tạo bài tập.');
       }
-    },    
+    },
   });
 
-  const handleUpload = async (file) => {
+  const handleUpload = async (file, stepIndex = -1, onSuccessCallback = null) => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -68,13 +68,18 @@ const CreateExercise = () => {
       });
 
       const url = res.data.url;
-      formik.setFieldValue('mediaUrl', url);
 
-      // Nhận dạng loại file
+      if (file.type.startsWith('image/')) {
+        if (onSuccessCallback) {
+          onSuccessCallback(url); // dùng cho ảnh
+        }
+        return;
+      }
+
+      formik.setFieldValue('mediaUrl', url);
       const fileType = file.type.startsWith('audio') ? 'audio' : 'video';
       formik.setFieldValue('mediaType', fileType);
 
-      // Tính thời lượng bằng giây
       estimateDurationFromFile(file);
     } catch (err) {
       console.error('❌ Upload thất bại:', err.response?.data || err.message);
@@ -150,6 +155,32 @@ const CreateExercise = () => {
                   <br />
                   Loại: {formik.values.mediaType} | Thời lượng: {formik.values.estimatedDuration}s
                 </small>
+              )}
+            </div>
+
+            {/* Ảnh minh họa */}
+            <div className="mb-3">
+              <label htmlFor="exercisePhoto" className="form-label">Ảnh minh họa</label>
+              <input
+                type="file"
+                className="form-control"
+                id="exercisePhoto"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleUpload(file, -1, (url) => formik.setFieldValue('photo', url));
+                  }
+                }}
+              />
+              {formik.values.photo && (
+                <div className="mt-2 text-center">
+                  <img
+                    src={formik.values.photo}
+                    alt="Ảnh minh họa"
+                    style={{ maxHeight: '150px', borderRadius: '8px', objectFit: 'cover' }}
+                  />
+                </div>
               )}
             </div>
 

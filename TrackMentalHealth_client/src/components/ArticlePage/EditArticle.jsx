@@ -5,17 +5,17 @@ import { useParams } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
 const EditArticle = () => {
-  const { articleId } = useParams(); // Lấy articleId từ URL
-  const [createdAt, setCreatedAt] = useState(null); // Lưu thời gian tạo bài viết ban đầu
-  // const [currentAuthorId, setCurrentAuthorId] = useState(null); // Không cần state này nếu không hiển thị
+  const { articleId } = useParams();
+  const [createdAt, setCreatedAt] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const token = localStorage.getItem('token');
-  let userId = null; // Đây là ID của người dùng đang đăng nhập
+  let userId = null;
 
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      userId = decoded.userId; // hoặc tên field phù hợp trong token của bạn
+      userId = decoded.userId;
     } catch (error) {
       console.error('❌ Token không hợp lệ:', error);
     }
@@ -26,24 +26,22 @@ const EditArticle = () => {
       title: '',
       content: '',
       status: false,
+      photo: '', // 👈 thêm photo vào initialValues
     },
     onSubmit: async (values) => {
       const now = new Date().toISOString();
       const articleData = {
         ...values,
-        id: articleId, // Thêm ID của bài viết để backend biết bài nào cần cập nhật
-        status: values.status.toString(), // Chuyển đổi boolean thành string nếu API cần
-        // KHÔNG GỬI TRƯỜNG 'author' ĐI NỮA
-        // createdAt: createdAt || now, // Vẫn nên để backend quản lý hoàn toàn createdAt và updatedAt
-        updatedAt: now, // Cập nhật thời gian chỉnh sửa (backend cũng nên tự động)
+        id: articleId,
+        status: values.status.toString(),
+        updatedAt: now,
+        photo: values.photo, // 👈 gửi ảnh lên server
       };
 
       try {
-        console.log('📦 Dữ liệu gửi đi để cập nhật (không có author):', articleData);
-        await axios.put(`http://localhost:9999/api/article/${articleId}`, articleData); 
+        console.log('📦 Dữ liệu gửi đi để cập nhật:', articleData);
+        await axios.put(`http://localhost:9999/api/article/${articleId}`, articleData);
         alert('✅ Cập nhật bài viết thành công!');
-        // Tùy chọn: chuyển hướng người dùng sau khi cập nhật
-        // navigate('/articles'); 
       } catch (error) {
         console.error('❌ Lỗi khi cập nhật bài viết:', error.response?.data || error.message);
         alert('❌ Có lỗi xảy ra khi cập nhật bài viết.');
@@ -51,7 +49,6 @@ const EditArticle = () => {
     },
   });
 
-  // Fetch article data khi component mount hoặc articleId thay đổi
   useEffect(() => {
     const fetchArticle = async () => {
       if (!articleId) return;
@@ -64,9 +61,9 @@ const EditArticle = () => {
           title: fetchedArticle.title || '',
           content: fetchedArticle.content || '',
           status: fetchedArticle.status === 'true' || fetchedArticle.status === true,
+          photo: fetchedArticle.photo || '', // 👈 load ảnh nếu có
         });
-        setCreatedAt(fetchedArticle.createdAt); // Vẫn lưu để tham khảo nếu cần
-        // setCurrentAuthorId(fetchedArticle.author); // Không cần set state này nếu không hiển thị
+        setCreatedAt(fetchedArticle.createdAt);
       } catch (err) {
         console.error('❌ Không thể tải dữ liệu bài viết:', err);
         alert('❌ Không thể tải dữ liệu bài viết.');
@@ -75,6 +72,26 @@ const EditArticle = () => {
 
     fetchArticle();
   }, [articleId]);
+
+  const handleUploadPhoto = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
+    try {
+      const res = await axios.post('http://localhost:9999/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const url = res.data.url;
+      formik.setFieldValue('photo', url); // 👈 set ảnh sau khi upload
+    } catch (err) {
+      console.error('❌ Upload ảnh thất bại:', err.response?.data || err.message);
+      alert('❌ Upload ảnh thất bại!');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="container my-5" style={{ maxWidth: '700px' }}>
@@ -107,6 +124,32 @@ const EditArticle = () => {
               />
             </div>
 
+            {/* Ảnh minh họa */}
+            <div className="mb-3">
+              <label htmlFor="articlePhoto" className="form-label">Ảnh minh họa</label>
+              <input
+                type="file"
+                className="form-control"
+                id="articlePhoto"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleUploadPhoto(file);
+                  }
+                }}
+              />
+              {formik.values.photo && (
+                <div className="mt-2 text-center">
+                  <img
+                    src={formik.values.photo}
+                    alt="Ảnh minh họa"
+                    style={{ maxHeight: '180px', borderRadius: '8px', objectFit: 'cover' }}
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="form-check mb-4">
               <input
                 className="form-check-input"
@@ -121,10 +164,8 @@ const EditArticle = () => {
               </label>
             </div>
 
-            {/* ĐÃ BỎ ĐOẠN CODE HIỂN THỊ TÁC GIẢ KHÔNG CHỈNH SỬA ĐƯỢC Ở ĐÂY */}
-
-            <button type="submit" className="btn btn-primary w-100">
-              💾 Lưu thay đổi
+            <button type="submit" className="btn btn-primary w-100" disabled={uploading}>
+              {uploading ? '⏳ Đang upload ảnh...' : '💾 Lưu thay đổi'}
             </button>
           </form>
         </div>

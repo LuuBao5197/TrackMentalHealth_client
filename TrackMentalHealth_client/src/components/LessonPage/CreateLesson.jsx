@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 
 const CreateLesson = () => {
   const [uploading, setUploading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // 👉 Hiển thị lỗi từ backend
+  const [errorMessage, setErrorMessage] = useState('');
 
   const token = localStorage.getItem('token');
   let userId = null;
@@ -32,7 +32,7 @@ const CreateLesson = () => {
     },
     onSubmit: async (values) => {
       const now = new Date().toISOString();
-    
+
       const lessonData = {
         title: values.title,
         description: values.description,
@@ -49,31 +49,23 @@ const CreateLesson = () => {
           mediaUrl: step.mediaUrl,
         })),
       };
-    
+
       try {
-        console.log("📦 Dữ liệu gửi lên:", lessonData);
         const response = await axios.post('http://localhost:9999/api/lesson/save', lessonData);
-        console.log('✅ Tạo bài học thành công:', response.data);
         alert('✅ Tạo bài học thành công!');
         formik.resetForm();
         setSteps([{ title: '', content: '', mediaType: '', mediaUrl: '' }]);
       } catch (error) {
-        console.error('❌ Lỗi khi tạo bài học:', error.response?.data || error.message);
-    
-        if (error.response) {
-          const status = error.response.status;
-          const backendMessage = error.response.data?.message || JSON.stringify(error.response.data);
-    
-          if (status === 400) {
-            alert(`❌ ${backendMessage}`);
-          } else {
-            alert(`❌ Lỗi từ server (${status}): ${backendMessage}`);
-          }
+        const status = error.response?.status;
+        const backendMessage = error.response?.data?.message || JSON.stringify(error.response?.data);
+
+        if (status === 400) {
+          alert(`❌ ${backendMessage}`);
         } else {
-          alert(`❌ Không thể kết nối đến server: ${error.message}`);
+          alert(`❌ Lỗi từ server (${status || '??'}): ${backendMessage}`);
         }
       }
-    },    
+    },
   });
 
   const handleStepChange = (index, field, value) => {
@@ -84,6 +76,15 @@ const CreateLesson = () => {
 
   const addStep = () => {
     setSteps([...steps, { title: '', content: '', mediaType: '', mediaUrl: '' }]);
+  };
+
+  const removeStep = (index) => {
+    if (steps.length <= 1) {
+      alert("❗ Cần có ít nhất một bước học.");
+      return;
+    }
+    const updatedSteps = steps.filter((_, i) => i !== index);
+    setSteps(updatedSteps);
   };
 
   const handleUpload = async (file, stepIndex = -1, onSuccessCallback = null) => {
@@ -99,13 +100,13 @@ const CreateLesson = () => {
       });
 
       const url = res.data.url;
-
       let detectedMediaType = '';
+
       if (file.type.startsWith('image/')) detectedMediaType = 'photo';
       else if (file.type.startsWith('video/')) detectedMediaType = 'video';
       else if (file.type.startsWith('audio/')) detectedMediaType = 'audio';
       else {
-        alert('Loại tệp không được hỗ trợ.');
+        alert('❌ Loại tệp không được hỗ trợ.');
         setUploading(false);
         return;
       }
@@ -119,7 +120,6 @@ const CreateLesson = () => {
         onSuccessCallback(url);
       }
     } catch (err) {
-      console.error('❌ Upload thất bại:', err.response?.data || err.message);
       alert('❌ Upload thất bại!');
     } finally {
       setUploading(false);
@@ -132,7 +132,6 @@ const CreateLesson = () => {
         <div className="card-body p-4">
           <h2 className="mb-4 text-primary">📝 Tạo Bài Học Mới</h2>
 
-          {/* ✅ Hiển thị lỗi từ backend nếu có */}
           {errorMessage && (
             <div className="alert alert-danger" role="alert">
               {errorMessage}
@@ -254,18 +253,20 @@ const CreateLesson = () => {
                         }
                       }}
                     />
+
                     {step.mediaUrl && (
                       <small className="text-muted d-block mt-1">
                         URL: {step.mediaUrl}
                       </small>
                     )}
+
                     {step.mediaUrl && !uploading && (
                       <div className="mt-2 text-center">
                         {step.mediaType === 'video' && (
                           <video controls src={step.mediaUrl} style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px' }} />
                         )}
                         {step.mediaType === 'audio' && (
-                          <audio controls src={step.mediaUrl} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                          <audio controls src={step.mediaUrl} style={{ maxWidth: '100%' }} />
                         )}
                         {step.mediaType === 'photo' && (
                           <img src={step.mediaUrl} alt="Media Preview" style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'contain' }} />
@@ -274,6 +275,18 @@ const CreateLesson = () => {
                     )}
                   </div>
                 </div>
+
+                {steps.length > 1 && (
+                  <div className="text-end mt-3">
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-sm"
+                      onClick={() => removeStep(index)}
+                    >
+                      ❌ Xoá bước này
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 

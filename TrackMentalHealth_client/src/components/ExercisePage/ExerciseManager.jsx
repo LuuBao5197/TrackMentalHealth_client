@@ -24,9 +24,9 @@ const ExerciseManager = () => {
             <p>Đang tải dữ liệu hoặc không có bài tập nào.</p>
           ) : (
             exercises.map(ex => {
-              const imageUrl = ex.mediaUrl?.startsWith('http')
-                ? ex.mediaUrl
-                : 'assets/img/default-exercise.webp';
+              const imageUrl = ex.photo?.startsWith('http')
+                ? ex.photo
+                : 'assets/img/default-exercise.webp'; // fallback nếu không có ảnh
 
               return (
                 <div
@@ -51,8 +51,16 @@ const ExerciseManager = () => {
                     </div>
                     <div className="portfolio-content">
                       <span className="category">{ex.mediaType}</span>
-                      <h3>{ex.title}</h3>
-                      <p>{ex.instruction?.substring(0, 100)}...</p>
+                      <h3>
+                        {ex.title?.length > 40
+                          ? ex.title.substring(0, 40) + '...'
+                          : ex.title}
+                      </h3>
+                      <p>
+                        {ex.instruction?.length > 50
+                          ? ex.instruction.substring(0, 50) + '...'
+                          : ex.instruction}
+                      </p>
                     </div>
                   </div>
                 </div>

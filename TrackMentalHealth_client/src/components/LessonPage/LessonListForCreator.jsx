@@ -133,7 +133,7 @@ const LessonListForCreator = () => {
                               state={{ lesson }}
                               className="details-link"
                             >
-                              <i className="bi bi-pencil"></i>
+                              <i className="bi bi-pencil-fill"></i>
                             </Link>
 
                           </div>
