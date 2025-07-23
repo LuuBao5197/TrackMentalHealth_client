@@ -58,9 +58,6 @@ const UserLayout = () => {
       {/* <Testimonials/> */}
       {/* <ContactSection/> */}
 
-        <Outlet />
-      <Footer />
-
        <Outlet />
       <Footer />
 

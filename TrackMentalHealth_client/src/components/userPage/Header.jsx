@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUserInfo } from '../../api/userAPI';
 import { useEffect } from "react";
 import { logout } from "../../redux/slices/authSlice";
+import { Link } from 'react-router-dom'; 
 import { useNavigate } from "react-router";
 import imgLogo from '@assets/images/logos/logoTMH.png';
 import '@assets/css/Logo.css'; // Assuming you have a CSS file for header styles
@@ -58,7 +59,7 @@ const Header = () => {
         <nav id="navmenu" className="navmenu">
           <ul>
             <li><a href="#hero" className="active">Home</a></li>
-            <li><a href="#about">About</a></li>
+            <li><Link to="/user/about">About</Link></li>
             <li><a href="#services">Diary</a></li>
             <li><a href="#portfolio">Mood</a></li>
             <li><a href="#pricing">Blog</a></li>

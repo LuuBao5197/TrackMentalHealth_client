@@ -36,8 +36,8 @@ const HeroPage = () => {
 
     getTodayMood()
       .then(res => {
-        if (res.data.length > 0) {
-          const mood = res.data[0];
+        const mood = res.data;
+        if (mood) {
           setTodayMood(mood);
           setSelectedMoodId(mood.moodLevel.id);
           setNote(mood.note || '');
@@ -45,6 +45,7 @@ const HeroPage = () => {
         }
       })
       .catch(err => console.error("Lỗi kiểm tra mood hôm nay:", err));
+
   }, []);
 
   const handleSubmit = async (e) => {
@@ -91,7 +92,7 @@ const HeroPage = () => {
             <h3 className="mb-4 fw-bold">
               {todayMood ? "💬 Cảm xúc của bạn hôm nay" : "💬 Hôm nay bạn cảm thấy thế nào?"}
             </h3>
-<div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
+            <div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
               {moodLevels.map((m) => (
                 <button
                   key={m.id}
@@ -134,7 +135,7 @@ const HeroPage = () => {
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">🤖 Gợi ý từ AI</h5>
+                  <h5 className="modal-title">Message</h5>
                   <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
                 </div>
                 <div className="modal-body">
@@ -168,7 +169,7 @@ const HeroPage = () => {
           <FeatureBox
             icon={<BsPencilSquare />}
             title="Lịch sử cảm xúc"
-text="Xem biểu đồ và lịch sử cảm xúc của bạn."
+            text="Xem biểu đồ và lịch sử cảm xúc của bạn."
             delay="400"
             link="history-mood"
           />
