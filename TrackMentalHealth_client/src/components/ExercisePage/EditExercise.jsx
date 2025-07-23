@@ -5,9 +5,9 @@ import { useParams } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
 const EditExercise = () => {
-  const { exerciseId } = useParams(); // Lấy exerciseId từ URL
+  const { exerciseId } = useParams();
   const [uploading, setUploading] = useState(false);
-  const [createdAt, setCreatedAt] = useState(null); // Lưu thời gian tạo bài tập ban đầu
+  const [createdAt, setCreatedAt] = useState(null);
 
   const token = localStorage.getItem('token');
   let contentCreatorId = null;
@@ -15,7 +15,7 @@ const EditExercise = () => {
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      contentCreatorId = decoded.contentCreatorId; // hoặc tên field phù hợp trong token
+      contentCreatorId = decoded.contentCreatorId;
     } catch (err) {
       console.error('❌ Token không hợp lệ:', err);
     }
@@ -29,6 +29,7 @@ const EditExercise = () => {
       mediaType: '',
       estimatedDuration: 0,
       status: false,
+      photo: '', // Thêm photo vào form
     },
     onSubmit: async (values) => {
       const now = new Date().toISOString();
@@ -40,18 +41,18 @@ const EditExercise = () => {
 
       const exerciseData = {
         ...values,
-        id: exerciseId, // Thêm ID của bài tập để cập nhật
+        id: exerciseId,
         status: values.status.toString(),
         estimatedDuration: parseInt(values.estimatedDuration || 0, 10),
-        createdById: contentCreatorId, 
-        createdAt: createdAt || now, // Giữ nguyên createdAt nếu đã có, nếu không thì dùng thời gian hiện tại
-        updatedAt: now, // Cập nhật thời gian chỉnh sửa
+        createdById: contentCreatorId,
+        createdAt: createdAt || now,
+        updatedAt: now,
+        photo: values.photo, // Gửi ảnh minh họa lên server
       };
 
       try {
         console.log('📦 Dữ liệu gửi đi để cập nhật:', exerciseData);
-        // Sử dụng phương thức PUT để cập nhật bài tập
-        await axios.put(`http://localhost:9999/api/exercise/${exerciseId}`, exerciseData); 
+        await axios.put(`http://localhost:9999/api/exercise/${exerciseId}`, exerciseData);
         alert('✅ Cập nhật bài tập thành công!');
       } catch (error) {
         console.error('❌ Lỗi khi cập nhật bài tập:', error.response?.data || error.message);
@@ -60,16 +61,14 @@ const EditExercise = () => {
     },
   });
 
-  // Fetch exercise data khi component mount hoặc exerciseId thay đổi
   useEffect(() => {
     const fetchExercise = async () => {
-      if (!exerciseId) return; // Đảm bảo có exerciseId trước khi fetch
+      if (!exerciseId) return;
 
       try {
         const res = await axios.get(`http://localhost:9999/api/exercise/${exerciseId}`);
         const fetchedExercise = res.data;
 
-        // Set formik values với dữ liệu bài tập đã fetch
         formik.setValues({
           title: fetchedExercise.title || '',
           instruction: fetchedExercise.instruction || '',
@@ -77,8 +76,9 @@ const EditExercise = () => {
           mediaType: fetchedExercise.mediaType || '',
           estimatedDuration: fetchedExercise.estimatedDuration || 0,
           status: fetchedExercise.status === 'true' || fetchedExercise.status === true,
+          photo: fetchedExercise.photo || '', // Set lại ảnh minh họa nếu có
         });
-        setCreatedAt(fetchedExercise.createdAt); // Lưu lại createdAt
+        setCreatedAt(fetchedExercise.createdAt);
       } catch (err) {
         console.error('❌ Không thể tải dữ liệu bài tập:', err);
         alert('❌ Không thể tải dữ liệu bài tập.');
@@ -86,9 +86,9 @@ const EditExercise = () => {
     };
 
     fetchExercise();
-  }, [exerciseId]); // Dependency array: chạy lại khi exerciseId thay đổi
+  }, [exerciseId]);
 
-  const handleUpload = async (file) => {
+  const handleUpload = async (file, stepIndex = -1, onSuccessCallback = null) => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -99,11 +99,17 @@ const EditExercise = () => {
       });
 
       const url = res.data.url;
-      formik.setFieldValue('mediaUrl', url);
 
+      if (file.type.startsWith('image/')) {
+        if (onSuccessCallback) {
+          onSuccessCallback(url); // dùng cho ảnh minh họa
+        }
+        return;
+      }
+
+      formik.setFieldValue('mediaUrl', url);
       const fileType = file.type.startsWith('audio') ? 'audio' : 'video';
       formik.setFieldValue('mediaType', fileType);
-
       estimateDurationFromFile(file);
     } catch (err) {
       console.error('❌ Upload thất bại:', err.response?.data || err.message);
@@ -180,7 +186,6 @@ const EditExercise = () => {
                   Loại: {formik.values.mediaType} | Thời lượng: {formik.values.estimatedDuration}s
                 </small>
               )}
-              {/* Hiển thị media hiện tại nếu có và chưa upload file mới */}
               {formik.values.mediaUrl && !uploading && (
                 <div className="mt-2">
                   {formik.values.mediaType === 'video' && (
@@ -189,6 +194,32 @@ const EditExercise = () => {
                   {formik.values.mediaType === 'audio' && (
                     <audio controls src={formik.values.mediaUrl} style={{ maxWidth: '100%' }} />
                   )}
+                </div>
+              )}
+            </div>
+
+            {/* Ảnh minh họa */}
+            <div className="mb-3">
+              <label htmlFor="exercisePhoto" className="form-label">Ảnh minh họa</label>
+              <input
+                type="file"
+                className="form-control"
+                id="exercisePhoto"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleUpload(file, -1, (url) => formik.setFieldValue('photo', url));
+                  }
+                }}
+              />
+              {formik.values.photo && (
+                <div className="mt-2 text-center">
+                  <img
+                    src={formik.values.photo}
+                    alt="Ảnh minh họa"
+                    style={{ maxHeight: '150px', borderRadius: '8px', objectFit: 'cover' }}
+                  />
                 </div>
               )}
             </div>
@@ -209,7 +240,7 @@ const EditExercise = () => {
 
             <button
               type="submit"
-              className="btn btn-primary w-100" // Đổi màu nút thành primary
+              className="btn btn-primary w-100"
               disabled={uploading}
             >
               {uploading ? '⏳ Đang upload...' : '💾 Lưu thay đổi'}

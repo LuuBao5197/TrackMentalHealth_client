@@ -33,9 +33,72 @@ const LessonManager = () => {
     }
   };
 
+  // Circular Progress Component
+  const CircularProgress = ({ percentage }) => {
+    const radius = 35;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="circular-progress">
+        <style>{`
+          .circular-progress {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .circular-progress svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+          }
+          .circular-progress circle {
+            fill: transparent;
+            stroke-width: 6;
+            stroke-linecap: round;
+          }
+          .circular-progress .bg-circle {
+            stroke: #e0e0e0;
+          }
+          .circular-progress .progress-circle {
+            stroke: #007bff;
+            transition: stroke-dashoffset 0.3s;
+          }
+          .circular-progress .percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+          }
+        `}</style>
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle
+            className="bg-circle"
+            cx="40"
+            cy="40"
+            r={radius}
+          />
+          <circle
+            className="progress-circle"
+            cx="40"
+            cy="40"
+            r={radius}
+            style={{ strokeDasharray: circumference, strokeDashoffset }}
+          />
+        </svg>
+        <div className="percentage">{percentage}%</div>
+      </div>
+    );
+  };
+
   return (
     <>
-      {/* Chèn CSS ngay trong file */}
       <style>{`
         .pagination-custom .btn {
           min-width: 50px;
@@ -63,6 +126,22 @@ const LessonManager = () => {
         .pagination-custom .page-label {
           cursor: default;
         }
+
+        .portfolio-card {
+          position: relative;
+        }
+
+        .progress-container {
+          position: absolute;
+          bottom: 10px;
+          right: 10px;
+          z-index: 1;
+        }
+
+        .portfolio-content {
+          position: relative;
+          padding-right: 90px;
+        }
       `}</style>
 
       <section id="portfolio" className="portfolio section">
@@ -83,6 +162,8 @@ const LessonManager = () => {
                 const imageUrl = lesson.photo?.startsWith('http')
                   ? lesson.photo
                   : 'assets/img/default-lesson.webp';
+                // Đặt progress cố định là 50% để kiểm tra
+                const progress = 50;
 
                 return (
                   <div
@@ -109,8 +190,21 @@ const LessonManager = () => {
                         </div>
                       </div>
                       <div className="portfolio-content">
-                        <h3>{lesson.title}</h3>
-                        <p>{lesson.description?.substring(0, 100)}...</p>
+                      <h3>
+                        {lesson.title?.length > 40
+                          ? lesson.title.substring(0, 40) + '...'
+                          : lesson.title}
+                      </h3>
+
+                      <p>
+                        {lesson.description?.length > 50
+                          ? lesson.description.substring(0, 50) + '...'
+                          : lesson.description}
+                      </p>
+
+                        <div className="progress-container">
+                          <CircularProgress percentage={progress} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -118,7 +212,6 @@ const LessonManager = () => {
               })}
             </div>
 
-            {/* Phân trang giống giao diện ảnh */}
             {totalPages > 1 && (
               <div className="pagination-custom mt-4 d-flex justify-content-center align-items-center gap-2 flex-wrap">
                 <button className="page-label btn btn-dark" disabled>
@@ -154,7 +247,6 @@ const LessonManager = () => {
                 )}
               </div>
             )}
-
           </div>
         </div>
       </section>

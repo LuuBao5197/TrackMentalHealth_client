@@ -15,8 +15,11 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useState } from 'react';
+import Dialog from '@mui/material/Dialog';
+import ForgotPasswordDialog from '../../../components/loginPage/ForgotPasswordDialog';
 
 const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => {
+    const [showForgotDialog, setShowForgotDialog] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     return (<form onSubmit={formik.handleSubmit}>
@@ -172,12 +175,13 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => {
                     />
                 </FormGroup>
                 <Typography
-                    component={Link}
-                    to="/auth/forgot-password"
+                    component="span"
+                    onClick={() => setShowForgotDialog(true)}
                     fontWeight="500"
                     sx={{
-                        textDecoration: 'none',
+                        textDecoration: 'underline',
                         color: 'primary.main',
+                        cursor: 'pointer',
                     }}
                 >
                     Forgot Password?
@@ -192,7 +196,9 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => {
         </Box>
 
         {subtitle}
+        <ForgotPasswordDialog open={showForgotDialog} onClose={() => setShowForgotDialog(false)} />
     </form>);
 };
 
 export default AuthLogin;
+

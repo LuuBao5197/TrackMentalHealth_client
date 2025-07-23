@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import { CircularProgress } from '@mui/material';
 import {
   Avatar,
   Box,
@@ -12,11 +14,8 @@ import {
   ListItemText
 } from '@mui/material';
 import { IconListCheck, IconMail, IconUser } from '@tabler/icons-react';
-import ProfileImg from 'src/assets/images/profile/user-1.jpg';
-
+import axios from 'axios';
 const Profile = () => {
-  const userRole = useSelector((state) => state.auth.user);
-
   const [anchorEl2, setAnchorEl2] = useState(null);
   const navigate = useNavigate();
 
@@ -27,6 +26,23 @@ const Profile = () => {
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
+  const userRole = useSelector((state) => state.auth.user);
+  const [user, setUser] = useState(null);
+
+
+  useEffect(() => {
+    if (!userRole?.userId) return;
+
+    axios.get(`http://localhost:9999/api/users/profile/${userRole.userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    })
+      .then((res) => setUser(res.data))
+      .catch((err) => console.error(err));
+  }, [userRole?.userId]);
+
+  if (!user) return <CircularProgress />;
 
   // const handleMyProfile = () => {
   //   const user = JSON.parse(localStorage.getItem('user'));
@@ -42,7 +58,7 @@ const Profile = () => {
   return (
     <Box>
       <IconButton size="large" color="inherit" onClick={handleClick2}>
-        <Avatar src={ProfileImg} alt="Profile" sx={{ width: 35, height: 35 }} />
+        <Avatar src={user.avatar} sx={{ width: 35, height: 35 }} />
       </IconButton>
 
       <Menu
