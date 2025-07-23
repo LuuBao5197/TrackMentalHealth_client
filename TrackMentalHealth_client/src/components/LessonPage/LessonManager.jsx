@@ -190,8 +190,18 @@ const LessonManager = () => {
                         </div>
                       </div>
                       <div className="portfolio-content">
-                        <h3>{lesson.title}</h3>
-                        <p>{lesson.description?.substring(0, 100)}...</p>
+                      <h3>
+                        {lesson.title?.length > 40
+                          ? lesson.title.substring(0, 40) + '...'
+                          : lesson.title}
+                      </h3>
+
+                      <p>
+                        {lesson.description?.length > 50
+                          ? lesson.description.substring(0, 50) + '...'
+                          : lesson.description}
+                      </p>
+
                         <div className="progress-container">
                           <CircularProgress percentage={progress} />
                         </div>
