@@ -5,9 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUserInfo } from '../../api/userAPI';
 import { useEffect } from "react";
 import { logout } from "../../redux/slices/authSlice";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import imgLogo from '@assets/images/logos/logoTMH.png';
 import '@assets/css/Logo.css'; // Assuming you have a CSS file for header styles
+import { Link } from "react-router-dom";
 const Header = () => {
   const userRole = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
@@ -16,6 +17,8 @@ const Header = () => {
   console.log(userInfo);
   const userID = userInfo.userId;
   const [user, setUser] = useState({});
+  const location = useLocation();
+  const currentPath = location.pathname;
   useEffect(() => {
     fetchData(userID);
   }, [])
@@ -57,15 +60,14 @@ const Header = () => {
 
         <nav id="navmenu" className="navmenu">
           <ul>
-            <li><a href="#hero" className="active">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#services">Diary</a></li>
-            <li><a href="#portfolio">Mood</a></li>
-            <li><a href="#pricing">Blog</a></li>
-            <li><a href="#team">Lesson</a></li>
-            <li><a href="#team">Community Social</a></li>
-            <li><a href="#team"> Mental Tests</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><Link to="/user/homepage" className={currentPath === "/user/homepage" ? "active" : ""}>HomePage</Link></li>
+            <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
+            <li><Link to="/user/a" className={currentPath === "/user/a" ? "active" : ""}>Mood</Link></li>
+            <li><Link to="/user/b" className={currentPath === "/user/b" ? "active" : ""}>Blog</Link></li>
+            <li><Link to="/user/c"  className={currentPath === "/user/c" ? "active" : ""}>Lesson</Link></li>
+            <li><Link to="/user/d"  className={currentPath === "/user/d" ? "active" : ""}>Community Social</Link></li>
+            <li><Link to="/user/e"  className={currentPath === "/user/e" ? "active" : ""}>Mental Tests</Link></li>
+            <li><Link to="/user/f"  className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li>
           </ul>
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
