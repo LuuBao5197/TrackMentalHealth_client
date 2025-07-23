@@ -27,9 +27,12 @@ const ArticleListForCreator = () => {
       return;
     }
 
-    axios.get(`http://localhost:9999/api/article/creator/${userId}`)
-      .then(response => setArticles(response.data))
-      .catch(error => console.error('Lỗi khi tải danh sách bài viết:', error));
+    axios
+      .get(`http://localhost:9999/api/article/creator/${userId}`)
+      .then((response) => setArticles(response.data))
+      .catch((error) =>
+        console.error('Lỗi khi tải danh sách bài viết:', error)
+      );
   }, []);
 
   const totalPages = Math.ceil(articles.length / articlesPerPage);
@@ -72,43 +75,33 @@ const ArticleListForCreator = () => {
           cursor: default;
         }
 
-        .edit-icon-link {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background-color: #6f42c1;
+        .details-link {
+          margin: 0 5px;
           color: white;
-          border-radius: 50%;
-          padding: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: 0.3s;
-          font-size: 16px;
-          z-index: 10;
         }
 
-        .edit-icon-link:hover {
-          background-color: #5a32a3;
-          color: #fff;
+        .details-link i {
+          font-size: 1.2rem;
         }
       `}</style>
 
       <section id="portfolio" className="portfolio section">
         <div className="container section-title" data-aos="fade-up">
-          <h2>Danh sách bài viết</h2>
+          <h2>📚 Danh sách bài viết</h2>
           <p>Khám phá những bài viết bạn đã tạo</p>
         </div>
 
         <div className="container" data-aos="fade-up" data-aos-delay="100">
           <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
             {currentArticles.length === 0 ? (
-              <p>Không có bài viết nào.</p>
+              <p>⏳ Không có bài viết nào.</p>
             ) : (
               currentArticles.map((article) => {
-                const imageUrl = article.photo
-                  ? `http://localhost:9999/uploads/${article.photo}`
-                  : 'assets/img/default-article.webp';
+                const imageUrl = article.photo?.startsWith('http')
+                  ? article.photo
+                  : article.photo
+                    ? `http://localhost:9999/uploads/${article.photo}`
+                    : 'assets/img/default-article.webp';
 
                 return (
                   <div
@@ -124,25 +117,32 @@ const ArticleListForCreator = () => {
                           loading="lazy"
                         />
                         <div className="portfolio-overlay">
-                          <div className="portfolio-actions">
+                          <div className="portfolio-actions d-flex justify-content-center">
                             <Link to={`/auth/article/${article.id}`} className="details-link">
                               <i className="bi bi-arrow-right"></i>
                             </Link>
-                            {/* Link chỉnh sửa bài học */}
                             <Link
                               to={`/auth/article/edit/${article.id}`}
                               state={{ article }}
                               className="details-link"
                             >
-                              <i className="bi bi-pencil"></i>
+                              <i className="bi bi-pencil-fill"></i>
                             </Link>
                           </div>
                         </div>
                       </div>
                       <div className="portfolio-content">
-                        <span className="category">{article.author}</span>
-                        <h3>{article.title}</h3>
-                        <p>{article.content?.substring(0, 100)}...</p>
+                        <span className="category">🖋 Tác giả: {article.author || 'Không rõ'}</span>
+                        <h3>
+                          {article.title?.length > 50
+                            ? article.title.substring(0, 50) + '...'
+                            : article.title}
+                        </h3>
+                        <p>
+                          {article.content?.length > 100
+                            ? article.content.substring(0, 100) + '...'
+                            : article.content}
+                        </p>
                       </div>
                     </div>
                   </div>
