@@ -29,21 +29,22 @@ export function connectWebSocket({ sessionId, groupId, onPrivateMessage, onGroup
             if (groupId) {
                 client.subscribe(`/topic/group/${groupId}`, (message) => {
                     if (message.body) {
-                        const groupMsg = JSON.parse(message.body);
-                        console.log("👥 Tin nhắn nhóm đến:", groupMsg);
-                        onGroupMessage?.(groupMsg);
+                        const msg = JSON.parse(message.body);
+                        console.log("👥 Tin nhắn nhóm đến:", msg);
+                        onGroupMessage?.(msg);
                     }
                 });
             }
 
+
             // 🔔 Notification (dù là chat 1-1 hay nhóm đều nhận)
-           client.subscribe(`/topic/notifications/${currentUserId}`, (message) => {
-            if (message.body) {
-                const notification = JSON.parse(message.body);
-                console.log("📥 Nhận thông báo:", notification);
-                onNotification?.(notification); // Gọi callback bên ngoài
-            }
-        });
+            client.subscribe(`/topic/notifications/${currentUserId}`, (message) => {
+                if (message.body) {
+                    const notification = JSON.parse(message.body);
+                    console.log("📥 Nhận thông báo:", notification);
+                    onNotification?.(notification); // Gọi callback bên ngoài
+                }
+            });
 
         },
 

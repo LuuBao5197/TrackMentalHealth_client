@@ -23,12 +23,13 @@ import EditLesson from '../components/LessonPage/EditLesson.jsx';
 import { element } from 'prop-types';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
 import ChatGroup from '../components/chatPage/ChatGroup.jsx';
-import Appointments from '../components/appointmentPage/Appointments.jsx';
-import UpdateAppointment from '../components/appointmentPage/UpdateAppointment.jsx';
-import CreateAppointment from '../components/appointmentPage/CreateAppointment.jsx';
+import Appointments from '../components/appointmentPage/UserPage/Appointments.jsx';
+import UpdateAppointment from '../components/appointmentPage/UserPage/UpdateAppointment.jsx';
+import CreateAppointment from '../components/appointmentPage/UserPage/CreateAppointment.jsx';
 
 import EditExercise from '../components/ExercisePage/EditExercise.jsx';
 import EditArticle from '../components/ArticlePage/EditArticle.jsx';
+import AppointmentManagement from '../components/appointmentPage/PsychologistPage/AppointmentManagement.jsx';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -46,10 +47,10 @@ const Register = Loadable(lazy(() => import('../views/authentication/Register'))
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
-const ImportTestPage = Loadable(lazy(()=> import('../components/testPage/ImportTestExcel.jsx')))
+const ImportTestPage = Loadable(lazy(() => import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
-const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
-const TestResultForm = Loadable(lazy(()=> import('../components/testPage/TestResultForm.jsx')))
+const TestListPage = Loadable(lazy(() => import('../components/testPage/TestList.jsx')))
+const TestResultForm = Loadable(lazy(() => import('../components/testPage/TestResultForm.jsx')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 const Router = [
 
@@ -72,16 +73,21 @@ const Router = [
       { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
       { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
-      { path: "chat/list", element: <ChatList /> },      
+      { path: "chat/list", element: <ChatList /> },
       { path: "chat/ai", element: <ChatWithAI /> },
       { path: "chat/:sessionId", element: <ChatWithUser /> },
       { path: "chat/group/:groupId", element: <ChatGroup /> },
+
       //appointment
       { path: "appointment/:userId", element: <Appointments /> },
       { path: "appointment/edit/:appointmentid", element: <UpdateAppointment /> },
       { path: "appointment/create/:userId", element: <CreateAppointment /> },
+      { path: "appointment/psychologist", element: <AppointmentManagement /> },
+
+
+      //chat
       { path: "chat", element: <ChatList /> },
-      { path: "chatlist", element: <ChatList /> },      
+      { path: "chatlist", element: <ChatList /> },
       { path: "chatai", element: <ChatWithAI /> },
       { path: "chat/:id", element: <ChatWithUser /> },
     ],
@@ -145,7 +151,7 @@ const Router = [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-          {path: "mood-history", element: <MoodHistoryPage />},
+          { path: "mood-history", element: <MoodHistoryPage /> },
         ],
       },
     ],
@@ -159,12 +165,12 @@ const Router = [
       {
         element: <ProtectedRoute allowedRoles={['TEST_DESIGNER']} />,
         children: [
-          { path: 'test/', element: <TestListPage/>},
+          { path: 'test/', element: <TestListPage /> },
           { path: 'test/edit/:id', element: <TestPage /> },
           { path: 'test/create', element: <OptionPage /> },
           { path: 'test/edit/:id', element: <OptionPage /> },
-          { path: 'test/importfile', element: <ImportTestPage/>},
-          { path: 'test/testResult/create', element: <TestResultForm/>}
+          { path: 'test/importfile', element: <ImportTestPage /> },
+          { path: 'test/testResult/create', element: <TestResultForm /> }
 
         ],
       },

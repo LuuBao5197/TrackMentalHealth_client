@@ -1,8 +1,10 @@
-import React, {useEffect, useState} from 'react';
-import {getPsychologists, saveAppointment} from '../../api/api';
-import {useNavigate} from "react-router-dom";
-import { showAlert } from '../../utils/showAlert';
-import { getCurrentUserId } from '../../utils/getCurrentUserID';
+import React, { useEffect, useState } from 'react';
+import { getPsychologists, saveAppointment, saveNotification } from '../../../api/api';
+import { useNavigate } from "react-router-dom";
+import { showAlert } from '../../../utils/showAlert';
+import { getCurrentUserId } from '../../../utils/getCurrentUserID';
+import { toast } from 'react-toastify';
+import { createNotificationDTO } from '../../../utils/dto/createNotificationDTO';
 
 function CreateAppointment() {
 
@@ -19,7 +21,7 @@ function CreateAppointment() {
 
 
     const [formData, setFormData] = useState({
-        timeStart:getCurrentDateTimeLocal(),
+        timeStart: getCurrentDateTimeLocal(),
         status: 'PENDING',
         note: '',
         user: '',
@@ -27,7 +29,7 @@ function CreateAppointment() {
     });
 
 
-    useEffect(()=>{
+    useEffect(() => {
         const fetchPsychologists = async () => {
             try {
                 const res = await getPsychologists();
@@ -47,31 +49,47 @@ function CreateAppointment() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const payload = {
+        timeStart: formData.timeStart,
+        status: formData.status,
+        note: formData.note,
+        user: { id: currentUserId },
+        psychologist: { id: parseInt(formData.psychologist) }
+    };
+
+    console.log("📦 Payload gửi lên:", payload);
+
+    try {
+        // 1. Gửi yêu cầu tạo cuộc hẹn
+        await saveAppointment(payload);
+        showAlert('Create appointment successfully', 'success');
+
+        // 2. Gửi thông báo sau khi tạo lịch thành công
+        const notificationDTO = createNotificationDTO(currentUserId);
+
         try {
-            const data = {
-                timeStart: formData.timeStart,
-                status: formData.status,
-                note: formData.note,
-                user: { id: currentUserId },
-                psychologist: { id: parseInt(formData.psychologist) }
-            };
-
-
-            console.log("Payload gửi lên:", data);
-            await saveAppointment(data);
-            showAlert('Create appointment successfully', 'success');
-            nav('/auth/appointments/' + currentUserId);
-        } catch (error) {
-            if (error.response && error.response.status === 409) {
-                showAlert("Appointment is already created. Please try again later.",'warning');
-            } else {
-                alert("Có lỗi xảy ra khi tạo lịch hẹn.");
-            }
+            await saveNotification(notificationDTO);
+            toast.success("Notification saved!");
+        } catch (notiErr) {
+            console.error("❌ Lỗi khi lưu notification:", notiErr);
+            toast.error("Failed to save notification!");
         }
 
-    };
+        // 3. Điều hướng về trang lịch hẹn
+        nav(`/auth/appointment/${currentUserId}`);
+    } catch (error) {
+        if (error.response?.status === 409) {
+            showAlert("Appointment is already created. Please try again later.", 'warning');
+        } else {
+            console.error("❌ Lỗi khi tạo lịch hẹn:", error);
+            alert("Có lỗi xảy ra khi tạo lịch hẹn.");
+        }
+    }
+};
+
 
     return (
         <div className="container mt-5">

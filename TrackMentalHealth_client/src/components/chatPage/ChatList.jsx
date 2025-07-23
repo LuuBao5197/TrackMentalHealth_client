@@ -8,7 +8,6 @@ import {
     deleteGroupById,
     getAllChatGroup,
     getChatGroupByCreatorId,
-    getChatSessionsByTwoUserId,
     getChatSessionsByUserId,
     getMessagesBySessionId,
     getNotificationsByUserId,
@@ -406,6 +405,10 @@ function ChatList() {
             {/* Chat 1-1 */}
             {!loading && !error && (
                 <>
+                    {sessions.length === 0 && (
+                        <div className="text-center text-muted mt-3">No chat session yet.</div>
+                    )}
+
                     <div className="list-group">
                         {sessions.map((session) => {
                             const isCurrentUserSender = session.sender.id === currentUserId;
@@ -465,7 +468,16 @@ function ChatList() {
                         })}
                     </div>
 
-                    {myGroup.length > 0 ? (
+                    <hr className="my-3 border-top border-secondary" />
+
+                    {myGroup.length === 0 ? (
+                        <div className="text-center text-muted mt-3">
+                            You don't have any groups yet. <br />
+                            <button className="btn btn-outline-primary mt-2" onClick={handleOpenCreate}>
+                                Create a group chat
+                            </button>
+                        </div>
+                    ) : (
                         <>
                             <div className="d-flex justify-content-between align-items-center mt-4">
                                 <h4>My Group ({myGroup.length})</h4>
@@ -497,36 +509,25 @@ function ChatList() {
                                                     className="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
                                                     style={{ width: "40px", height: "40px" }}
                                                 >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 640 512"
-                                                        fill="white"
-                                                        width="20"
-                                                        height="20"
-                                                    >
-                                                        <path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM609.3 512l-137.8 0c5.4-9.4 8.6-20.3 8.6-32l0-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2l61.4 0C567.8 320 640 392.2 640 481.3c0 17-13.8 30.7-30.7 30.7zM432 256c-31 0-59-12.6-79.3-32.9C372.4 196.5 384 163.6 384 128c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112z" />
+                                                    {/* SVG default avatar */}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="white" width="20" height="20">
+                                                        <path d="..." />
                                                     </svg>
                                                 </div>
                                             )}
                                             <div>
                                                 <strong>{grp.name}</strong>
                                                 <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>
-                                                    {grp.des || "Không có mô tả"}
+                                                    {grp.des || "No description"}
                                                 </p>
                                             </div>
                                         </div>
 
                                         <div className="ms-3 d-flex gap-2">
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => handleEditGroup(grp)}
-                                            >
+                                            <button className="btn btn-sm btn-outline-secondary" onClick={() => handleEditGroup(grp)}>
                                                 Edit
                                             </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleDeleteGroup(grp.id)}
-                                            >
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteGroup(grp.id)}>
                                                 Delete
                                             </button>
                                         </div>
@@ -534,14 +535,9 @@ function ChatList() {
                                 ))}
                             </div>
                         </>
-                    ) : (
-                        <div className="d-flex justify-content-between align-items-center mt-4">
-                            <h4>My Group ({myGroup.length})</h4>
-                            <button className="btn btn-outline-primary" onClick={handleOpenCreate}>
-                                Add new group ?
-                            </button>
-                        </div>
                     )}
+
+                    <hr className="my-3 border-top border-secondary" />
 
                     {group.length > 0 && (
                         <>

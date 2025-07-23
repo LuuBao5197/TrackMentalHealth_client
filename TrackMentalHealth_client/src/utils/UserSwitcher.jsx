@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 const DUMMY_USERS = [
     { id: 1, name: "Người dùng 1" },
     { id: 2, name: "Người dùng 2" },
+    { id: 3, name: "Người dùng 3" },
+    { id: 4, name: "Người dùng 4" },
 ];
 
 function UserSwitcher({ onChange }) {

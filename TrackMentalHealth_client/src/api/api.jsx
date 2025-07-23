@@ -19,6 +19,18 @@ export const getMessagesBySessionId= async (id) => {
     }
 };
 
+//create chat sesssiom
+export const initiateChatSession = async (senderId, receiverId) => {
+    try {
+        const res = await axios.post(`${chat_url}session/initiate/${senderId}/${receiverId}`);
+        return res.data;
+    } catch (error) {
+        console.error("❌ Failed to initiate session:", error);
+        throw error;
+    }
+};
+
+
 export const getChatSessionsByUserId= async (id) => {
     try {
         const response = await axios.get(chat_url+"session/"+id);
@@ -30,17 +42,6 @@ export const getChatSessionsByUserId= async (id) => {
     }
 };
 
-
-export const getChatSessionsByTwoUserId= async (id1,id2) => {
-    try {
-        const response = await axios.get(chat_url+`session/${id1}/${id2}`);
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
-        throw error;
-    }
-};
 
 export const getAppointmentsByPsyId= async (id) => {
     try {
@@ -64,6 +65,18 @@ export const getAppointmentById= async (id) => {
     }
 };
 
+//get appointment by psychologist
+export const getAppointmentByPsyId= async (psyId) => {
+    try {
+        const response = await axios.get(Appointment_url+"psychologist/"+psyId);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi khi gọi API:', error);
+        throw error;
+    }
+};
+
 export const saveAppointment= async (data) => {
     try {
         const response = await axios.post(Appointment_url+"save",data);
@@ -75,16 +88,16 @@ export const saveAppointment= async (data) => {
     }
 };
 
-export const updateAppointment= async (id,data) => {
+export const updateAppointment = async (id, data) => {
     try {
-        const response = await axios.put(Appointment_url+`${id}`,data);
-        console.log(response.data);
+        const response = await axios.put(`${Appointment_url}${id}`, data);
         return response.data;
     } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
+        console.error('Lỗi khi cập nhật lịch hẹn:', error);
         throw error;
     }
 };
+
 
 export const deleteAppointment= async (id) => {
     try {
@@ -159,6 +172,19 @@ export const getNotificationsByUserId = async (userId) => {
     }
 };
 
+//creat new notification
+export const saveNotification = async (data) => {
+    try {
+        const response = await axios.post(notification_url+"save" ,data);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+
 export const changeStatusNotification = async (id) => {
     try {
         const response = await axios.put(notification_url+"changestatus/" + id);
@@ -217,6 +243,19 @@ export const getMessagesByGroupId = async (id) => {
         throw error;
     }
 };
+
+//get user by group id :
+export const findUsersByGroupId = async (groupId,currentUserId) => {
+    try {
+        const response = await axios.get(`${chatGroup_url}group/users/${groupId}/${currentUserId}`);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
 
 
 //delete my group

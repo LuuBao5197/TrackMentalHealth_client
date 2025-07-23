@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { getAppointmentById, getPsychologists, updateAppointment } from '../../api/api';
+import { getAppointmentById, getPsychologists, updateAppointment } from '../../../api/api';
 import { useNavigate, useParams } from "react-router-dom";
-import { showAlert } from '../../utils/showAlert';
-import { getCurrentUserId } from '../../utils/getCurrentUserID';
+import { showAlert } from '../../../utils/showAlert';
+import { getCurrentUserId } from '../../../utils/getCurrentUserID';
 
 function UpdateAppointment() {
 
