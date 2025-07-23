@@ -43,7 +43,7 @@ const Login2 = () => {
               <LoginForm
                 subtext={
                   <Typography variant="subtitle1" textAlign="center" color="textSecondary" mb={1}>
-                    Your Social Campaigns
+                    {/* Your Social Campaigns */}
                   </Typography>
                 }
                 subtitle={

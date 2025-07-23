@@ -58,7 +58,7 @@ const UserLayout = () => {
       {/* <Testimonials/> */}
       {/* <ContactSection/> */}
 
-        <Outlet />
+      <Outlet />
       <Footer />
 
     </div>

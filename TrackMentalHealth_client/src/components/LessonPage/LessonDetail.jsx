@@ -72,7 +72,10 @@ const LessonDetail = () => {
                 />
               )}
 
-              {(step.content || `Nội dung bước ${step.stepNumber} (cập nhật?)`)}
+              <p style={{ whiteSpace: 'pre-line' }}>
+                {step.content || `Nội dung bước ${step.stepNumber} (cập nhật?)`}
+              </p>
+
 
             </div>
           ))

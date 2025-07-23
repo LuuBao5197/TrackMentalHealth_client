@@ -10,6 +10,7 @@ import {
   IconTestPipe,
   IconDropletQuestion,
   IconInputX,
+  IconDoorEnter,
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -116,6 +117,12 @@ const getMenuItemsByRole = (role) => {
       title: 'Create Test By ImportFile',
       icon: IconInputX,
       href: '/testDesigner/test/importfile',
+    },
+    {
+      id: uniqueId(),
+      title: 'Do Test',
+      icon: IconDoorEnter,
+      href: '/testDesigner/test/doTest',
     },
 
   ];

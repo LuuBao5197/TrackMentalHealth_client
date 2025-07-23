@@ -9,23 +9,23 @@ import {
     DialogActions,
     DialogContent,
     DialogContentText,
-    DialogTitle
+    DialogTitle,
+    Box,
+    Typography,
+    Stack
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
+
 const ResetPasswordForm = ({ email }) => {
     const navigate = useNavigate();
     const [error, setError] = React.useState('');
     const [successDialogOpen, setSuccessDialogOpen] = React.useState(false);
 
-
-
     const formik = useFormik({
         initialValues: { newPassword: '' },
         validationSchema: Yup.object({
-            newPassword: Yup.string()
-                .min(6, 'Password must be at least 6 characters')
-                .required('New password is required'),
+            newPassword: Yup.string().min(6, 'At least 6 characters').required('New password is required'),
         }),
         onSubmit: async (values) => {
             try {
@@ -42,32 +42,37 @@ const ResetPasswordForm = ({ email }) => {
 
     const handleDialogClose = () => {
         setSuccessDialogOpen(false);
-        navigate('/auth/login'); // Chuyển về trang đăng nhập sau khi đóng dialog
+        navigate('/auth/login');
     };
 
     return (
-        <>
+        <Box maxWidth={400} mx="auto" mt={4} p={3} borderRadius={2} boxShadow={3}>
+            <Typography variant="h5" fontWeight="bold" mb={2}>
+                Reset Password
+            </Typography>
             <form onSubmit={formik.handleSubmit}>
-                <TextField
-                    fullWidth
-                    type="password"
-                    label="New Password"
-                    name="newPassword"
-                    {...formik.getFieldProps('newPassword')}
-                    error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-                    helperText={formik.touched.newPassword && formik.errors.newPassword}
-                />
-                {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-                <Button type="submit" variant="contained" sx={{ mt: 2 }}>
-                    Reset Password
-                </Button>
+                <Stack spacing={2}>
+                    <TextField
+                        fullWidth
+                        type="password"
+                        label="New Password"
+                        name="newPassword"
+                        {...formik.getFieldProps('newPassword')}
+                        error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
+                        helperText={formik.touched.newPassword && formik.errors.newPassword}
+                    />
+                    {error && <Alert severity="error">{error}</Alert>}
+                    <Button type="submit" variant="contained" fullWidth>
+                        Reset Password
+                    </Button>
+                </Stack>
             </form>
 
             <Dialog open={successDialogOpen} onClose={handleDialogClose}>
-                <DialogTitle>Password Reset Successful</DialogTitle>
+                <DialogTitle>Success</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Your password has been reset successfully . Click OK to return to login.
+                        Your password has been reset successfully. Click OK to go back to login.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -76,7 +81,7 @@ const ResetPasswordForm = ({ email }) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </>
+        </Box>
     );
 };
 

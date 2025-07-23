@@ -35,7 +35,6 @@ import AppointmentManagement from '../components/appointmentPage/PsychologistPag
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
 const UserLayout = Loadable(lazy(() => import('../layouts/user/UserLayout')));
-
 /* ****Pages***** */
 const Dashboard = Loadable(lazy(() => import('../views/dashboard/Dashboard')));
 const SamplePage = Loadable(lazy(() => import('../views/sample-page/SamplePage')));
@@ -45,13 +44,16 @@ const Shadow = Loadable(lazy(() => import('../views/utilities/Shadow')));
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
-const HomePage = Loadable(lazy(() => import('../views/user/Homepage')));
+const HomePage = Loadable(lazy(() => import('../components/userPage/HomePage.jsx')));
+const AboutUs = Loadable(lazy(()=> import('../components/userPage/AboutSection.jsx')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const ImportTestPage = Loadable(lazy(() => import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const TestListPage = Loadable(lazy(() => import('../components/testPage/TestList.jsx')))
 const TestResultForm = Loadable(lazy(() => import('../components/testPage/TestResultForm.jsx')))
+const DoTestForm = Loadable(lazy(() => import('../components/testPage/DoTestForm.jsx')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
+
 const Router = [
 
   {
@@ -118,35 +120,15 @@ const Router = [
       { path: '*', element: <Navigate to="/auth/404" replace /> },
     ],
   },
-
-
   {
     path: '/user',
     element: <UserLayout />,
     children: [
-      { path: 'homepage1', element: <HomePage /> },
-      { path: 'register', element: <Register /> },
+      { path: 'homepage', element: <HomePage /> },
       { path: 'social', element: <SocialPage /> },
+       { path: 'aboutUs', element: <AboutUs /> },
       {
-        element: <ProtectedRoute allowedRoles={['USER']} />,
-        children: [
-          { path: 'homepage', element: <HomePage /> },
-          { path: 'write-diary', element: <WriteDiaryPage /> },
-          { path: 'history', element: <DiaryHistoryPage /> },
-          { path: 'history-mood', element: <MoodHistoryPage /> },
-        ],
-      },
-    ],
-  },
-  {
-    path: '/user',
-    element: <UserLayout />,
-    children: [
-      { path: 'homepage1', element: <HomePage /> },
-      { path: 'register', element: <Register /> },
-      { path: 'social', element: <SocialPage /> },
-      {
-        element: <ProtectedRoute allowedRoles={['User', 2]} />, // gộp role User và 2
+        element: <ProtectedRoute allowedRoles={['User']} />, // gộp role User và 2
         children: [
           { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
@@ -170,8 +152,8 @@ const Router = [
           { path: 'test/create', element: <OptionPage /> },
           { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage /> },
-          { path: 'test/testResult/create', element: <TestResultForm /> }
-
+          { path: 'test/testResult/create', element: <TestResultForm /> },
+          { path: 'test/doTest', element: <DoTestForm/>}
         ],
       },
 

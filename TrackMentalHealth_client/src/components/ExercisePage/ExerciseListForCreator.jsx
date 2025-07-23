@@ -37,9 +37,9 @@ const ExerciseListForCreator = () => {
     return `filter-${exercise.mediaType?.toLowerCase() || 'general'}`;
   };
 
-  const filteredExercises = exercises.filter((exercise) => {
+  const filteredExercises = exercises.filter((ex) => {
     if (activeFilter === '*') return true;
-    return getExerciseCategoryClass(exercise) === activeFilter;
+    return getExerciseCategoryClass(ex) === activeFilter;
   });
 
   const totalPages = Math.ceil(filteredExercises.length / exercisesPerPage);
@@ -82,25 +82,13 @@ const ExerciseListForCreator = () => {
           cursor: default;
         }
 
-        .edit-icon-link {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background-color: #6f42c1;
+        .details-link {
+          margin: 0 5px;
           color: white;
-          border-radius: 50%;
-          padding: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: 0.3s;
-          font-size: 16px;
-          z-index: 10;
         }
 
-        .edit-icon-link:hover {
-          background-color: #5a32a3;
-          color: #fff;
+        .details-link i {
+          font-size: 1.2rem;
         }
       `}</style>
 
@@ -113,47 +101,45 @@ const ExerciseListForCreator = () => {
         <div className="container" data-aos="fade-up" data-aos-delay="100">
           <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
             {currentExercises.length === 0 ? (
-              <p>Không có bài tập nào.</p>
+              <p>Đang tải dữ liệu hoặc không có bài tập nào.</p>
             ) : (
-              currentExercises.map((exercise) => {
-                const imageUrl = exercise.mediaUrl?.startsWith('http')
-                  ? exercise.mediaUrl
-                  : 'assets/img/default-exercise.webp';
+              currentExercises.map(ex => {
+                const imageUrl = ex.photo?.startsWith('http')
+                  ? ex.photo
+                  : 'assets/img/default-exercise.webp'; // fallback ảnh
 
                 return (
                   <div
-                    key={exercise.id}
-                    className={`col-lg-6 col-md-6 portfolio-item isotope-item ${getExerciseCategoryClass(exercise)}`}
+                    key={ex.id}
+                    className={`col-lg-6 col-md-6 portfolio-item isotope-item ${getExerciseCategoryClass(ex)}`}
                   >
                     <div className="portfolio-card position-relative">
                       <div className="portfolio-image">
                         <img
                           src={imageUrl}
                           className="img-fluid"
-                          alt={exercise.title}
+                          alt={ex.title}
                           loading="lazy"
                         />
                         <div className="portfolio-overlay">
-                          <div className="portfolio-actions">
-                            <Link to={`/auth/exercise/${exercise.id}`} className="details-link">
+                          <div className="portfolio-actions d-flex justify-content-center">
+                            <Link to={`/auth/exercise/${ex.id}`} className="details-link">
                               <i className="bi bi-arrow-right"></i>
                             </Link>
-
-                            {/* Link chỉnh sửa bài học */}
                             <Link
-                              to={`/auth/exercise/edit/${exercise.id}`}
-                              state={{ exercise }}
+                              to={`/auth/exercise/edit/${ex.id}`}
+                              state={{ exercise: ex }}
                               className="details-link"
                             >
-                              <i className="bi bi-pencil"></i>
+                              <i className="bi bi-pencil-fill"></i>
                             </Link>
                           </div>
                         </div>
                       </div>
                       <div className="portfolio-content">
-                        <span className="category">{exercise.mediaType}</span>
-                        <h3>{exercise.title}</h3>
-                        <p>{exercise.instruction?.substring(0, 100)}...</p>
+                        <span className="category">{ex.mediaType}</span>
+                        <h3>{ex.title}</h3>
+                        <p>{ex.instruction?.substring(0, 100)}...</p>
                       </div>
                     </div>
                   </div>
