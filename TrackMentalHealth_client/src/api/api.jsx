@@ -9,7 +9,7 @@ const chatGroup_url ="http://localhost:9999/api/chatgroup/";
 
 export const getMessagesBySessionId= async (id) => {
     try {
-        const response = await axios.get(chat_url+""+id);
+        const response = await axios.get(chat_url+id);
         console.log(response.data);
         return response.data;
         // console.log(response.data);
@@ -18,50 +18,30 @@ export const getMessagesBySessionId= async (id) => {
         throw error;
     }
 };
+
+//create chat sesssiom
+export const initiateChatSession = async (senderId, receiverId) => {
+    try {
+        const res = await axios.post(`${chat_url}session/initiate/${senderId}/${receiverId}`);
+        return res.data;
+    } catch (error) {
+        console.error("❌ Failed to initiate session:", error);
+        throw error;
+    }
+};
+
 
 export const getChatSessionsByUserId= async (id) => {
     try {
         const response = await axios.get(chat_url+"session/"+id);
         console.log(response.data);
         return response.data;
-        // console.log(response.data);
     } catch (error) {
         console.error('Lỗi khi gọi API:', error);
         throw error;
     }
 };
 
-
-export const getChatSessionsByTwoUserId= async (id1,id2) => {
-    try {
-        const response = await axios.get(chat_url+`session/${id1}/${id2}`);
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
-        throw error;
-    }
-};
-
-export const sendMessage = async (id, message) => {
-    try {
-        const response = await axios.post(
-            `${chat_url}${id}`,
-            { message: message }, // nếu backend expects JSON {"message":"..."}
-            {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
-        throw error;
-    }
-};
 
 export const getAppointmentsByPsyId= async (id) => {
     try {
@@ -85,6 +65,18 @@ export const getAppointmentById= async (id) => {
     }
 };
 
+//get appointment by psychologist
+export const getAppointmentByPsyId= async (psyId) => {
+    try {
+        const response = await axios.get(Appointment_url+"psychologist/"+psyId);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi khi gọi API:', error);
+        throw error;
+    }
+};
+
 export const saveAppointment= async (data) => {
     try {
         const response = await axios.post(Appointment_url+"save",data);
@@ -96,16 +88,16 @@ export const saveAppointment= async (data) => {
     }
 };
 
-export const updateAppointment= async (id,data) => {
+export const updateAppointment = async (id, data) => {
     try {
-        const response = await axios.put(Appointment_url+`${id}`,data);
-        console.log(response.data);
+        const response = await axios.put(`${Appointment_url}${id}`, data);
         return response.data;
     } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
+        console.error('Lỗi khi cập nhật lịch hẹn:', error);
         throw error;
     }
 };
+
 
 export const deleteAppointment= async (id) => {
     try {
@@ -180,6 +172,19 @@ export const getNotificationsByUserId = async (userId) => {
     }
 };
 
+//creat new notification
+export const saveNotification = async (data) => {
+    try {
+        const response = await axios.post(notification_url+"save" ,data);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+
 export const changeStatusNotification = async (id) => {
     try {
         const response = await axios.put(notification_url+"changestatus/" + id);
@@ -215,6 +220,44 @@ export const getChatGroupByCreatorId = async (id) => {
     }
 };
 
+//get group by id group
+export const getChatGroupById = async (id) => {
+    try {
+        const response = await axios.get(chatGroup_url+id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+//get msg from group id
+export const getMessagesByGroupId = async (id) => {
+    try {
+        const response = await axios.get(chatGroup_url+"messages/"+id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+//get user by group id :
+export const findUsersByGroupId = async (groupId,currentUserId) => {
+    try {
+        const response = await axios.get(`${chatGroup_url}group/users/${groupId}/${currentUserId}`);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+
+
 //delete my group
 export const deleteGroupById = async (id) => {
     try {
@@ -248,6 +291,19 @@ export const updateGroupById = async (id,data) => {
         throw error;
     }
 };
+
+//seen message
+export const changeStatusIsRead = async (sessionId, receiverId) => {
+    try {
+        const response = await axios.put(`${chat_url}changeStatus/${sessionId}/${receiverId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi khi cập nhật trạng thái isRead:", error);
+        throw error;
+    }
+};
+
+
 
 
 

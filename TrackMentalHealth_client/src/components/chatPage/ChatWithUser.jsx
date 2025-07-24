@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
     MainContainer,
     MessageContainer,
@@ -9,122 +9,99 @@ import {
     MinChatUiProvider
 } from "@minchat/react-chat-ui";
 
-import {connectWebSocket, sendWebSocketMessage} from "../../services/stompClient";
+import {
+    connectWebSocket,
+    sendWebSocketMessage,
+} from "../../services/stompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
+import { getMessagesBySessionId } from "../../api/api";
 
 function ChatWithUser() {
-    const currentUserId = getCurrentUserId();
-    const { sessionId } = useParams(); // ID của phiên trò chuyện từ URL
+    const currentUserId = parseInt(getCurrentUserId());
+    const { sessionId } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Lấy receiver được truyền từ ChatList
+    const preloadedReceiver = location.state?.receiver;
+
     const [messages, setMessages] = useState([]);
-    const [receiverName, setReceiverName] = useState("Đang tải..."); // Tên người kia
+    const [receiverName, setReceiverName] = useState(preloadedReceiver?.fullname || "Đối phương");
+    const [receiverId, setReceiverId] = useState(preloadedReceiver?.id || null);
 
-    const nav = useNavigate();
+useEffect(() => {
+    const fetchMessages = async () => {
+        try {
+            const res = await getMessagesBySessionId(sessionId);
 
-    useEffect(() => {
-        const fetchMessages = async () => {
-            try {
-                const res = await getMessagesBySessionId(sessionId);
-                console.log(res)
+            if (res.length > 0) {
+                const formatted = res.map(msg => ({
+                    text: msg.message,
+                    user: {
+                        id: msg.sender.id.toString(),
+                        name: msg.sender.id === currentUserId ? "Tôi" : (msg.sender.fullname || "Đối phương")
+                    }
+                }));
 
-                const formatted = res
-                    .filter(msg => msg?.id && msg?.message)
-                    .map(msg => ({
-                        text: msg.message,
-                        user: {
-                            id: msg.senderId.toString(),
-                            name: msg.session.receiver.fullname,
-                        }
-                    }));
-
-                const otherUser = res.find(
-                    msg => msg.senderId.toString() !== currentUserId
-                )?.session.receiver.fullname;
-                setReceiverName(otherUser);
                 setMessages(formatted);
-            } catch (err) {
-                console.error("Lỗi khi tải tin nhắn:", err);
+
+                if (!receiverId) {
+                    const { sender, receiver } = res[0].session;
+                    const isCurrentUserSender = sender.id === currentUserId;
+                    const otherUser = isCurrentUserSender ? receiver : sender;
+
+                    setReceiverName(otherUser.fullname || "Đối phương");
+                    setReceiverId(otherUser.id);
+                }
             }
-        };
+        } catch (err) {
+            console.error("❌ Lỗi lấy tin nhắn:", err);
+        }
+    };
 
-        fetchMessages();
+    fetchMessages();
 
-        const disconnect = connectWebSocket(sessionId, (msg) => {
-            if (!msg || !msg.message || !msg.senderId) return;
+   const disconnect = connectWebSocket({
+    sessionId, // phải có
+    onPrivateMessage: (msg) => {
+        if (!msg?.message || !msg?.senderId) return;
 
-            setMessages(prev => [...prev, {
+        setMessages(prev => [
+            ...prev,
+            {
                 text: msg.message,
                 user: {
                     id: msg.senderId.toString(),
-                    name: msg.senderName || "Đối phương"
+                    name: msg.senderId === currentUserId ? "Tôi" : (msg.senderName || "Đối phương")
                 }
-            }]);
-
-            if (msg.senderId.toString() !== currentUserId) {
-                setReceiverName(msg.senderName || "Người dùng");
             }
-        });
+        ]);
+    }
+});
 
-        return () => {
-            if (disconnect) disconnect();
-        };
-    }, [sessionId]);
 
-    const handleSendMessage = async (text) => {
+    return () => {
+        if (disconnect) disconnect();
+    };
+}, [sessionId, currentUserId, receiverId]);
+
+    const handleSendMessage = (text) => {
         if (!text.trim()) return;
 
-        // Gửi qua WebSocket (nếu cần)
-        sendWebSocketMessage(`/app/chat/${sessionId}`, {
-            senderId: currentUserId,
+        if (!receiverId) {
+            console.warn("Không xác định được người nhận, không thể gửi tin nhắn");
+            return;
+        }
+
+        const messageObj = {
+            sender: { id: currentUserId },
+            receiver: { id: receiverId },
             message: text,
             session: { id: sessionId }
-        });
+        };
+        console.log("📨 Sending message:", messageObj);
 
-        const newMessage = new ChatMessageDTO({
-            senderId: currentUserId,
-            message: text,
-            isRead: false
-        });
-
-        try {
-            console.log("🚀 Gửi tin nhắn tới API:", newMessage);
-
-            const res = await sendMessage(sessionId, newMessage);
-            console.log("✅ Phản hồi từ server:", res);
-
-            const data = res.data || res; // tuỳ thuộc vào structure của API
-
-            const formatted = {
-                text: data.message,
-                user: {
-                    id: data.senderId?.toString(),
-                    name: data.session?.users?.fullname || "Tôi",
-                }
-            };
-            setMessages(prev => [...prev, formatted]);
-        } catch (err) {
-            console.error("❌ Không gửi được tin nhắn:");
-
-            if (err.response) {
-                // 👉 Nếu lỗi từ server (status >= 400)
-                console.error("🔴 Status:", err.response.status);         // ví dụ 403
-                console.error("🔴 Headers:", err.response.headers);
-                console.error("🔴 Response data:", err.response.data);    // chi tiết lỗi
-
-                alert(
-                    `Lỗi gửi tin nhắn:\n` +
-                    `Status: ${err.response.status}\n` +
-                    `Details: ${JSON.stringify(err.response.data, null, 2)}`
-                );
-            } else if (err.request) {
-                // 👉 Nếu request được gửi nhưng không có response (network error)
-                console.error("🛑 Request lỗi, không nhận được response:", err.request);
-                alert("Lỗi mạng hoặc server không phản hồi.");
-            } else {
-                // 👉 Lỗi khác (ví dụ lỗi config Axios)
-                console.error("⚠️ Lỗi không xác định:", err.message);
-                alert(`Lỗi không xác định: ${err.message}`);
-            }
-        }
+        sendWebSocketMessage(`/app/chat/${sessionId}`, messageObj);
     };
 
     const handleSendMeetLink = () => {
@@ -136,26 +113,23 @@ function ChatWithUser() {
         <MinChatUiProvider theme="#6ea9d7">
             <MainContainer style={{ height: '100vh' }}>
                 <MessageContainer>
-                    <MessageHeader onBack={() => nav('/')}>
+                    <MessageHeader onBack={() => navigate("/auth/chat/list")}>
                         {receiverName}
                     </MessageHeader>
 
                     <MessageList
-                        currentUserId={currentUserId}
+                        currentUserId={currentUserId.toString()}
                         messages={messages}
                     />
 
-                    <div>
-                        <div style={{ flex: 1 }}>
-                            <MessageInput
-                                placeholder="Nhập tin nhắn..."
-                                onSendMessage={handleSendMessage}
-                                showSendButton
-                                showAttachButton={true}
-                                onAttachClick={handleSendMeetLink}
-                            />
-                        </div>
-                    </div>
+                    <MessageInput
+                        placeholder="Nhập tin nhắn..."
+                        onSendMessage={handleSendMessage}
+                        showSendButton
+                        showAttachButton={true}
+                        onAttachClick={handleSendMeetLink}
+                        disabled={!receiverId}
+                    />
                 </MessageContainer>
             </MainContainer>
         </MinChatUiProvider>
