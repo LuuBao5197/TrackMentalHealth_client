@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { logout } from "../../redux/slices/authSlice";
 import { useLocation, useNavigate } from "react-router";
 import imgLogo from '@assets/images/logos/logoTMH.png';
-import '@assets/css/Logo.css'; // Assuming you have a CSS file for header styles
+// import '@assets/css/Logo.css'; // Assuming you have a CSS file for header styles
 import { Link } from "react-router-dom";
 const Header = () => {
   const userRole = useSelector((state) => state.auth.user);
@@ -64,10 +64,10 @@ const Header = () => {
             <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
             <li><Link to="/user/a" className={currentPath === "/user/a" ? "active" : ""}>Mood</Link></li>
             <li><Link to="/user/b" className={currentPath === "/user/b" ? "active" : ""}>Blog</Link></li>
-            <li><Link to="/user/c"  className={currentPath === "/user/c" ? "active" : ""}>Lesson</Link></li>
-            <li><Link to="/user/d"  className={currentPath === "/user/d" ? "active" : ""}>Community Social</Link></li>
-            <li><Link to="/user/e"  className={currentPath === "/user/e" ? "active" : ""}>Mental Tests</Link></li>
-            <li><Link to="/user/f"  className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li>
+            <li><Link to="/user/c" className={currentPath === "/user/c" ? "active" : ""}>Lesson</Link></li>
+            <li><Link to="/user/d" className={currentPath === "/user/d" ? "active" : ""}>Community Social</Link></li>
+            <li><Link to="/user/e" className={currentPath === "/user/e" ? "active" : ""}>Mental Tests</Link></li>
+            <li><Link to="/user/f" className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li>
           </ul>
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
@@ -76,20 +76,18 @@ const Header = () => {
           <div className="dropdown btn-getstarted">
             <a
               href="#"
-              className="d-flex align-items-center text-decoration-none"
+              className="d-flex align-items-center text-decoration-none p-1"
               data-bs-toggle="dropdown"
               aria-expanded="false"
+              style={{ height: '50px' }} // hoặc bạn cho vào CSS
             >
               <img
                 src={user.avatar}
                 alt="Hi Avatar"
-                width="70"
-                height="70"
-                className="rounded-circle me-2"
+                className="avatar-img"
               />
-              {/* <span className="d-none d-md-inline">{user.fullname}</span> */}
-              {/* <i className="bi bi-chevron-down ms-1"></i> */}
             </a>
+
             <ul className="dropdown-menu dropdown-menu-end shadow">
               <li><button className="dropdown-item" onClick={handleEditProfile}>Edit Profile</button></li>
               <li><hr className="dropdown-divider" /></li>
