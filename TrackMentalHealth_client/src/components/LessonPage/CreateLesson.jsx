@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
@@ -33,6 +34,12 @@ const CreateLesson = () => {
     onSubmit: async (values) => {
       const now = new Date().toISOString();
 
+      // Kiểm tra nếu ảnh đại diện chưa được tải lên
+      if (!values.photo) {
+        alert('❌ Ảnh đại diện là bắt buộc!');
+        return;
+      }
+
       const lessonData = {
         title: values.title,
         description: values.description,
@@ -45,8 +52,8 @@ const CreateLesson = () => {
           stepNumber: index + 1,
           title: step.title,
           content: step.content,
-          mediaType: step.mediaType,
-          mediaUrl: step.mediaUrl,
+          mediaType: step.mediaType || null,
+          mediaUrl: step.mediaUrl || null,
         })),
       };
 
@@ -165,7 +172,7 @@ const CreateLesson = () => {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="lessonPhoto" className="form-label">Ảnh đại diện bài học</label>
+              <label htmlFor="lessonPhoto" className="form-label">Ảnh đại diện bài học <span className="text-danger">*</span></label>
               <input
                 type="file"
                 className="form-control"
@@ -175,8 +182,11 @@ const CreateLesson = () => {
                   const file = e.target.files[0];
                   if (file) {
                     handleUpload(file, -1, (url) => formik.setFieldValue('photo', url));
+                  } else {
+                    formik.setFieldValue('photo', '');
                   }
                 }}
+                required
               />
               {formik.values.photo && (
                 <div className="mt-2 text-center">
@@ -250,6 +260,9 @@ const CreateLesson = () => {
                         const file = e.target.files[0];
                         if (file) {
                           handleUpload(file, index);
+                        } else {
+                          handleStepChange(index, 'mediaType', '');
+                          handleStepChange(index, 'mediaUrl', '');
                         }
                       }}
                     />
