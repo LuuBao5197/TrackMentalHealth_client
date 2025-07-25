@@ -29,6 +29,9 @@ import CreateAppointment from '../components/appointmentPage/UserPage/CreateAppo
 
 import EditExercise from '../components/ExercisePage/EditExercise.jsx';
 import EditArticle from '../components/ArticlePage/EditArticle.jsx';
+
+import TestListForUser from '../components/testPage/TestListForUser.jsx';
+import Unauthorized from '../views/authentication/Unauthorize.jsx';
 import AppointmentManagement from '../components/appointmentPage/PsychologistPage/AppointmentManagement.jsx';
 
 /* ***Layouts**** */
@@ -45,7 +48,7 @@ const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../components/userPage/HomePage.jsx')));
-const AboutUs = Loadable(lazy(()=> import('../components/userPage/AboutSection.jsx')));
+const AboutUs = Loadable(lazy(() => import('../components/userPage/AboutSection.jsx')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const ImportTestPage = Loadable(lazy(() => import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
@@ -65,6 +68,8 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
+      { path: 'unauthorized', element: <Unauthorized /> },
+
       { path: 'create-lesson', element: <CreateLesson /> },
       { path: 'create-exercise', element: <CreateExercise /> },
       { path: 'create-article', element: <CreateArticle /> },
@@ -92,13 +97,14 @@ const Router = [
       { path: "chatlist", element: <ChatList /> },
       { path: "chatai", element: <ChatWithAI /> },
       { path: "chat/:id", element: <ChatWithUser /> },
+
     ],
   },
 
   //🔐 Private: Cần đăng nhập
   {
     path: '/',
-    element: <FullLayout />,
+    element: <UserLayout />,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
@@ -126,14 +132,18 @@ const Router = [
     children: [
       { path: 'homepage', element: <HomePage /> },
       { path: 'social', element: <SocialPage /> },
-       { path: 'aboutUs', element: <AboutUs /> },
+      { path: 'aboutUs', element: <AboutUs /> },
+      { path: 'tests', element: <TestListForUser /> },
+
       {
-        element: <ProtectedRoute allowedRoles={['User']} />, // gộp role User và 2
+        element: <ProtectedRoute allowedRoles={['USER']} />, // gộp role User và 2
         children: [
-          { path: 'homepage', element: <HomePage /> },
+          // { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
           { path: "mood-history", element: <MoodHistoryPage /> },
+          { path: 'doTest/:testId', element: <DoTestForm /> },
+
         ],
       },
     ],
@@ -156,6 +166,7 @@ const Router = [
           { path: 'test/doTest', element: <DoTestForm/>}
         ],
       },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
 
     ],
   },
@@ -167,6 +178,7 @@ const Router = [
       { path: 'user/edit-profile/:userId', element: <EditProfile /> },
     ],
   },
+  { path: '*', element: <Navigate to="/auth/404" replace /> },
 ];
 
 export default Router;

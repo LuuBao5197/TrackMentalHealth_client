@@ -1,0 +1,65 @@
+/* about.css */
+
+.about.section {
+  background-color: #f9f9f9;
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
+
+.about .content h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.about .content p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #555;
+}
+
+.about .content .text-primary {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.about .content ul {
+  padding-left: 0;
+  margin-top: 20px;
+}
+
+.about .content ul li {
+  display: flex;
+  align-items: flex-start;
+  font-size: 1rem;
+  color: #444;
+}
+
+.about .content ul li i {
+  font-size: 1.2rem;
+  margin-right: 10px;
+  color: #28a745; /* Bootstrap's success color */
+}
+
+.about .btn {
+  transition: all 0.3s ease;
+}
+
+.about .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.about-images img {
+  object-fit: cover;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.about-images img:hover {
+  transform: scale(1.02);
+}

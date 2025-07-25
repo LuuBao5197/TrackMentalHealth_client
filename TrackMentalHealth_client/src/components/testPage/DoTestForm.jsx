@@ -3,20 +3,25 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/mbti.css';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const DoTestForm = () => {
+    const userId = useSelector((state) => state.auth.user.userId);
     const [test, setTest] = useState(null); // chứa toàn bộ object từ API
     const [answers, setAnswers] = useState({});
     const [markedForReview, setMarkedForReview] = useState([]);
     const [timer, setTimer] = useState(0);
+    const { testId } = useParams();
+    const navigate = useNavigate();
     const [focusedQuestion, setFocusedQuestion] = useState(null);
     const questionRefs = useRef([]);
 
     useEffect(() => {
-        fetchTest(99);
+        fetchTest(testId);
         const interval = setInterval(() => setTimer(t => t + 1), 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [testId]);
 
     const fetchTest = async (id) => {
         try {
@@ -51,7 +56,7 @@ const DoTestForm = () => {
             setTimeout(() => setFocusedQuestion(null), 1500);
         }
     };
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const unanswered = test.questions.filter(q => !answers[q.id]);
         if (unanswered.length > 0) {
             alert(`Bạn còn ${unanswered.length} câu chưa làm. Vui lòng hoàn thành tất cả câu hỏi trước khi nộp bài.`);
@@ -60,18 +65,16 @@ const DoTestForm = () => {
 
         // Tính tổng điểm dựa trên các câu trả lời
         let totalScore = 0;
-
         test.questions.forEach(q => {
             const selectedOptionId = answers[q.id];
             const selectedOption = q.options.find(opt => opt.id === selectedOptionId);
             if (selectedOption) {
-                totalScore += selectedOption.scoreValue || 0; // Mặc định 0 nếu không có score
+                totalScore += selectedOption.scoreValue || 0;
             }
         });
 
         // Tìm kết quả phù hợp theo thang điểm
         let resultText = "Không xác định";
-
         if (test.results && test.results.length > 0) {
             const found = test.results.find(r =>
                 totalScore >= r.minScore && totalScore <= r.maxScore
@@ -79,11 +82,30 @@ const DoTestForm = () => {
             if (found) resultText = found.resultText;
         }
 
-        // Hiển thị kết quả
-        alert(`Tổng điểm của bạn là ${totalScore}. Kết quả: ${resultText}`);
+        // Tạo danh sách câu trả lời theo format API yêu cầu
+        const formattedAnswers = Object.entries(answers).map(([questionId, selectedOptionId]) => ({
+            questionId: parseInt(questionId),
+            selectedOptionId
+        }));
 
-        // Nếu cần gửi về server:
-        // axios.post('/api/test/submit', { testId: test.id, answers, totalScore, resultText });
+        // Giả sử userId đang hardcode tạm (có thể thay bằng lấy từ session/localStorage/context)
+        const payload = {
+            userId: userId, // cần thay bằng id thực tế từ user đăng nhập
+            testId: test.id,
+            answers: formattedAnswers,
+            result: resultText
+        };
+
+        try {
+            const res = await axios.post('http://localhost:9999/api/test/submitUserTestResult', payload);
+            alert(`Đã nộp bài thành công. Tổng điểm của bạn là ${totalScore}. Kết quả: ${resultText}`);
+            console.log('Response từ server:', res.data);
+
+            setTimeout(() => navigate('/'), 1500);
+        } catch (error) {
+            console.error('Lỗi khi gửi kết quả:', error);
+            alert('Gửi kết quả thất bại. Vui lòng thử lại.');
+        }
 
         console.log("Answers:", answers);
         console.log("Total Score:", totalScore);
