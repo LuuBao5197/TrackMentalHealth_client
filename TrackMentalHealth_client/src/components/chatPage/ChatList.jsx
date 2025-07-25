@@ -1,25 +1,34 @@
 import React, { useEffect, useState } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
+    changeStatusIsRead,
     changeStatusNotification,
     createNewGroup,
     deleteGroupById,
     getAllChatGroup,
     getChatGroupByCreatorId,
-    getChatSessionsByTwoUserId,
     getChatSessionsByUserId,
     getMessagesBySessionId,
     getNotificationsByUserId,
     getPsychologists,
     updateGroupById,
 } from "../../api/api";
-import {useNavigate} from "react-router-dom";
-import {showAlert} from "../../utils/showAlert";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBell} from '@fortawesome/free-regular-svg-icons';
+import { useNavigate } from "react-router-dom";
+import { showAlert } from "../../utils/showAlert";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBell } from '@fortawesome/free-regular-svg-icons';
 import { getCurrentUserId } from '../../utils/getCurrentUserID';
 import '../../assets/css/chat.css';
 import { showConfirm } from '../../utils/showConfirm';
 import GroupModal from '../../utils/Modals/GroupModal';
+import NotificationDetailModal from '../../utils/Modals/NotificationDetailModal';
+import { connectWebSocket } from '../../services/stompClient';
+import UserSwitcher from '../../utils/UserSwitcher';
+
+const getOtherUser = (session, currentUserId) =>
+    session.sender.id === currentUserId ? session.receiver : session.sender;
+
 
 function ChatList() {
     const currentUserId = parseInt(getCurrentUserId());
@@ -34,42 +43,66 @@ function ChatList() {
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [editingGroup, setEditingGroup] = useState(null);
+    const [selectedNotification, setSelectedNotification] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+
     useEffect(() => {
+        if (!currentUserId) return;
+
         const fetchSessions = async () => {
             try {
                 const res = await getChatSessionsByUserId(currentUserId);
+
                 const sessionsWithLastMessage = await Promise.all(
                     res.map(async (session) => {
                         try {
-                            const messageRes = await getMessagesBySessionId(session.id);
-                            if (messageRes.data && messageRes.data.length > 0) {
-                                return {
-                                    ...session,
-                                    latestMessage: messageRes.data[messageRes.data.length - 1].message
-                                };
-                            } else {
-                                return { ...session, latestMessage: "Không có tin nhắn gần đây..." };
+                            const messages = await getMessagesBySessionId(session.id);
+                            let latestMessage = "No message yet...";
+                            let unreadCount = 0;
+                            let timestamp = null;
+                            let isLastMessageUnread = false;
+
+                            if (messages && messages.length > 0) {
+                                const lastMsg = messages[messages.length - 1];
+                                latestMessage = lastMsg.message;
+                                timestamp = lastMsg.timestamp || lastMsg.createdAt || null;
+
+                                unreadCount = messages.filter(
+                                    msg => !msg.isRead && msg.receiver?.id === currentUserId
+                                ).length;
+
+                                isLastMessageUnread = (
+                                    !lastMsg.isRead &&
+                                    lastMsg.receiver?.id === currentUserId
+                                );
                             }
+
+                            return {
+                                ...session,
+                                latestMessage,
+                                unreadCount,
+                                timestamp,
+                                isLastMessageUnread,
+                            };
                         } catch (msgErr) {
-                            console.error(`Lỗi khi tải tin nhắn cho session ${session.id}:`, msgErr);
-                            return { ...session, latestMessage: "Không thể lấy tin nhắn." };
+                            console.error(`❌ Lỗi khi tải tin nhắn cho session ${session.id}:`, msgErr);
+                            return {
+                                ...session,
+                                latestMessage: "Không thể lấy tin nhắn.",
+                                unreadCount: 0,
+                                timestamp: null,
+                                isLastMessageUnread: false,
+                            };
                         }
                     })
                 );
+
                 setSessions(sessionsWithLastMessage);
             } catch (err) {
+                console.error("❌ Lỗi tải danh sách session:", err);
                 setError(err.toString());
             } finally {
                 setLoading(false);
-            }
-        };
-
-        const fetchPsychologists = async () => {
-            try {
-                const data = await getPsychologists();
-                setPsychologists(data);
-            } catch (err) {
-                console.error(err);
             }
         };
 
@@ -80,7 +113,16 @@ function ChatList() {
                 const unread = Array.isArray(data) ? data.filter(n => !n.read) : [];
                 setUnreadNotifications(unread);
             } catch (err) {
-                console.error(err);
+                console.error("❌ Lỗi khi lấy thông báo:", err);
+            }
+        };
+
+        const fetchPsychologists = async () => {
+            try {
+                const data = await getPsychologists();
+                setPsychologists(data);
+            } catch (err) {
+                console.error("❌ Lỗi khi lấy psychologist:", err);
             }
         };
 
@@ -89,7 +131,7 @@ function ChatList() {
                 const data = await getAllChatGroup();
                 setGroup(data);
             } catch (err) {
-                console.error(err);
+                console.error("❌ Lỗi khi lấy group:", err);
             }
         };
 
@@ -98,16 +140,68 @@ function ChatList() {
                 const data = await getChatGroupByCreatorId(currentUserId);
                 setmyGroup(data);
             } catch (err) {
-                console.error(err);
+                console.error("❌ Lỗi khi lấy group của tôi:", err);
             }
         };
 
+        // Gọi các fetch ban đầu
         fetchNotifications();
         fetchSessions();
         fetchPsychologists();
         fetchChatGroup();
         fetchChatGroupByCreatorId();
+
+        // WebSocket
+        const disconnect = connectWebSocket({
+            sessionId: null,
+            groupId: null,
+            onPrivateMessage: (msg) => {
+                if (!msg || !msg.message || !msg.senderName) return;
+
+                toast.info(`New message from ${msg.senderName.toUpperCase()}`);
+
+                // 👇 Kiểm tra nếu tin nhắn thuộc phiên hiện tại
+                if (msg.session?.id === currentSessionId) {
+                    setMessages(prev => [...prev, msg]);
+                }
+
+                if (msg.session?.id !== currentSessionId && msg.receiverId === currentUserId) {
+                    // Nếu không phải session đang xem + là người nhận tin → cập nhật trạng thái unread
+                    setUnreadMessages(prev => {
+                        const sessionId = msg.session?.id;
+                        const updated = { ...prev };
+                        updated[sessionId] = (updated[sessionId] || 0) + 1;
+                        return updated;
+                    });
+                }
+
+
+                fetchSessions(); // Cập nhật danh sách session (ví dụ để update unread count)
+            }
+            ,
+            onNotification: (notification) => {
+                console.log("🔔 Nhận noti từ WebSocket:", notification);
+
+                setNotifications(prev => [notification, ...prev]);
+
+                if (!notification.read) {
+                    setUnreadNotifications(prev => [notification, ...prev]);
+                }
+
+                toast.info(`🔔 ${notification.title}: ${notification.message}`, {
+                    position: "top-right",
+                    autoClose: 4000,
+                });
+            }
+        });
+
+
+
+        return () => {
+            if (disconnect) disconnect();
+        };
     }, [currentUserId]);
+
 
     const chatWithPsychologist = async (psychologistId) => {
         try {
@@ -120,16 +214,6 @@ function ChatList() {
         } catch (err) {
             console.error(err);
             showAlert("Error fetching chat session.", "error");
-        }
-    };
-
-    const handleClickNotification = (id) => () => {
-        try {
-            changeStatusNotification(id);
-            navigate(`/`);
-        } catch (err) {
-            console.error(err);
-            showAlert("Error changing status notification.", "error");
         }
     };
 
@@ -191,14 +275,51 @@ function ChatList() {
         }
     };
 
+    const handleOpenNotificationDetail = async (noti) => {
+        setSelectedNotification(noti);
+        setShowDetailModal(true);
+
+        if (!noti.read) {
+            await changeStatusNotification(noti.id);
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === noti.id ? { ...n, read: true } : n))
+            );
+            setUnreadNotifications((prev) =>
+                prev.filter((n) => n.id !== noti.id)
+            );
+
+        }
+    };
+
+    const handleClick = async (session) => {
+        const otherUser = getOtherUser(session, currentUserId);
+        try {
+            // Gọi API đánh dấu tin nhắn đã đọc
+            await changeStatusIsRead(session.id, currentUserId);
+            setUnreadCounts((prev) => ({
+                ...prev,
+                [session.id]: 0,
+            }));
+        } catch (err) {
+            console.warn("Không thể cập nhật trạng thái isRead");
+        }
+
+        // Điều hướng sang khung chat, truyền receiver qua state
+        navigate(`/auth/chat/${session.id}`, {
+            state: {
+                receiver: otherUser
+            }
+        });
+    };
 
     return (
         <div className="container mt-4">
+            <UserSwitcher />
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-primary mb-0">Messenger</h2>
 
                 <div className="d-flex gap-2">
-                    <button onClick={() => navigate(`/appointments/${currentUserId}`)} className="btn btn-outline-primary">
+                    <button onClick={() => navigate(`/auth/appointment/${currentUserId}`)} className="btn btn-outline-primary">
                         My Appointments
                     </button>
 
@@ -234,15 +355,28 @@ function ChatList() {
                             )}
                         </button>
 
-                        <ul className="dropdown-menu dropdown-menu-end" style={{ minWidth: '300px' }}>
+                        <ul
+                            className="dropdown-menu dropdown-menu-end"
+                            style={{
+                                minWidth: '300px',
+                                maxHeight: '300px',
+                                overflowY: 'auto'
+                            }}
+                        >
                             {notifications.length === 0 ? (
                                 <li className="dropdown-item text-muted">Không có thông báo mới</li>
                             ) : (
-                                notifications.slice(0, 5).map((noti, index) => (
-                                    <li key={index} className={`dropdown-item ${!noti.read ? 'fw-bold bg-light' : ''}`} onClick={handleClickNotification(noti.id)}>
+                                notifications.map((noti, index) => (
+                                    <li
+                                        key={index}
+                                        className={`dropdown-item border-bottom ${!noti.read ? 'fw-bold bg-light' : ''}`}
+                                        onClick={() => handleOpenNotificationDetail(noti)}
+                                    >
                                         <div>
                                             <strong>{noti.title}</strong>
-                                            {!noti.read && <span className="badge bg-warning ms-2">New</span>}
+                                            {!noti.read && (
+                                                <span className="badge bg-primary ms-2">New</span>
+                                            )}
                                         </div>
                                         <div className="text-muted" style={{ fontSize: '12px' }}>
                                             {noti.message}
@@ -250,14 +384,9 @@ function ChatList() {
                                     </li>
                                 ))
                             )}
-                            <li><hr className="dropdown-divider" /></li>
-                            <li>
-                                <button className="dropdown-item text-center text-primary" onClick={() => navigate('/notifications')}>
-                                    Xem tất cả
-                                </button>
-                            </li>
                         </ul>
                     </div>
+
                 </div>
             </div>
 
@@ -276,24 +405,79 @@ function ChatList() {
             {/* Chat 1-1 */}
             {!loading && !error && (
                 <>
+                    {sessions.length === 0 && (
+                        <div className="text-center text-muted mt-3">No chat session yet.</div>
+                    )}
+
                     <div className="list-group">
-                        {sessions.map((session) => (
-                            <div
-                                key={session.id}
-                                className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                onClick={() => navigate(`/chat/${session.id}`)}
-                                style={{ cursor: "pointer" }}
-                            >
-                                <div>
-                                    <strong>{session.receiver.fullname}</strong>
-                                    <p className="text-muted mb-0">{session.latestMessage}</p>
+                        {sessions.map((session) => {
+                            const isCurrentUserSender = session.sender.id === currentUserId;
+                            const otherUser = isCurrentUserSender ? session.receiver : session.sender;
+
+                            return (
+                                <div
+                                    key={session.id}
+                                    className="list-group-item list-group-item-action d-flex align-items-center gap-3"
+                                    onClick={() => handleClick(session)}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    {/* Avatar hình tròn */}
+                                    <img
+                                        src={otherUser.avatar || "/default-avatar.png"}
+                                        alt="avatar"
+                                        className="rounded-circle border"
+                                        width="40"
+                                        height="40"
+                                    />
+
+                                    {/* Nội dung bên trái */}
+                                    <div className="flex-grow-1">
+                                        <div className="fw-bold d-flex justify-content-between align-items-center">
+                                            {otherUser.fullname.toUpperCase()}
+
+                                            {session.timestamp && (
+                                                <small className="text-muted ms-2">
+                                                    {new Date(session.timestamp).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        hour12: true
+                                                    })}
+                                                </small>
+                                            )}
+                                        </div>
+
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <p
+                                                className={`mb-0 small flex-grow-1 ${session.unreadCount > 0 ? 'fw-bold text-dark' : 'text-muted'
+                                                    }`}
+                                            >
+                                                {session.latestMessage}
+                                            </p>
+
+                                            {/* 📩 Hiển thị số tin chưa đọc bên cạnh message */}
+                                            {session.unreadCount > 0 && (
+                                                <span className="badge bg-danger rounded-pill ms-2">
+                                                    {session.unreadCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+
+                        })}
                     </div>
 
+                    <hr className="my-3 border-top border-secondary" />
 
-                    {myGroup.length > 0 && (
+                    {myGroup.length === 0 ? (
+                        <div className="text-center text-muted mt-3">
+                            You don't have any groups yet. <br />
+                            <button className="btn btn-outline-primary mt-2" onClick={handleOpenCreate}>
+                                Create a group chat
+                            </button>
+                        </div>
+                    ) : (
                         <>
                             <div className="d-flex justify-content-between align-items-center mt-4">
                                 <h4>My Group ({myGroup.length})</h4>
@@ -302,17 +486,15 @@ function ChatList() {
                                 </button>
                             </div>
 
-
                             <div className="list-group mt-2">
                                 {myGroup.map((grp) => (
                                     <div
                                         key={grp.id}
                                         className="list-group-item d-flex justify-content-between align-items-center"
                                     >
-                                        {/* Phần click mở group */}
                                         <div
                                             className="d-flex align-items-center"
-                                            onClick={() => navigate(`/chat/group/${grp.id}`)}
+                                            onClick={() => navigate(`/auth/chat/group/${grp.id}`)}
                                             style={{ cursor: "pointer", flex: 1 }}
                                         >
                                             {grp.avt ? (
@@ -327,45 +509,25 @@ function ChatList() {
                                                     className="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
                                                     style={{ width: "40px", height: "40px" }}
                                                 >
-                                                    {/* SVG avatar placeholder */}
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 640 512"
-                                                        fill="white"
-                                                        width="20"
-                                                        height="20"
-                                                    >
-                                                        <path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM609.3 512l-137.8 0c5.4-9.4 8.6-20.3 8.6-32l0-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2l61.4 0C567.8 320 640 392.2 640 481.3c0 17-13.8 30.7-30.7 30.7zM432 256c-31 0-59-12.6-79.3-32.9C372.4 196.5 384 163.6 384 128c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112z" />
+                                                    {/* SVG default avatar */}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="white" width="20" height="20">
+                                                        <path d="..." />
                                                     </svg>
                                                 </div>
                                             )}
                                             <div>
                                                 <strong>{grp.name}</strong>
                                                 <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>
-                                                    {grp.des || "Không có mô tả"}
+                                                    {grp.des || "No description"}
                                                 </p>
-                                                <span className="badge bg-secondary">
-                                                    {grp.members?.length}/{grp.maxMember} members
-                                                </span>
                                             </div>
                                         </div>
 
-                                        {/* Nút Edit/Delete */}
                                         <div className="ms-3 d-flex gap-2">
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => {
-                                                    handleEditGroup(grp);
-                                                }}
-                                            >
+                                            <button className="btn btn-sm btn-outline-secondary" onClick={() => handleEditGroup(grp)}>
                                                 Edit
                                             </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => {
-                                                    handleDeleteGroup(grp.id);
-                                                }}
-                                            >
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteGroup(grp.id)}>
                                                 Delete
                                             </button>
                                         </div>
@@ -374,6 +536,9 @@ function ChatList() {
                             </div>
                         </>
                     )}
+
+                    <hr className="my-3 border-top border-secondary" />
+
                     {group.length > 0 && (
                         <>
                             <h4 className="mt-4">Chat Group ({group.length})</h4>
@@ -382,7 +547,7 @@ function ChatList() {
                                     <div
                                         key={grp.id}
                                         className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                        onClick={() => navigate(`/chat/group/${grp.id}`)}
+                                        onClick={() => navigate(`/auth/chat/group/${grp.id}`)}
                                         style={{ cursor: "pointer" }}
                                     >
                                         <div className="d-flex align-items-center"
@@ -416,9 +581,6 @@ function ChatList() {
                                                 <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
                                                     {grp.des || "Không có mô tả"}
                                                 </p>
-                                                <span className="badge bg-secondary">
-                                                    {grp.members?.length}/{grp.maxMember} members
-                                                </span>
                                             </div>
                                         </div>
                                         <span className="badge bg-secondary">
@@ -436,7 +598,7 @@ function ChatList() {
 
             {/* Nút Chat AI */}
             <button
-                onClick={() => navigate('/auth/chatai')} className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
+                onClick={() => navigate('/auth/chat/ai')} className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
                 style={{
                     position: "fixed",
                     bottom: "24px",
@@ -462,6 +624,13 @@ function ChatList() {
                 initialData={editingGroup}
             />
 
+            <NotificationDetailModal
+                show={showDetailModal}
+                onClose={() => setShowDetailModal(false)}
+                notification={selectedNotification}
+            />
+
+            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
 
         </div>
     );

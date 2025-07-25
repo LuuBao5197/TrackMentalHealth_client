@@ -22,10 +22,17 @@ import ChatWithAI from '../components/chatPage/ChatWithAI.jsx';
 import EditLesson from '../components/LessonPage/EditLesson.jsx';
 import { element } from 'prop-types';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
+import ChatGroup from '../components/chatPage/ChatGroup.jsx';
+import Appointments from '../components/appointmentPage/UserPage/Appointments.jsx';
+import UpdateAppointment from '../components/appointmentPage/UserPage/UpdateAppointment.jsx';
+import CreateAppointment from '../components/appointmentPage/UserPage/CreateAppointment.jsx';
+
 import EditExercise from '../components/ExercisePage/EditExercise.jsx';
 import EditArticle from '../components/ArticlePage/EditArticle.jsx';
+
 import TestListForUser from '../components/testPage/TestListForUser.jsx';
 import Unauthorized from '../views/authentication/Unauthorize.jsx';
+import AppointmentManagement from '../components/appointmentPage/PsychologistPage/AppointmentManagement.jsx';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -73,6 +80,19 @@ const Router = [
       { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
       { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
+      { path: "chat/list", element: <ChatList /> },
+      { path: "chat/ai", element: <ChatWithAI /> },
+      { path: "chat/:sessionId", element: <ChatWithUser /> },
+      { path: "chat/group/:groupId", element: <ChatGroup /> },
+
+      //appointment
+      { path: "appointment/:userId", element: <Appointments /> },
+      { path: "appointment/edit/:appointmentid", element: <UpdateAppointment /> },
+      { path: "appointment/create/:userId", element: <CreateAppointment /> },
+      { path: "appointment/psychologist", element: <AppointmentManagement /> },
+
+
+      //chat
       { path: "chat", element: <ChatList /> },
       { path: "chatlist", element: <ChatList /> },
       { path: "chatai", element: <ChatWithAI /> },
@@ -123,6 +143,7 @@ const Router = [
           { path: 'history', element: <DiaryHistoryPage /> },
           { path: "mood-history", element: <MoodHistoryPage /> },
           { path: 'doTest/:testId', element: <DoTestForm /> },
+
         ],
       },
     ],
@@ -142,8 +163,7 @@ const Router = [
           { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
-          { path: 'test/doTest', element: <DoTestForm /> }
-
+          { path: 'test/doTest', element: <DoTestForm/>}
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

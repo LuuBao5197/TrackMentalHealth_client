@@ -27,10 +27,7 @@ const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
   console.log(userRole);
-
   const [headerHeight, setHeaderHeight] = useState(0);
-
-
   // Add/remove class vào body
   useEffect(() => {
     document.body.classList.add('index-page');
@@ -52,6 +49,7 @@ const UserLayout = () => {
   return (
     <div>
       <Header />
+      {/* <HeroPage /> */}
       {/* <AboutSection />
       <HowWeWork/>
       <Portfolio/>
