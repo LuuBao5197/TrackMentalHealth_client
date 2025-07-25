@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '@components/userPage/Header';
-import Footer from '@components/userPage/Footer'; 
+import Footer from '@components/userPage/Footer';
 import HeroPage from '@components/userPage/HeroPage';
 import AboutSection from '@components/userPage/AboutSection';
 import HowWeWork from '@components/userPage/HowWeWork';
@@ -27,10 +27,17 @@ const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
   console.log(userRole);
+
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+
   // Add/remove class vào body
   useEffect(() => {
     document.body.classList.add('index-page');
-
+    const header = document.querySelector('header'); // hoặc .your-custom-header-class
+    if (header) {
+      setHeaderHeight(header.offsetHeight);
+    }
     // Cleanup: xóa khi component unmount
     return () => {
       document.body.classList.remove('index-page');
@@ -56,8 +63,9 @@ const UserLayout = () => {
       <TeamSection/> */}
       {/* <Testimonials/> */}
       {/* <ContactSection/> */}
-
-      <Outlet />
+      <main style={{ paddingTop: headerHeight }} className='container'>
+        <Outlet />
+      </main>
       <Footer />
 
     </div>

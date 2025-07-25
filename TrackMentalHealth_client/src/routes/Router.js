@@ -24,6 +24,8 @@ import { element } from 'prop-types';
 import ChatWithUser from '../components/chatPage/ChatWithUser.jsx';
 import EditExercise from '../components/ExercisePage/EditExercise.jsx';
 import EditArticle from '../components/ArticlePage/EditArticle.jsx';
+import TestListForUser from '../components/testPage/TestListForUser.jsx';
+import Unauthorized from '../views/authentication/Unauthorize.jsx';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -39,12 +41,12 @@ const Error = Loadable(lazy(() => import('../views/authentication/Error')));
 const Register = Loadable(lazy(() => import('../views/authentication/Register')));
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../components/userPage/HomePage.jsx')));
-const AboutUs = Loadable(lazy(()=> import('../components/userPage/AboutSection.jsx')));
+const AboutUs = Loadable(lazy(() => import('../components/userPage/AboutSection.jsx')));
 const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
-const ImportTestPage = Loadable(lazy(()=> import('../components/testPage/ImportTestExcel.jsx')))
+const ImportTestPage = Loadable(lazy(() => import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
-const TestListPage = Loadable(lazy(()=> import('../components/testPage/TestList.jsx') ))
-const TestResultForm = Loadable(lazy(()=> import('../components/testPage/TestResultForm.jsx')))
+const TestListPage = Loadable(lazy(() => import('../components/testPage/TestList.jsx')))
+const TestResultForm = Loadable(lazy(() => import('../components/testPage/TestResultForm.jsx')))
 const DoTestForm = Loadable(lazy(() => import('../components/testPage/DoTestForm.jsx')))
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 
@@ -59,6 +61,8 @@ const Router = [
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
+      { path: 'unauthorized', element: <Unauthorized /> },
+
       { path: 'create-lesson', element: <CreateLesson /> },
       { path: 'create-exercise', element: <CreateExercise /> },
       { path: 'create-article', element: <CreateArticle /> },
@@ -70,16 +74,17 @@ const Router = [
       { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
       { path: "chat", element: <ChatList /> },
-      { path: "chatlist", element: <ChatList /> },      
+      { path: "chatlist", element: <ChatList /> },
       { path: "chatai", element: <ChatWithAI /> },
       { path: "chat/:id", element: <ChatWithUser /> },
+
     ],
   },
 
   //🔐 Private: Cần đăng nhập
   {
     path: '/',
-    element: <FullLayout />,
+    element: <UserLayout />,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
@@ -107,14 +112,17 @@ const Router = [
     children: [
       { path: 'homepage', element: <HomePage /> },
       { path: 'social', element: <SocialPage /> },
-       { path: 'aboutUs', element: <AboutUs /> },
+      { path: 'aboutUs', element: <AboutUs /> },
+      { path: 'tests', element: <TestListForUser /> },
+
       {
-        element: <ProtectedRoute allowedRoles={['User']} />, // gộp role User và 2
+        element: <ProtectedRoute allowedRoles={['USER']} />, // gộp role User và 2
         children: [
-          { path: 'homepage', element: <HomePage /> },
+          // { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-          {path: "mood-history", element: <MoodHistoryPage />},
+          { path: "mood-history", element: <MoodHistoryPage /> },
+          { path: 'doTest/:testId', element: <DoTestForm /> },
         ],
       },
     ],
@@ -128,16 +136,17 @@ const Router = [
       {
         element: <ProtectedRoute allowedRoles={['TEST_DESIGNER']} />,
         children: [
-          { path: 'test/', element: <TestListPage/>},
+          { path: 'test/', element: <TestListPage /> },
           { path: 'test/edit/:id', element: <TestPage /> },
           { path: 'test/create', element: <OptionPage /> },
           { path: 'test/edit/:id', element: <OptionPage /> },
-          { path: 'test/importfile', element: <ImportTestPage/>},
-          { path: 'test/testResult/create', element: <TestResultForm/>},
-          { path: 'test/doTest', element: <DoTestForm/>}
-      
+          { path: 'test/importfile', element: <ImportTestPage /> },
+          { path: 'test/testResult/create', element: <TestResultForm /> },
+          { path: 'test/doTest', element: <DoTestForm /> }
+
         ],
       },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
 
     ],
   },
@@ -149,6 +158,7 @@ const Router = [
       { path: 'user/edit-profile/:userId', element: <EditProfile /> },
     ],
   },
+  { path: '*', element: <Navigate to="/auth/404" replace /> },
 ];
 
 export default Router;
