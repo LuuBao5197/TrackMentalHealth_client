@@ -9,122 +9,92 @@ import { setCredentials } from '../../redux/slices/authSlice';
 import {
     Box,
     Typography,
-    FormGroup,
-    FormControlLabel,
-    Button,
     Stack,
-    Checkbox,
-    Alert
+    Alert,
+    Button
 } from '@mui/material';
 
-import CustomTextField from '../../components/forms/theme-elements/CustomTextField';
 import AuthLogin from '../../views/authentication/auth/AuthLogin';
+import { GoogleLogin } from '@react-oauth/google';
 
-const LoginForm = () => {
+const LoginForm = ({ subtext, subtitle }) => {
     const navigate = useNavigate();
-    const [errorMessage, setErrorMessage] = React.useState('');
     const dispatch = useDispatch();
+    const [errorMessage, setErrorMessage] = React.useState('');
+
+    const handleSuccessLogin = (token) => {
+        try {
+            const decoded = jwtDecode(token);
+            localStorage.setItem('token', token);
+            dispatch(setCredentials({ user: decoded, token }));
+
+            if (decoded.role === "USER") {
+                navigate("/user/social");
+            } else {
+                navigate("/dashboard");
+            }
+        } catch (err) {
+            console.error("Token decode failed", err);
+        }
+    };
+
+    const loginWithSocialToken = async (provider, idToken) => {
+        try {
+            const response = await axios.post(`http://localhost:9999/api/auth/oauth/${provider}`, null, {
+                params: { idToken },
+            });
+            const { token } = response.data;
+            handleSuccessLogin(token);
+        } catch (err) {
+            console.error(`Login with ${provider} failed:`, err);
+            setErrorMessage(`Login with ${provider} failed`);
+        }
+    };
+
+
     const formik = useFormik({
         initialValues: {
             email: '',
             password: '',
-            remember: true,
+            remember: false
         },
         validationSchema: Yup.object({
-            email: Yup.string().required('Required'),
+            email: Yup.string().email('Invalid email').required('Required'),
             password: Yup.string().required('Required'),
         }),
         onSubmit: async (values) => {
             try {
-                const response = await axios.post('http://localhost:9999/api/users/login', {
-                    email: values.email,
-                    password: values.password,
-                });
-                const {token} = response.data;
-                console.log('Token from response:', token);
-
-                localStorage.setItem('token', token);
-                // localStorage.setItem("user", JSON.stringify(decoded));
-                const decoded = jwtDecode(token);
-                dispatch(setCredentials({ user: decoded, token }));
-                console.log('Decoded token:', decoded);
-                if(decoded.role == "USER"){
-                    alert("Login successful");
-                    navigate("/user/social")
-                } else if(decoded.role == "ADMIN"){
-                    alert("Login successful");
-                    navigate("/dashboard");
-                } else if(decoded.role == "PSYCHOLOGIST"){
-                    alert("Login successful");
-                    navigate("/dashboard");
-                } else if(decoded.role == "CONTENT_CREATOR"){
-                    alert("Login successful");
-                    navigate("/dashboard");
-                }else if(decoded.role == "TEST_DESIGNER"){
-                    alert("Login successful");
-                    navigate("/dashboard");
-                }
+                const res = await axios.post('http://localhost:9999/api/users/login', values);
+                handleSuccessLogin(res.data.token);
             } catch (err) {
-                if (err.response && err.response.status === 401) {
-                    setErrorMessage('Invalid email or password');
-                } else {
-                    setErrorMessage('Login failed. Please try again later.');
-                }
+                setErrorMessage("Invalid email or password");
             }
         }
     });
 
-    React.useEffect(() => {
-        const handleMouseMove = (e) => {
-            const pupils = document.querySelectorAll('.pupil');
-            pupils.forEach(pupil => {
-                const rect = pupil.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const dx = e.clientX - centerX;
-                const dy = e.clientY - centerY;
-                const angle = Math.atan2(dy, dx);
-                const radius = 3;
-                pupil.setAttribute('cx', Number(pupil.dataset.ox) + radius * Math.cos(angle));
-                pupil.setAttribute('cy', Number(pupil.dataset.oy) + radius * Math.sin(angle));
-            });
-        };
-
-        const pupils = document.querySelectorAll('.pupil');
-        pupils.forEach(pupil => {
-            pupil.dataset.ox = pupil.getAttribute('cx');
-            pupil.dataset.oy = pupil.getAttribute('cy');
-        });
-
-        document.addEventListener('mousemove', handleMouseMove);
-        return () => document.removeEventListener('mousemove', handleMouseMove);
-    }, []);
-
-
     return (
         <AuthLogin
-            subtitle={
-                <Stack direction="row" spacing={1} justifyContent="center" mt={3}>
-                    <Typography color="textSecondary" variant="h6" fontWeight="500">
-                        New to Track Mental Health?
-                    </Typography>
-                    <Typography
-                        component="a"
-                        href="/TrackMentalHealth/auth/register"
-                        fontWeight="500"
-                        sx={{
-                            textDecoration: 'none',
-                            color: 'primary.main',
-                        }}
-                    >
-                        Create an account
-                    </Typography>
-                </Stack>
-            }
             formik={formik}
             errorMessage={errorMessage}
+            subtext={
+                <>
+                    {subtext}
+                    <Stack direction="column" spacing={2} alignItems="center" mt={1}>
+                        <GoogleLogin
+                            onSuccess={(credentialResponse) => {
+                                const credential = credentialResponse.credential;
+                                loginWithSocialToken('google', credential);
+                            }}
+                            onError={() => setErrorMessage('Google login failed')}
+                            useOneTap
+                        />    
+                    </Stack>
+                </>
+            }
+            subtitle={subtitle}
         />
     );
 };
+
 
 export default LoginForm;

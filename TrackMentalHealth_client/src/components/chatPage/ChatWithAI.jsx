@@ -10,7 +10,6 @@ import {useNavigate} from "react-router-dom";
 import {useEffect, useState} from "react";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { chatAI, getAIHistory } from "../../api/api";
-import { margin } from "@mui/system";
 
 function ChatWithAI() {
     const currentUserId = getCurrentUserId(); 
@@ -74,7 +73,7 @@ function ChatWithAI() {
         <MinChatUiProvider theme="#6ea9d7">
             <MainContainer style={{height: '100vh'}}>
                 <MessageContainer>
-                    <MessageHeader onBack={() => nav('/auth/chat')}>AI Psychologist</MessageHeader>
+                    <MessageHeader onBack={() => nav('/auth/chat/list')}>AI Psychologist</MessageHeader>
                     <MessageList currentUserId={currentUserId} messages={messages}/>
                     <MessageInput
                         placeholder="Nhập tin nhắn..."

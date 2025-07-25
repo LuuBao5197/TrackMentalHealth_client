@@ -1,6 +1,4 @@
-
+// src/utils/getCurrentUserID.js
 export function getCurrentUserId() {
-    //demo
-    const currentUserId = "1"
-    return currentUserId;
+    return localStorage.getItem("currentUserId") || "1";
 }
