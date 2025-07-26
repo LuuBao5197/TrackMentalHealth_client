@@ -9,7 +9,7 @@ const ArticleManager = () => {
   const fetchUserNameById = async (id) => {
     try {
       const res = await axios.get(`http://localhost:9999/api/user/${id}`);
-      return res.data.fullname || 'Không rõ';
+      return res.data.username || 'Không rõ';
     } catch (err) {
       console.error(`❌ Lỗi khi lấy tên người dùng với ID ${id}:`, err);
       return 'Không rõ';
