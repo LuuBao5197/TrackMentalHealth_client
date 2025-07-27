@@ -1,42 +1,51 @@
 import React from 'react';
-
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@assets/css/about.css'; // File CSS tùy chỉnh
+import { ReactComponent as AboutSVG } from '@assets/img/about/AboutUsTMH.svg';
+import { Link } from 'react-router-dom';
 const AboutSection = () => {
   return (
-    <section id="about" className="about section">
+    <section
+      id="about"
+      className="about section py-5"
+      style={{ backgroundColor: '#f9f9f9' }}
+    >
       <div className="container">
-        <div className="row gy-4">
+        <div className="row gy-4 align-items-center">
 
+          {/* Nội dung giới thiệu */}
           <div className="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
-            <p className="who-we-are">Who We Are</p>
-            <h3>Unleashing Potential with Creative Strategy</h3>
-            <p className="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
+            <p className="text-primary fw-semibold">About TrackMentalHealth</p>
+            <h3 className="mb-4">Empowering Mental Wellness Through Technology</h3>
+            <p className="text-muted">
+              TrackMentalHealth is a modern platform designed to help individuals monitor, assess,
+              and improve their mental well-being. Our mission is to make mental health support
+              more accessible, personalized, and data-driven.
             </p>
-            <ul>
-              <li><i className="bi bi-check-circle"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-              <li><i className="bi bi-check-circle"></i> <span>Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-              <li><i className="bi bi-check-circle"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</span></li>
+            <ul className="list-unstyled">
+              <li className="mb-2">
+                <i className="bi bi-check-circle text-success me-2"></i>
+                <span>Daily mood and symptom tracking with visual insights</span>
+              </li>
+              <li className="mb-2">
+                <i className="bi bi-check-circle text-success me-2"></i>
+                <span>Access to self-assessment tests such as PHQ-9 and MBTI</span>
+              </li>
+              <li className="mb-2">
+                <i className="bi bi-check-circle text-success me-2"></i>
+                <span>Expert content and guidance from psychologists and mental health professionals</span>
+              </li>
             </ul>
-            <a href="#" className="read-more"><span>Read More</span><i className="bi bi-arrow-right"></i></a>
+            <Link to="/user/homepage" className="btn btn-outline-primary mt-3">
+
+              <i className="bi bi-arrow-right ms-1"></i>Learn More
+            </Link>
+
           </div>
 
-          <div className="col-lg-6 about-images" data-aos="fade-up" data-aos-delay="200">
-            <div className="row gy-4">
-              <div className="col-lg-6">
-                <img src="assets/img/about/about-portrait-1.webp" className="img-fluid" alt="" />
-              </div>
-              <div className="col-lg-6">
-                <div className="row gy-4">
-                  <div className="col-lg-12">
-                    <img src="assets/img/about/about-8.webp" className="img-fluid" alt="" />
-                  </div>
-                  <div className="col-lg-12">
-                    <img src="assets/img/about/about-12.webp" className="img-fluid" alt="" />
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Hình ảnh minh họa */}
+          <div className="col-lg-6 about-images d-flex justify-content-center" data-aos="fade-up" data-aos-delay="200">
+            <AboutSVG style={{ width: '100%', height: 'auto' }} />
           </div>
 
         </div>
