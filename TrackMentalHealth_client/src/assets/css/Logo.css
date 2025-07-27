@@ -9,8 +9,8 @@
 }
 
 .logo-img {
-  width: 600px;         /* Logo to rõ hơn */
-  max-width: 100%;      /* Responsive không vỡ khung */
+  width: 500px;         /* Logo to rõ hơn */
+  max-width: 70%;      /* Responsive không vỡ khung */
   height: auto;
   object-fit: contain;
   filter: brightness(1.2) contrast(1.1);
