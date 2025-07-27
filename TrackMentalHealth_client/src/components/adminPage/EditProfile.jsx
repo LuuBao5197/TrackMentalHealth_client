@@ -7,12 +7,17 @@ import {
     Avatar,
     Paper,
     MenuItem,
-    CircularProgress
+    CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    DialogContent
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
     fullname: Yup.string().required('Full name is required'),
@@ -22,6 +27,8 @@ const validationSchema = Yup.object({
 });
 
 const EditProfile = () => {
+    const navigate = useNavigate();
+    const [openSuccessDialog, setOpenSuccessDialog] = useState(false);
     const user = useSelector((state) => state.auth.user);
     const [avatar, setAvatar] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -91,7 +98,7 @@ const EditProfile = () => {
                         Authorization: `Bearer ${token}`,
                     }
                 });
-                alert(res.data.message || 'Profile updated!');
+                setOpenSuccessDialog(true);
             } catch (err) {
                 console.error("Update failed:", err.response?.data || err.message);
                 alert("Update failed!");
@@ -228,9 +235,19 @@ const EditProfile = () => {
                     Save Changes
                 </Button>
             </Box>
+            <Dialog open={openSuccessDialog} onClose={() => setOpenSuccessDialog(false)}>
+                <DialogTitle>✅ Update Successfully!</DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setOpenSuccessDialog(false);
+                        navigate("/user/social");
+                    }} autoFocus>
+                        OK
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 };
 
 export default EditProfile;
-    
