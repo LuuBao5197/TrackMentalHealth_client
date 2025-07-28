@@ -21,6 +21,6 @@ const getTitle = (type) => {
         case 'question':
             return 'Xác nhận';
         default:
-            return '';
+            return 'Successfully';
     }
 };

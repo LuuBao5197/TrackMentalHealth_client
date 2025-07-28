@@ -110,7 +110,7 @@ const Router = [
     path: '/',
     element: <UserLayout />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <Navigate to="/user/homepage" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
       {
         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
@@ -162,12 +162,12 @@ const Router = [
         element: <ProtectedRoute allowedRoles={['TEST_DESIGNER']} />,
         children: [
           { path: 'test/', element: <TestListPage /> },
-          { path: 'test/edit/:id', element: <TestPage /> },
           { path: 'test/create', element: <OptionPage /> },
           { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
-          { path: 'test/doTest', element: <DoTestForm/>}
+          {path: 'test/testResult/edit/:testId', element: <TestResultForm />}
+          
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

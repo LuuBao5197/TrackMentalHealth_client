@@ -7,6 +7,8 @@ import {
   IconTrash,
   IconSearch,
 } from '@tabler/icons-react';
+import TestPreviewModal from './TestPreviewModal';
+import { useNavigate } from 'react-router';
 
 const TestList = () => {
   const [tests, setTests] = useState([]);
@@ -16,7 +18,9 @@ const TestList = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [totalPages, setTotalPages] = useState(0);
-
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedTest, setSelectedTest] = useState(null);
+  const navigate = useNavigate();
   const fetchTests = useCallback(async (page, size = perPage, searchTerm = search) => {
     setLoading(true);
     try {
@@ -60,11 +64,13 @@ const TestList = () => {
   }, [search, fetchTests]);
 
   const handleDetail = (test) => {
-    alert(`Detail of test ID ${test.id}`);
+    setSelectedTest(test);
+    setShowDetail(true);
   };
 
   const handleEdit = (test) => {
-    alert(`Edit test ID ${test.id}`);
+    console.log(test);
+    navigate(`/testDesigner/test/edit/${test.id}`)
   };
 
   const handleDelete = async (testId) => {
@@ -196,7 +202,15 @@ const TestList = () => {
         noDataComponent="Không có dữ liệu"
 
       />
+      <TestPreviewModal
+        show={showDetail}
+        onClose={() => setShowDetail(false)}
+        testData={selectedTest}
+        title="Test Detail"
+      />
+
     </div>
+
   );
 };
 

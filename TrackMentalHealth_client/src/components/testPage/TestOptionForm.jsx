@@ -2,15 +2,17 @@ import React, { lazy, useEffect, useState } from 'react';
 import { useFormik, FormikProvider, FieldArray } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Loadable from '../../layouts/full/shared/loadable/Loadable';
+import { showAlert } from '../../utils/showAlert';
+import { showConfirm } from '../../utils/showConfirm';
 // const OptionPage = Loadable(lazy(() => import('../testPage/ImportTestExcel')))
 
 const FullTestFormWithPreview = () => {
   const { id } = useParams();
   const isEditMode = !!id;
   const [previewMode, setPreviewMode] = useState(false);
-
+  const navigate = useNavigate();
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -98,18 +100,22 @@ const FullTestFormWithPreview = () => {
           instructions: true,
           questions: touchedQuestions
         });
-
-        alert('Vui lòng kiểm tra lại thông tin trước khi lưu!');
+        showAlert("Check information carefully before save",);
+        // alert('Vui lòng kiểm tra lại thông tin trước khi lưu!');
         return;
       }
-
       const payload = {
         ...values,
+        id: isEditMode ? id : undefined, // 👈 nếu đang sửa, thêm id vào payload
         questions: values.questions.map((q, qIdx) => ({
-          ...q,
+          id: q.id, // 👈 giữ lại id câu hỏi nếu có
+          questionText: q.questionText,
+          questionType: q.questionType,
           questionOrder: qIdx + 1,
           options: q.options.map((opt, oIdx) => ({
-            ...opt,
+            id: opt.id, // 👈 giữ lại id đáp án nếu có
+            optionText: opt.optionText,
+            scoreValue: opt.scoreValue,
             optionOrder: oIdx + 1
           }))
         }))
@@ -117,16 +123,25 @@ const FullTestFormWithPreview = () => {
 
       try {
         if (isEditMode) {
+          const confirm = await showConfirm("Are you sure to save");
+          if (!confirm) {
+            return;
+          }
+          // await axios.put(`http://localhost:9999/api/test/full/${id}`, payload);
+          console.log(payload);
           await axios.put(`http://localhost:9999/api/test/full/${id}`, payload);
-          alert('Cập nhật thành công!');
+          showAlert('Cập nhật thành công!', "success");
+          navigate(-1);
+
         } else {
           await axios.post('http://localhost:9999/api/test/full', payload);
-          alert('Tạo thành công!');
+          showAlert('Tạo thành công!');
+          navigate(-1);
         }
         formik.resetForm();
       } catch (err) {
         console.error(err);
-        alert('Có lỗi xảy ra khi lưu dữ liệu!');
+        showAlert('Có lỗi xảy ra khi lưu dữ liệu!');
       }
     }
 
@@ -136,7 +151,7 @@ const FullTestFormWithPreview = () => {
 
   useEffect(() => {
     if (isEditMode) {
-      axios.get(`http://localhost:9999/api/test/full/${id}`)
+      axios.get(`http://localhost:9999/api/test/${id}`)
         .then(res => formik.setValues(res.data))
         .catch(err => console.error('Load lỗi:', err));
     }
