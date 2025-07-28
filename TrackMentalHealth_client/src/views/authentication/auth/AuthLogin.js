@@ -24,7 +24,7 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => {
 
     return (<form onSubmit={formik.handleSubmit}>
         <Box display="flex" justifyContent="center" mb={3}>
-            <svg
+            {/* <svg
                 id="cat"
                 width="200"
                 height="200"
@@ -74,7 +74,7 @@ const AuthLogin = ({ title, subtitle, subtext, formik, errorMessage }) => {
                 />
 
                 <rect className="hand" x="50" y="70" width="100" height="30" fill="#000000FF" rx="10" ry="10" style={{ display: 'none' }} />
-            </svg>
+            </svg> */}
         </Box>
         {title && (
             <Typography fontWeight="700" variant="h2" mb={1}>

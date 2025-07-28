@@ -1,212 +1,142 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Typography,
+    TextField,
     Button,
-    MenuItem,
-    InputLabel,
-    Select,
-    FormControl,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Typography,
+    Alert,
+    Link,
+    Stack,
+    InputAdornment,
     IconButton,
-    InputAdornment
+    CircularProgress,
 } from '@mui/material';
-import { Stack } from '@mui/system';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import CustomTextField from '../../components/forms/theme-elements/CustomTextField';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useNavigate } from 'react-router-dom';
 
 const RegisterForm = () => {
     const navigate = useNavigate();
-    const [avatarFile, setAvatarFile] = useState(null);
-    const [certificateFiles, setCertificateFiles] = useState([]);
-    const [certificateError, setCertificateError] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-
-    const [otpSent, setOtpSent] = useState(false);
+    const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+    const [emailForOtp, setEmailForOtp] = useState('');
     const [otp, setOtp] = useState('');
     const [otpVerified, setOtpVerified] = useState(false);
     const [otpError, setOtpError] = useState('');
+    const [otpSentMessage, setOtpSentMessage] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        let timer;
+        if (resendCooldown > 0) {
+            timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+        }
+        return () => clearTimeout(timer);
+    }, [resendCooldown]);
+
+    const validationSchema = Yup.object({
+        fullName: Yup.string().required('Full name is required'),
+        email: Yup.string().email('Invalid email').required('Email is required'),
+        password: Yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
+        confirmPassword: Yup.string().oneOf([Yup.ref('password'), null], 'Passwords must match')
+            .required('Confirm Password is required'),
+    });
 
     const formik = useFormik({
         initialValues: {
             fullName: '',
             email: '',
             password: '',
-            roleId: '',
+            confirmPassword: '',
         },
-        validationSchema: Yup.object({
-            fullName: Yup.string().required('Name is required'),
-            email: Yup.string().email('Invalid email').required('Email is required'),
-            password: Yup.string().min(6, 'Min 6 characters').required('Password is required'),
-            roleId: Yup.string().required('Please select role'),
-        }),
-        onSubmit: async (values, { setSubmitting }) => {
+        validationSchema,
+        onSubmit: async (values) => {
             try {
-                const formData = new FormData();
-                formData.append('fullName', values.fullName);
-                formData.append('email', values.email);
-                formData.append('password', values.password);
-                formData.append('roleId', Number(values.roleId));
-
-                if (avatarFile) formData.append('avatar', avatarFile);
-
-                const roleIdNum = Number(values.roleId);
-                const requiresCertificate = [3, 4, 5].includes(roleIdNum);
-
-                if (requiresCertificate) {
-                    if (!certificateFiles || certificateFiles.length < 1 || certificateFiles.length > 5) {
-                        setCertificateError('You must upload between 1 and 5 certificates for this role.');
-                        setSubmitting(false);
-                        return;
-                    } else {
-                        setCertificateError('');
-                        Array.from(certificateFiles).forEach((file) =>
-                            formData.append('certificates', file)
-                        );
-                    }
-                }
-
-                await axios.post('http://localhost:9999/api/users/register', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
+                setLoading(true);
+                setEmailForOtp(values.email);
+                await axios.post('http://localhost:9999/api/users/send-otp-register', null, {
+                    params: { email: values.email }
                 });
-
-                alert('Registration successful!');
-                navigate('/auth/login');
-            } catch (err) {
-                alert('Registration failed. Please try again.');
-                console.error('Registration error:', err.response?.data || err);
+                setOtpDialogOpen(true);
+                setOtpSentMessage('OTP has been sent to your email.');
+                setResendCooldown(60);
+            } catch (error) {
+                console.error('Error sending OTP:', error);
             } finally {
-                setSubmitting(false);
+                setLoading(false);
             }
-        }
+        },
     });
 
-    const showCertificateInput = ['3', '4', '5'].includes(formik.values.roleId);
+    const handleVerifyOtp = async () => {
+        try {
+            await axios.post('http://localhost:9999/api/users/verify-otp-register', null, {
+                params: { email: emailForOtp, otp }
+            });
+            setOtpVerified(true);
+            setOtpDialogOpen(false);
+
+            const registerData = new FormData();
+            registerData.append('fullName', formik.values.fullName);
+            registerData.append('email', formik.values.email);
+            registerData.append('password', formik.values.password);
+            registerData.append('confirmPassword', formik.values.confirmPassword);
+            registerData.append('roleId', '1'); // USER role
+
+            await axios.post('http://localhost:9999/api/users/register', registerData);
+            alert('Registration successful!');
+            navigate('/auth/login');
+        } catch (error) {
+            setOtpError('Invalid OTP. Please try again.');
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0) return;
+        try {
+            await axios.post('http://localhost:9999/api/users/send-otp-register', null, {
+                params: { email: emailForOtp }
+            });
+            setOtpSentMessage('OTP resent successfully.');
+            setResendCooldown(60);
+        } catch (error) {
+            setOtpSentMessage('Failed to resend OTP.');
+        }
+    };
 
     return (
-        <Box component="form" onSubmit={formik.handleSubmit} encType="multipart/form-data">
-            <Stack mb={3}>
-                <Typography variant="subtitle1" fontWeight={600} mb="5px">
-                    Email Address
-                </Typography>
-                <CustomTextField
-                    id="email"
-                    name="email"
-                    label="Email"
-                    variant="outlined"
+        <form onSubmit={formik.handleSubmit}>
+            <Stack spacing={2}>
+                <TextField
                     fullWidth
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={async (e) => {
-                        formik.handleBlur(e);
-
-                        const email = e.target.value;
-
-                        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-
-                        try {
-                            const res = await axios.get('http://localhost:9999/api/users/check-email', {
-                                params: { email },
-                            });
-
-                            if (res.data.exists) {
-                                formik.setFieldError('email', 'Email is already taken');
-                                setOtpSent(false);
-                                return;
-                            }
-
-                            console.log('📨 Sending OTP to:', email);
-
-                            axios.post('http://localhost:9999/api/users/send-otp-register', null, {
-                                params: { email: email }
-                            }, {
-                                headers: { Authorization: undefined }
-                            });
-
-                            setOtpSent(true);
-                            setOtpVerified(false);
-                            setOtp('');
-                            setOtpError('');
-                        } catch (err) {
-                            console.error('OTP send failed:', err);
-                            formik.setFieldError('email', 'Failed to send OTP. Try again.');
-                        }
-                    }}
-                    error={formik.touched.email && Boolean(formik.errors.email)}
-                    helperText={formik.touched.email && formik.errors.email}
-                />
-
-                {otpSent && !otpVerified && (
-                    <Box mt={2}>
-                        <Typography fontWeight={600} mb="5px">
-                            Enter OTP (sent to your email)
-                        </Typography>
-                        <CustomTextField
-                            fullWidth
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            error={Boolean(otpError)}
-                            helperText={otpError}
-                        />
-                        <Button
-                            sx={{ mt: 1 }}
-                            variant="outlined"
-                            size="small"
-                            onClick={async () => {
-                                try {
-                                    const res = await axios.post('http://localhost:9999/api/users/verify-otp-register', null, {
-                                        params: { email: formik.values.email, otp: otp }
-                                    });
-
-                                    if (res.data.verified) {
-                                        setOtpVerified(true);
-                                        setOtpError('');
-                                        alert('OTP verified successfully!');
-                                    } else {
-                                        setOtpError('Invalid OTP');
-                                    }
-                                } catch (err) {
-                                    console.error('OTP verify failed:', err);
-                                    setOtpError('OTP verification failed');
-                                }
-                            }}
-                        >
-                            Verify OTP
-                        </Button>
-                    </Box>
-                )}
-
-                <Typography variant="subtitle1" fontWeight={600} mb="5px" mt="25px">
-                    Full Name
-                </Typography>
-                <CustomTextField
-                    id="fullName"
-                    name="fullName"
                     label="Full Name"
-                    variant="outlined"
-                    fullWidth
-                    disabled={!otpVerified}
+                    name="fullName"
                     value={formik.values.fullName}
                     onChange={formik.handleChange}
                     error={formik.touched.fullName && Boolean(formik.errors.fullName)}
                     helperText={formik.touched.fullName && formik.errors.fullName}
                 />
-
-                <Typography variant="subtitle1" fontWeight={600} mb="5px" mt="25px">
-                    Password
-                </Typography>
-                <CustomTextField
-                    id="password"
-                    name="password"
-                    label="Password"
-                    type={showPassword ? 'text' : 'password'}
-                    variant="outlined"
+                <TextField
                     fullWidth
-                    disabled={!otpVerified}
+                    label="Email"
+                    name="email"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    error={formik.touched.email && Boolean(formik.errors.email)}
+                    helperText={formik.touched.email && formik.errors.email}
+                />
+                <TextField
+                    fullWidth
+                    type={showPassword ? 'text' : 'password'}
+                    label="Password"
+                    name="password"
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     error={formik.touched.password && Boolean(formik.errors.password)}
@@ -214,79 +144,67 @@ const RegisterForm = () => {
                     InputProps={{
                         endAdornment: (
                             <InputAdornment position="end">
-                                <IconButton
-                                    onClick={() => setShowPassword((prev) => !prev)}
-                                    edge="end"
-                                >
+                                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                                     {showPassword ? <VisibilityOff /> : <Visibility />}
                                 </IconButton>
                             </InputAdornment>
                         )
                     }}
                 />
-
-                <FormControl fullWidth margin="normal" disabled={!otpVerified}>
-                    <InputLabel id="roleId-label">Role</InputLabel>
-                    <Select
-                        labelId="roleId-label"
-                        id="roleId"
-                        name="roleId"
-                        label="Role"
-                        value={formik.values.roleId}
-                        onChange={(e) => formik.setFieldValue('roleId', e.target.value)}
-                        error={formik.touched.roleId && Boolean(formik.errors.roleId)}
-                    >
-                        <MenuItem value="1">User</MenuItem>
-                        <MenuItem value="3">Content Creator</MenuItem>
-                        <MenuItem value="4">Test Designer</MenuItem>
-                        <MenuItem value="5">Psychologist</MenuItem>
-                    </Select>
-                </FormControl>
-
-                <Box mt={2}>
-                    <Typography fontWeight={600} mb="5px">
-                        Avatar (optional)
-                    </Typography>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        disabled={!otpVerified}
-                        onChange={(e) => setAvatarFile(e.currentTarget.files[0])}
-                    />
-                </Box>
-
-                {showCertificateInput && (
-                    <Box mt={2}>
-                        <Typography fontWeight={600} mb="5px">
-                            Certificates (1–5 files)
-                        </Typography>
-                        <input
-                            type="file"
-                            multiple
-                            accept=".pdf,image/*"
-                            disabled={!otpVerified}
-                            onChange={(e) => setCertificateFiles(e.target.files)}
-                        />
-                        {certificateError && (
-                            <Typography color="error" fontSize="0.875rem" mt="5px">
-                                {certificateError}
-                            </Typography>
-                        )}
-                    </Box>
-                )}
+                <TextField
+                    fullWidth
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    value={formik.values.confirmPassword}
+                    onChange={formik.handleChange}
+                    error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                    helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                    InputProps={{
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
+                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
+                />
+                <Button type="submit" variant="contained" disabled={loading}>
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+                </Button>
+                <Typography align="center">
+                    Not a User? <Link href="/TrackMentalHealth/auth/choose-role">Click here!</Link>
+                </Typography>
             </Stack>
 
-            <Button
-                color="primary"
-                variant="contained"
-                size="large"
-                fullWidth
-                type="submit"
-                disabled={!otpVerified || formik.isSubmitting}
-            >
-                Sign Up
-            </Button>
-        </Box>
+            <Dialog open={otpDialogOpen} onClose={() => setOtpDialogOpen(false)}>
+                <DialogTitle>Email Verification</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2}>
+                        {otpSentMessage && <Alert severity="info">{otpSentMessage}</Alert>}
+                        {otpError && <Alert severity="error">{otpError}</Alert>}
+                        <TextField
+                            fullWidth
+                            label="Enter OTP"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                        />
+                        <Button
+                            onClick={handleResendOtp}
+                            disabled={resendCooldown > 0}
+                            variant="outlined"
+                        >
+                            Resend OTP {resendCooldown > 0 ? `(${resendCooldown}s)` : ''}
+                        </Button>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleVerifyOtp} variant="contained">Verify OTP</Button>
+                    <Button onClick={() => setOtpDialogOpen(false)}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+        </form>
     );
 };
 
