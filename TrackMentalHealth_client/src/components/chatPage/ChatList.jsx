@@ -12,7 +12,9 @@ import {
     getMessagesBySessionId,
     getNotificationsByUserId,
     getPsychologists,
+    initiateChatSession,
     updateGroupById,
+    uploadFile,
 } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { showAlert } from "../../utils/showAlert";
@@ -25,6 +27,8 @@ import GroupModal from '../../utils/Modals/GroupModal';
 import NotificationDetailModal from '../../utils/Modals/NotificationDetailModal';
 import { connectWebSocket } from '../../services/stompClient';
 import UserSwitcher from '../../utils/UserSwitcher';
+
+
 
 const getOtherUser = (session, currentUserId) =>
     session.sender.id === currentUserId ? session.receiver : session.sender;
@@ -45,7 +49,6 @@ function ChatList() {
     const [editingGroup, setEditingGroup] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-
     useEffect(() => {
         if (!currentUserId) return;
 
@@ -205,9 +208,9 @@ function ChatList() {
 
     const chatWithPsychologist = async (psychologistId) => {
         try {
-            const data = await getChatSessionsByTwoUserId(psychologistId, currentUserId);
+            const data = await initiateChatSession(psychologistId, currentUserId);
             if (data.id) {
-                navigate(`/chat/${data.id}`);
+                navigate(`/auth/chat/${data.id}`);
             } else {
                 showAlert("No chat session exists. Please create one.", "warning");
             }
@@ -243,37 +246,48 @@ function ChatList() {
 
     const handleModalSubmit = async (data) => {
         try {
+            setLoading(true); // Bắt đầu loading
+
+            let avt = data.imageUrl || data.avt || null;
+
+            if (data.file) {
+                avt = await uploadFile(data.file);
+            }
+
+            const payload = {
+                ...data,
+                avt,
+                createdBy: { id: currentUserId },
+                members: [{ id: currentUserId }],
+            };
+
             if (editingGroup) {
-                const updatedGroup = await updateGroupById(editingGroup.id, data);
+                const updatedGroup = await updateGroupById(editingGroup.id, payload);
                 setmyGroup((prev) =>
-                    prev.map((group) =>
-                        group.id === editingGroup.id ? updatedGroup : group
-                    )
+                    prev.map((group) => (group.id === editingGroup.id ? updatedGroup : group))
                 );
                 setGroup((prev) =>
-                    prev.map((group) =>
-                        group.id === editingGroup.id ? updatedGroup : group
-                    )
+                    prev.map((group) => (group.id === editingGroup.id ? updatedGroup : group))
                 );
                 showAlert("Group updated!", "success");
-            }
-            else {
-                const newGroup = await createNewGroup({
-                    ...data,
-                    createdBy: { id: currentUserId },
-                    members: [{ id: currentUserId }]
-                });
-                showAlert("Group created!", "success");
+            } else {
+                const newGroup = await createNewGroup(payload);
                 setmyGroup((prev) => [...prev, newGroup]);
                 setGroup((prev) => [...prev, newGroup]);
+                showAlert("Group created!", "success");
             }
 
             setShowModal(false);
         } catch (error) {
             showAlert("Đã có lỗi khi tạo/sửa nhóm", "error");
             console.error(error);
+        } finally {
+            setLoading(false); // Tắt loading dù thành công hay thất bại
         }
     };
+
+
+
 
     const handleOpenNotificationDetail = async (noti) => {
         setSelectedNotification(noti);
