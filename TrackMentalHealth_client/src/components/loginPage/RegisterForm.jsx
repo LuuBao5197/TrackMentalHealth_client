@@ -88,7 +88,7 @@ const RegisterForm = () => {
             registerData.append('email', formik.values.email);
             registerData.append('password', formik.values.password);
             registerData.append('confirmPassword', formik.values.confirmPassword);
-            registerData.append('roleId', '1'); // USER role
+            registerData.append('roleId', '5'); // USER role
 
             await axios.post('http://localhost:9999/api/users/register', registerData);
             alert('Registration successful!');
