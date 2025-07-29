@@ -118,12 +118,6 @@ const getMenuItemsByRole = (role) => {
       icon: IconInputX,
       href: '/testDesigner/test/importfile',
     },
-    {
-      id: uniqueId(),
-      title: 'Do Test',
-      icon: IconDoorEnter,
-      href: '/testDesigner/test/doTest',
-    },
 
   ];
   const MenuitemsPsy = [

@@ -29,9 +29,9 @@ const LoginForm = ({ subtext, subtitle }) => {
             dispatch(setCredentials({ user: decoded, token }));
 
             if (decoded.role === "USER") {
-                navigate("/user/social");
+                navigate("/user/homepage");
             } else {
-                navigate("/dashboard");
+                navigate("/testDesigner/test/");
             }
         } catch (err) {
             console.error("Token decode failed", err);

@@ -33,6 +33,8 @@ import EditArticle from '../components/ArticlePage/EditArticle.jsx';
 import TestListForUser from '../components/testPage/TestListForUser.jsx';
 import Unauthorized from '../views/authentication/Unauthorize.jsx';
 import AppointmentManagement from '../components/appointmentPage/PsychologistPage/AppointmentManagement.jsx';
+import ChooseRolePage from '../components/loginPage/ChooseRolePage.jsx';
+import RolesRegisterForm from '../components/loginPage/RolesRegisterForm.jsx';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -63,6 +65,8 @@ const Router = [
     path: '/auth',
     element: <BlankLayout />,
     children: [
+      { path: 'roles-register', element: <RolesRegisterForm />},
+      { path: 'choose-role', element: <ChooseRolePage /> },
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
       { path: 'forgot-password', element: <ForgotPasswordFlow /> },
@@ -89,7 +93,7 @@ const Router = [
     path: '/',
     element: <UserLayout />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <Navigate to="/user/homepage" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
       {
         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
@@ -164,7 +168,6 @@ const Router = [
         element: <ProtectedRoute allowedRoles={['TEST_DESIGNER']} />,
         children: [
           { path: 'test/', element: <TestListPage /> },
-          { path: 'test/edit/:id', element: <TestPage /> },
           { path: 'test/create', element: <OptionPage /> },
           { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage /> },

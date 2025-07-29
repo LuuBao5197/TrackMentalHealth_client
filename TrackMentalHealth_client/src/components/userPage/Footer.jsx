@@ -1,6 +1,12 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+  const navigate = useNavigate();
+
+  const handleNavigate = (roleId) => {
+    navigate(`/auth/choose-role`);
+  };
   return (
     <footer id="footer" className="footer light-background">
       <div className="container footer-top">
@@ -40,11 +46,9 @@ const Footer = () => {
 
           <div className="col-lg-2 col-md-3 footer-links">
             <h4>Our Services</h4>
-            <ul>
-              <li><a href="#">Register psychologist</a></li>
-              <li><a href="#">Register content_creator</a></li>
-              <li><a href="#">Register test designer</a></li>
-              <li><a href="#">Register users</a></li>
+            <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+              <li style={{ cursor: 'pointer' }} onClick={() => handleNavigate(5)}>Become a TrackMentalHealth Partner</li>
+              {/* <li style={{ cursor: 'pointer' }} onClick={() => handleNavigate(1)}>Register users</li> */}
             </ul>
           </div>
 
@@ -53,7 +57,7 @@ const Footer = () => {
             <ul>
               <li><a href="#">Connect psychologist </a></li>
               <li><a href="#">Chat with AI expert</a></li>
-              
+
             </ul>
           </div>
 
@@ -62,7 +66,7 @@ const Footer = () => {
             <ul>
               <li><a href="#">Mental Social</a></li>
               <li><a href="#">Feedback about website</a></li>
- 
+
             </ul>
           </div>
         </div>
@@ -72,7 +76,7 @@ const Footer = () => {
         <p>© <span>Copyright</span> <strong className="px-1 sitename">Track Mental Health</strong> <span>All Rights Reserved</span></p>
         <div className="credits">
           Designed by Team 1 - T1.2308AO -  <a href="https://aptech.fpt.edu.vn/">FPT APTECH TPHCM</a>
-        </div>  
+        </div>
       </div>
     </footer>
   );

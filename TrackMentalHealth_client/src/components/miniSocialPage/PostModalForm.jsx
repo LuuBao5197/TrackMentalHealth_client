@@ -1,117 +1,258 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button } from 'react-bootstrap';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import React, { useState, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
+import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import getCroppedImg from '../../utils/handleImage/cropImage';
+import './PostModalForm.css';
 import axios from 'axios';
+import {showAlert} from '../../utils/showAlert';
+const filters = [
+  { name: 'None', value: 'none' },
+  { name: 'Grayscale', value: 'grayscale(1)' },
+  { name: 'Sepia', value: 'sepia(1)' },
+  { name: 'Brightness', value: 'brightness(1.5)' },
+  { name: 'Contrast', value: 'contrast(1.5)' },
+];
+const handleClose = () => {
+  resetForm();
+  onClose();
+};
+function PostModalForm({ show, handleClose, onPostCreated, userID }) {
+  const [content, setContent] = useState('');
+  const [rawImages, setRawImages] = useState([]); // blob urls
+  const [croppedImages, setCroppedImages] = useState([]); // preview urls
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [error, setError] = useState('');
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [filter, setFilter] = useState('none');
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
-function PostModalForm({ show, handleClose, onPostCreated }) {
-  const [userId, setUserId] = useState(null);
-  const [preview, setPreview] = useState('');
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user?.id) setUserId(user.id);
+  const onCropComplete = useCallback((_, croppedPixels) => {
+    setCroppedAreaPixels(croppedPixels);
   }, []);
 
-  const formik = useFormik({
-    initialValues: {
-      content: '',
-      media_url: '',
-      is_anonymous: false,
-      status: 'approve'
-    },
-    validationSchema: Yup.object({
-      content: Yup.string()
-        .required('Không được để trống')
-        .max(500, 'Không quá 500 ký tự')
-    }),
-    onSubmit: async (values, { resetForm }) => {
-      if (!userId) {
-        alert("Không tìm thấy người dùng");
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = [];
+
+    for (let file of files) {
+      if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+        setError('Chỉ chấp nhận ảnh JPG, JPEG, PNG.');
         return;
       }
-
-      const payload = {
-        user: { id: userId },
-        ...values
-      };
-
-      try {
-        await axios.post('http://localhost:9999/api/community/post', payload);
-        resetForm();
-        setPreview('');
-        handleClose();
-        if (onPostCreated) onPostCreated(); // gọi lại cha để load lại bài viết
-      } catch (error) {
-        console.error(error);
-        alert("Đăng bài thất bại");
+      if (file.size > 4 * 1024 * 1024) {
+        setError('Ảnh phải nhỏ hơn 4MB.');
+        return;
       }
+      validFiles.push(URL.createObjectURL(file));
     }
-  });
 
-  const handleMediaChange = (e) => {
-    formik.handleChange(e);
-    setPreview(e.target.value);
+    if (validFiles.length + rawImages.length > 3) {
+      setError('Tối đa 3 ảnh!');
+      return;
+    }
+
+    setError('');
+    setRawImages([...rawImages, ...validFiles]);
+    setCurrentIndex(rawImages.length); // chuyển sang ảnh mới
+  };
+
+  const handleCrop = async () => {
+    try {
+      const cropped = await getCroppedImg(rawImages[currentIndex], croppedAreaPixels, filter);
+      const updated = [...croppedImages];
+      updated[currentIndex] = cropped;
+      setCroppedImages(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePost = async () => {
+    if (!content && croppedImages.length === 0) {
+      setError('Vui lòng nhập nội dung hoặc chọn ít nhất 1 ảnh.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('content', content);
+      formData.append('isAnonymous', isAnonymous);
+      formData.append('userId', userID); // số nguyên
+
+      for (let i = 0; i < croppedImages.length; i++) {
+        const response = await fetch(croppedImages[i]);
+        const blob = await response.blob();
+        const file = new File([blob], `image_${i}.jpg`, { type: blob.type });
+        formData.append('images', file);
+      }
+
+      const res = await axios.post('http://localhost:9999/api/community/post', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    
+      showAlert("Status đã được đăng thành công");
+      resetForm();
+      handleClose();
+    } catch (err) {
+      showAlert("Dang bai that bai", "error")
+      setError('Đăng bài thất bại. Vui lòng thử lại.');
+    }
+  };
+
+  const resetForm = () => {
+    setContent('');
+    setRawImages([]);
+    setCroppedImages([]);
+    setCurrentIndex(0);
+    setZoom(1);
+    setFilter('none');
+    setError('');
+    setIsAnonymous(false);
+  };
+
+  const removeImage = (index) => {
+    const newRaw = [...rawImages];
+    const newCrop = [...croppedImages];
+    newRaw.splice(index, 1);
+    newCrop.splice(index, 1);
+    setRawImages(newRaw);
+    setCroppedImages(newCrop);
+    setCurrentIndex(Math.max(0, index - 1));
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
-      <form onSubmit={formik.handleSubmit}>
-        <Modal.Header closeButton>
-          <Modal.Title>Tạo bài viết</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <textarea
-            name="content"
-            className={`form-control mb-2 ${formik.touched.content && formik.errors.content ? 'is-invalid' : ''}`}
-            placeholder="Bạn đang nghĩ gì thế?"
-            rows="4"
-            value={formik.values.content}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          ></textarea>
-          {formik.touched.content && formik.errors.content && (
-            <div className="text-danger small">{formik.errors.content}</div>
-          )}
+    <Modal show={show} onHide={handleClose} size="lg">
+      <Modal.Header closeButton>
+        <Modal.Title>Đăng bài viết</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {error && <Alert variant="danger">{error}</Alert>}
 
-          <input
-            type="text"
-            name="media_url"
-            className="form-control mb-2"
-            placeholder="Dán link ảnh/video (nếu có)"
-            value={formik.values.media_url}
-            onChange={handleMediaChange}
+        <Form.Group className="mb-3">
+          <Form.Label>Nội dung</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
           />
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Check
+            type="checkbox"
+            label="Đăng bài ẩn danh"
+            checked={isAnonymous}
+            onChange={(e) => setIsAnonymous(e.target.checked)}
+          />
+        </Form.Group>
 
-          {preview && (
-            <img
-              src={preview}
-              alt="preview"
-              className="img-fluid rounded mb-2"
-              loading="lazy"
-            />
-          )}
+        <Form.Group className="mb-3">
+          <Form.Label>Chọn ảnh (tối đa 3)</Form.Label>
+          <Form.Control type="file" multiple accept="image/*" onChange={handleImageChange} />
+        </Form.Group>
 
-          <div className="form-check mb-2">
-            <input
-              type="checkbox"
-              name="is_anonymous"
-              className="form-check-input"
-              checked={formik.values.is_anonymous}
-              onChange={formik.handleChange}
-            />
-            <label className="form-check-label">Ẩn danh</label>
+        {rawImages.length > 0 && (
+          <>
+            <div className="mb-2">
+              <strong>Đang chỉnh ảnh {currentIndex + 1} / {rawImages.length}</strong>
+              <Button
+                variant="outline-danger"
+                size="sm"
+                className="ms-3"
+                onClick={() => removeImage(currentIndex)}
+              >
+                Xoá ảnh này
+              </Button>
+            </div>
+            <div className="crop-container mb-3">
+              <Cropper
+                image={rawImages[currentIndex]}
+                crop={crop}
+                zoom={zoom}
+                aspect={4 / 3}
+                cropShape="rect"
+                showGrid
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                style={{
+                  containerStyle: {
+                    height: 300,
+                    position: 'relative',
+                  },
+                  mediaStyle: {
+                    filter,
+                  },
+                }}
+              />
+              <div className="d-flex gap-2 mt-2 align-items-center">
+                <Form.Range
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                />
+                <Form.Select value={filter} onChange={(e) => setFilter(e.target.value)}>
+                  {filters.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.name}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Button variant="success" size="sm" onClick={handleCrop}>
+                  Áp dụng
+                </Button>
+              </div>
+              <div className="d-flex justify-content-between mt-2">
+                <Button
+                  variant="outline-secondary"
+                  disabled={currentIndex === 0}
+                  onClick={() => setCurrentIndex(currentIndex - 1)}
+                >
+                  ← Trước
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  disabled={currentIndex === rawImages.length - 1}
+                  onClick={() => setCurrentIndex(currentIndex + 1)}
+                >
+                  Tiếp →
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {croppedImages.length > 0 && (
+          <div className="preview-container text-center mb-3">
+            <strong>Ảnh đã xử lý</strong>
+            <div className="d-flex gap-2 mt-2 flex-wrap justify-content-center">
+              {croppedImages.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`preview-${idx}`}
+                  className="rounded"
+                  style={{ maxHeight: 100, maxWidth: 150 }}
+                />
+              ))}
+            </div>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Hủy
-          </Button>
-          <Button type="submit" variant="primary">
-            Đăng bài
-          </Button>
-        </Modal.Footer>
-      </form>
+        )}
+      </Modal.Body>
+      <Modal.Footer className="d-flex justify-content-center gap-2">
+        <Button variant="secondary" onClick={handleClose}>
+          Hủy
+        </Button>
+        <Button variant="primary" onClick={handlePost} disabled={croppedImages.length === 0 && !content}>
+          Đăng bài
+        </Button>
+      </Modal.Footer>
     </Modal>
   );
 }
