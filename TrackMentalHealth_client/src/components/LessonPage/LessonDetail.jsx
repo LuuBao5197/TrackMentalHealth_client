@@ -31,14 +31,12 @@ const LessonDetail = () => {
   useEffect(() => {
     if (!lesson || !lesson.lessonSteps || !userId) return;
 
-    // 📥 Lấy bước đã hoàn thành
     axios.get(`http://localhost:9999/api/user/${userId}/lesson/${lesson.id}/progress`)
       .then((res) => {
         const completedSteps = res.data
           .filter(progress => progress.step && progress.step.id)
           .map(progress => progress.step.id);
 
-        // 👀 Tạo observer
         observer.current = new IntersectionObserver(entries => {
           entries.forEach(async (entry) => {
             if (entry.isIntersecting) {
@@ -63,7 +61,6 @@ const LessonDetail = () => {
           });
         }, { threshold: 0.5 });
 
-        // 👇 Gán observer cho mỗi step
         lesson.lessonSteps.forEach(step => {
           const el = stepRefs.current[step.id];
           if (el) observer.current.observe(el);
@@ -87,22 +84,23 @@ const LessonDetail = () => {
   return (
     <div className="container py-5" style={{ fontFamily: 'Georgia, serif', fontSize: '1.2em' }}>
       {/* Hero Section */}
-      <section id="hero" className="hero-section mb-5">
+      <section id="hero" className="hero-section mb-3">
         <div className="row align-items-center">
           <div className="col-lg-8">
             <div className="badge-wrapper mb-3">
               <div className="d-inline-flex align-items-center rounded-pill border border-primary px-3 py-1">
                 <div className="icon-circle me-2 text-primary"><BsBell /></div>
-                <span className="badge-text me-3 fw-bold" style={{ fontSize: '1.3em' }}>Giới thiệu bài học</span>
+                <span className="badge-text me-3 fw-bold" style={{ fontSize: '1.3em' }}>Introduce the lesson</span>
               </div>
             </div>
-            <h1 className="display-5 fw-bold text-dark mb-3" style={{ fontSize: '3em' }}>{lesson.title}</h1>
+            <h1 className="display-8 fw-bold text-dark mb-2" style={{ fontSize: '3em' }}>{lesson.title}</h1>
+            <p style={{ fontSize: '1.4em', marginBottom: '0.3rem' }}>{lesson.description}</p>
           </div>
         </div>
       </section>
 
       {/* Steps */}
-      <h2 className="mb-4 border-bottom pb-2 text-primary" style={{ fontSize: '1.6em' }}>📌 Các bước trong bài học:</h2>
+      <h2 className="mb-1 border-bottom pb-1 text-primary" style={{ fontSize: '1.6em', marginTop: '-0.5rem' }}>📌 Steps in the lesson:</h2>
       {lesson.lessonSteps && lesson.lessonSteps.length > 0 ? (
         lesson.lessonSteps
           .sort((a, b) => a.stepNumber - b.stepNumber)
@@ -132,7 +130,7 @@ const LessonDetail = () => {
           ))
       ) : (
         <p className="text-muted fst-italic" style={{ fontSize: '1.3em', margin: '3em 0', lineHeight: '1.8' }}>
-          Chưa có bước học nào.
+          No learning steps right now.
         </p>
       )}
     </div>
