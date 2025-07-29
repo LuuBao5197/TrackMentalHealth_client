@@ -24,8 +24,6 @@ function NewsFeed() {
     }
   }, [userID]);
 
-
-
   const updatePostById = async (postId) => {
     try {
       const res = await axios.get(`http://localhost:9999/api/community/post/${postId}`);
@@ -41,9 +39,10 @@ function NewsFeed() {
   const fetchPosts = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
     loadingRef.current = true;
-
+    console.log('Fetching page', pageRef.current);
     try {
       const res = await axios.get(`http://localhost:9999/api/community/post?page=${pageRef.current}&size=5`);
+      console.log(res);
       const data = res.data.content;
       const totalPages = res.data.totalPages; // <- cần backend trả về
 
@@ -75,6 +74,7 @@ function NewsFeed() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [fetchPosts, handleScroll]);
+
 
   const refreshPosts = () => {
     setPosts([]);
