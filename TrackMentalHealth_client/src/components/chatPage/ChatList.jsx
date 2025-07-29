@@ -21,7 +21,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { showAlert } from "../../utils/showAlert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell } from '@fortawesome/free-regular-svg-icons';
+import { faBell, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { getCurrentUserId } from '../../utils/getCurrentUserID';
 import '../../assets/css/chat.css';
 import { showConfirm } from '../../utils/showConfirm';
@@ -31,14 +31,12 @@ import { connectWebSocket } from '../../services/stompClient';
 import { MainContainer, MessageContainer, MessageHeader, MessageInput, MessageList, MinChatUiProvider } from '@minchat/react-chat-ui';
 import { useSelector } from 'react-redux';
 
-
-
 const getOtherUser = (session, currentUserId) =>
     session.sender.id === currentUserId ? session.receiver : session.sender;
 
 
 function ChatList() {
-    const { user } = useSelector((state) => state.auth); // lấy role
+    const user = useSelector((state) => state.auth); // lấy role
     const currentUserId = parseInt(getCurrentUserId());
     // const currentUserId = String(getCurrentUserId());
     const [sessions, setSessions] = useState([]);
@@ -56,6 +54,7 @@ function ChatList() {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     //AI
+
     const [messages, setMessages] = useState([
         {
             text: "Xin chào! Tôi là AI, ngày hôm nay bạn ổn chứ?",
@@ -63,39 +62,35 @@ function ChatList() {
         }
     ]);
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                const history = await getAIHistory(String(currentUserId));
 
-                const formattedHistory = history.map(h => {
-                    const role = String(h.role || "user").toLowerCase();
-                    return {
-                        text: h.message,
-                        user: {
-                            id: role === "ai" ? "ai" : String(currentUserId),  // ép thành string ở đây
-                            name: role === "ai" ? "AI Doctor" : "You"
-                        }
-                    };
-                });
+    const fetchHistory = async () => {
+        try {
+            const history = await getAIHistory(currentUserId);
 
-
-                setMessages(prev => [...prev, ...formattedHistory]);
-            } catch (err) {
-                console.error("Lỗi load history:", err);
-            }
-        };
-        fetchHistory();
-    }, [String(currentUserId)]);
+            const formattedHistory = history.map(h => {
+                const role = String(h.role || "user").toLowerCase();
+                return {
+                    text: h.message,
+                    user: {
+                        id: role === "ai" ? "ai" : currentUserId,
+                        name: role === "ai" ? "AI Doctor" : "You"
+                    }
+                };
+            });
+            setMessages(prev => [...prev, ...formattedHistory]);
+        } catch (err) {
+            console.error("Lỗi load history:", err);
+        }
+    };
 
     const handleSendMessage = async (text) => {
         if (!text.trim()) return;
 
-        const userMessage = { text, user: { id: String(currentUserId), name: "You" } };
+        const userMessage = { text, user: { id: currentUserId, name: "You" } };
         setMessages(prev => [...prev, userMessage]);
 
         try {
-            const payload = { message: text, userId: String(currentUserId) };
+            const payload = { message: text, userId: currentUserId };
             const aiReply = await chatAI(payload);
 
             const aiMessage = {
@@ -111,8 +106,6 @@ function ChatList() {
             }]);
         }
     };
-
-
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -218,6 +211,7 @@ function ChatList() {
         fetchPsychologists();
         fetchChatGroup();
         fetchChatGroupByCreatorId();
+        fetchHistory();
 
         // WebSocket
         const disconnect = connectWebSocket({
@@ -290,7 +284,7 @@ function ChatList() {
             const confirmed = await showConfirm("Are you sure you want to delete this group?");
             if (!confirmed) return;
             await deleteGroupById(id);
-            showAlert("Group deleted successfully!", "success");
+            toast.success('Group deleted successfully');
             setmyGroup(prev => prev.filter(grp => grp.id !== id));
             setGroup(prev => prev.filter(grp => grp.id !== id));
         } catch (err) {
@@ -389,22 +383,20 @@ function ChatList() {
     };
 
     async function handleDeleteNotification(id) {
-  try {
-    const isConfirmed = await showConfirm('Are you sure?'); // nếu showConfirm là async
+        try {
+            const isConfirmed = await showConfirm('Are you sure?');
 
-    if (isConfirmed) {
-      await deleteNotificationById(id);
-      
-      // Cập nhật lại danh sách notification
-      setNotifications((prev) => prev.filter((noti) => noti.id !== id));
-
-      showAlert('Delete successfully!', 'success');
+            if (isConfirmed) {
+                await deleteNotificationById(id);
+                // Cập nhật lại danh sách notification
+                setNotifications((prev) => prev.filter((noti) => noti.id !== id));
+                toast.success('Delete successfully');
+            }
+        } catch (e) {
+            console.log('Error deleting notification:', e);
+            showAlert('Failed to delete notification', 'danger');
+        }
     }
-  } catch (e) {
-    console.log('Error deleting notification:', e);
-    showAlert('Failed to delete notification', 'danger');
-  }
-}
 
 
 
@@ -491,6 +483,7 @@ function ChatList() {
                                 minWidth: '300px',
                                 maxHeight: '300px',
                                 overflowY: 'auto',
+                                cursor: 'pointer'
                             }}
                         >
                             {notifications.length === 0 ? (
@@ -510,23 +503,28 @@ function ChatList() {
                                             </div>
                                         </div>
 
-                                        {/* Nút X */}
                                         <button
                                             className="btn btn-sm position-absolute top-0 end-0 me-1 mt-1 p-0"
                                             style={{
-                                                width: '18px',
-                                                height: '18px',
+                                                width: '20px',
+                                                height: '20px',
                                                 borderRadius: '50%',
-                                                background: 'red',
-                                                color: 'white',
-                                                fontSize: '12px',
-                                                lineHeight: '12px',
+                                                border: '1px solid #dc3545', // viền đỏ outline
+                                                backgroundColor: 'transparent', // nền trong suốt
+                                                color: '#dc3545', // chữ đỏ
+                                                fontSize: '14px',
+                                                lineHeight: '14px',
                                                 textAlign: 'center',
+                                                transition: 'background-color 0.2s ease'
                                             }}
-                                            onClick={() => handleDeleteNotification(index)}
+                                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8d7da')}
+                                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                            onClick={() => handleDeleteNotification(noti.id)}
                                         >
-                                            ×
+                                            <FontAwesomeIcon icon={faTrashAlt} />
+
                                         </button>
+
                                     </li>
                                 ))
                             )}
@@ -744,7 +742,8 @@ function ChatList() {
 
             {/* Nút Chat AI */}
             <button
-                onClick={() => setIsOpen(true)}
+                // onClick={() => setIsOpen(true)}
+                onClick={()=>navigate('/user/chat/ai')}
                 className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
                 style={{
                     position: "fixed",

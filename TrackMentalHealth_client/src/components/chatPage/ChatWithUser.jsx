@@ -43,9 +43,9 @@ function ChatWithUser() {
                             id: msg.sender.id.toString(),
                             name: msg.sender.id === currentUserId ? "Tôi" : (msg.sender.fullname || "Đối phương"),
                             avatar:
-                                m.sender?.avatar && m.sender.avatar.trim() !== ""
-                                    ? m.sender.avatar
-                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender?.fullname || "U")}`
+                                msg.sender?.avatar && msg.sender.avatar.trim() !== ""
+                                    ? msg.sender.avatar
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender?.fullname || "U")}`
                         }
                     }));
 
@@ -116,37 +116,41 @@ function ChatWithUser() {
     };
 
     return (
-        <MinChatUiProvider theme="#6ea9d7">
-            <MainContainer style={{ height: '100vh' }}>
-                <MessageContainer>
-                    <MessageHeader
-                        onBack={() => navigate("/user/chat/list")}
-                        avatar={
-                            preloadedReceiver?.avatar && preloadedReceiver.avatar.trim() !== ""
-                                ? preloadedReceiver.avatar
-                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(receiverName)}`
-                        }
-                    >
-                        {receiverName}
-                    </MessageHeader>
+        <div className="container mt-3 mb-3">
+            <MinChatUiProvider theme="#6ea9d7">
+                <MainContainer style={{ height: '100vh' }}>
+                    <MessageContainer>
+                        <MessageHeader
+                            onBack={() => navigate("/user/chat/list")}
+                            avatar={
+                                preloadedReceiver?.avatar && preloadedReceiver.avatar.trim() !== ""
+                                    ? preloadedReceiver.avatar
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(receiverName)}`
+                            }
+                        >
+                            {receiverName}
+                        </MessageHeader>
 
 
-                    <MessageList
-                        currentUserId={currentUserId.toString()}
-                        messages={messages}
-                    />
+                        <MessageList
+                            currentUserId={currentUserId.toString()}
+                            messages={messages}
+                        />
 
-                    <MessageInput
-                        placeholder="Nhập tin nhắn..."
-                        onSendMessage={handleSendMessage}
-                        showSendButton
-                        showAttachButton={true}
-                        onAttachClick={handleSendMeetLink}
-                        disabled={!receiverId}
-                    />
-                </MessageContainer>
-            </MainContainer>
-        </MinChatUiProvider>
+                        <MessageInput
+                            placeholder="Nhập tin nhắn..."
+                            onSendMessage={handleSendMessage}
+                            showSendButton
+                            showAttachButton={true}
+                            onAttachClick={handleSendMeetLink}
+                            disabled={!receiverId}
+                        />
+                    </MessageContainer>
+                </MainContainer>
+            </MinChatUiProvider>
+
+        </div>
+
     );
 }
 

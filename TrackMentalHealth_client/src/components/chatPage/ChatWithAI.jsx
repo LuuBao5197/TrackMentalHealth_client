@@ -70,7 +70,8 @@ function ChatWithAI() {
     };
 
     return (
-        <MinChatUiProvider theme="#6ea9d7">
+        <div className="container mt-3 mb-3">
+             <MinChatUiProvider theme="#6ea9d7">
             <MainContainer style={{height: '100vh'}}>
                 <MessageContainer>
                     <MessageHeader onBack={() => nav('/user/chat/list')}>AI Psychologist</MessageHeader>
@@ -83,6 +84,8 @@ function ChatWithAI() {
                 </MessageContainer>
             </MainContainer>
         </MinChatUiProvider>
+        </div>
+       
     );
 }
 

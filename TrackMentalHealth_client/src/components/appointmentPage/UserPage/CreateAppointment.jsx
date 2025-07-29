@@ -3,7 +3,7 @@ import { getPsychologists, saveAppointment, saveNotification } from '../../../ap
 import { useNavigate } from "react-router-dom";
 import { showAlert } from '../../../utils/showAlert';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import { NotDTO } from '../../../utils/dto/NotDTO';
 import { useSelector } from 'react-redux';
 
@@ -73,7 +73,7 @@ function CreateAppointment() {
 
         try {
             await saveAppointment(payload);
-            showAlert('Create appointment successfully', 'success');
+            toast.success('Create appointment successfully');
 
             // Gửi notification
             const notificationToUser = NotDTO(currentUserId, 'New appointment created successfully');
@@ -147,6 +147,8 @@ function CreateAppointment() {
                     Create Appointment
                 </button>
             </form>
+            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
+
         </div>
     );
 }
