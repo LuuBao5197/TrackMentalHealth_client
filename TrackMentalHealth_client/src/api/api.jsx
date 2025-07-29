@@ -5,11 +5,23 @@ const Appointment_url = 'http://localhost:9999/api/appointment/';
 const psy_url = 'http://localhost:9999/api/psychologist/';
 const ai_url = 'http://localhost:9999/api/chatai/';
 const notification_url = 'http://localhost:9999/api/notification/';
-const chatGroup_url ="http://localhost:9999/api/chatgroup/";
+const chatGroup_url = "http://localhost:9999/api/chatgroup/";
+const upload_url = 'http://localhost:9999/api/upload';
 
-export const getMessagesBySessionId= async (id) => {
+
+export const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await axios.post(upload_url, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data.url;
+};
+
+
+export const getMessagesBySessionId = async (id) => {
     try {
-        const response = await axios.get(chat_url+id);
+        const response = await axios.get(chat_url + id);
         console.log(response.data);
         return response.data;
         // console.log(response.data);
@@ -31,9 +43,9 @@ export const initiateChatSession = async (senderId, receiverId) => {
 };
 
 
-export const getChatSessionsByUserId= async (id) => {
+export const getChatSessionsByUserId = async (id) => {
     try {
-        const response = await axios.get(chat_url+"session/"+id);
+        const response = await axios.get(chat_url + "session/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -43,9 +55,10 @@ export const getChatSessionsByUserId= async (id) => {
 };
 
 
-export const getAppointmentsByPsyId= async (id) => {
+//appointment
+export const getAppointmentByUserId = async (id) => {
     try {
-        const response = await axios.get(Appointment_url+"list/"+id);
+        const response = await axios.get(Appointment_url + "list/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -54,9 +67,9 @@ export const getAppointmentsByPsyId= async (id) => {
     }
 };
 
-export const getAppointmentById= async (id) => {
+export const getAppointmentById = async (id) => {
     try {
-        const response = await axios.get(Appointment_url+""+id);
+        const response = await axios.get(Appointment_url + "" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -66,9 +79,9 @@ export const getAppointmentById= async (id) => {
 };
 
 //get appointment by psychologist
-export const getAppointmentByPsyId= async (psyId) => {
+export const getAppointmentByPsyId = async (psyId) => {
     try {
-        const response = await axios.get(Appointment_url+"psychologist/"+psyId);
+        const response = await axios.get(Appointment_url + "psychologist/" + psyId);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -77,9 +90,9 @@ export const getAppointmentByPsyId= async (psyId) => {
     }
 };
 
-export const saveAppointment= async (data) => {
+export const saveAppointment = async (data) => {
     try {
-        const response = await axios.post(Appointment_url+"save",data);
+        const response = await axios.post(Appointment_url + "save", data);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -99,9 +112,9 @@ export const updateAppointment = async (id, data) => {
 };
 
 
-export const deleteAppointment= async (id) => {
+export const deleteAppointment = async (id) => {
     try {
-        const response = await axios.delete(Appointment_url+`${id}`);
+        const response = await axios.delete(Appointment_url + `${id}`);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -112,7 +125,7 @@ export const deleteAppointment= async (id) => {
 
 
 
-export const getPsychologists= async () => {
+export const getPsychologists = async () => {
     try {
         const response = await axios.get(psy_url);
         console.log(response.data);
@@ -163,7 +176,7 @@ export const getAIHistory = async (userId) => {
 //notifications
 export const getNotificationsByUserId = async (userId) => {
     try {
-        const response = await axios.get(notification_url+"user/" + userId);
+        const response = await axios.get(notification_url + "user/" + userId);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -175,7 +188,7 @@ export const getNotificationsByUserId = async (userId) => {
 //creat new notification
 export const saveNotification = async (data) => {
     try {
-        const response = await axios.post(notification_url+"save" ,data);
+        const response = await axios.post(notification_url + "save", data);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -187,7 +200,18 @@ export const saveNotification = async (data) => {
 
 export const changeStatusNotification = async (id) => {
     try {
-        const response = await axios.put(notification_url+"changestatus/" + id);
+        const response = await axios.put(notification_url + "changestatus/" + id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+export const deleteNotificationById = async (id) => {
+    try {
+        const response = await axios.delete(notification_url + "delete/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -199,7 +223,7 @@ export const changeStatusNotification = async (id) => {
 //chat group
 export const getAllChatGroup = async () => {
     try {
-        const response = await axios.get(chatGroup_url+"findAll");
+        const response = await axios.get(chatGroup_url + "findAll");
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -211,7 +235,7 @@ export const getAllChatGroup = async () => {
 //get chat group by creator id
 export const getChatGroupByCreatorId = async (id) => {
     try {
-        const response = await axios.get(chatGroup_url+"createdBy/"+id);
+        const response = await axios.get(chatGroup_url + "createdBy/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -223,7 +247,7 @@ export const getChatGroupByCreatorId = async (id) => {
 //get group by id group
 export const getChatGroupById = async (id) => {
     try {
-        const response = await axios.get(chatGroup_url+id);
+        const response = await axios.get(chatGroup_url + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -235,7 +259,7 @@ export const getChatGroupById = async (id) => {
 //get msg from group id
 export const getMessagesByGroupId = async (id) => {
     try {
-        const response = await axios.get(chatGroup_url+"messages/"+id);
+        const response = await axios.get(chatGroup_url + "messages/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -245,7 +269,7 @@ export const getMessagesByGroupId = async (id) => {
 };
 
 //get user by group id :
-export const findUsersByGroupId = async (groupId,currentUserId) => {
+export const findUsersByGroupId = async (groupId, currentUserId) => {
     try {
         const response = await axios.get(`${chatGroup_url}group/users/${groupId}/${currentUserId}`);
         console.log(response.data);
@@ -256,12 +280,10 @@ export const findUsersByGroupId = async (groupId,currentUserId) => {
     }
 };
 
-
-
 //delete my group
 export const deleteGroupById = async (id) => {
     try {
-        const response = await axios.delete(chatGroup_url+"delete/"+id);
+        const response = await axios.delete(chatGroup_url + "delete/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {
@@ -270,21 +292,30 @@ export const deleteGroupById = async (id) => {
     }
 };
 //add new group
-export const createNewGroup = async (data) => {
+export const createNewGroup = async (groupData, file) => {
+    const formData = new FormData();
+    formData.append(
+        "chatGroup",
+        new Blob([JSON.stringify(groupData)], { type: "application/json" })
+    );
+    if (file) formData.append("file", file);
+
     try {
-        console.log("Sending group:", data); // kiểm tra kỹ
-        const response = await axios.post(chatGroup_url + "create", data);
+        const response = await axios.post(chatGroup_url + "create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     } catch (error) {
-        console.error('Lỗi:', error);
+        console.error("Lỗi:", error);
         throw error;
     }
 };
+
 //update group
-export const updateGroupById = async (id,data) => {
+export const updateGroupById = async (id, data) => {
     try {
         console.log("Sending group:", data); // kiểm tra kỹ
-        const response = await axios.put(chatGroup_url + "edit/"+id, data);
+        const response = await axios.put(chatGroup_url + "edit/" + id, data);
         return response.data;
     } catch (error) {
         console.error('Lỗi:', error);

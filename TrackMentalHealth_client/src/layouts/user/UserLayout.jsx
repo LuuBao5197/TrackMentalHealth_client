@@ -27,6 +27,10 @@ const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
   console.log(userRole);
+
+  localStorage.setItem('currentUserId',userRole.userId);
+  console.log(localStorage.getItem('currentUserId'));
+  
   const [headerHeight, setHeaderHeight] = useState(0);
   // Add/remove class vào body
   useEffect(() => {
