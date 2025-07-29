@@ -6,6 +6,8 @@ import {
     changeStatusNotification,
     createNewGroup,
     deleteGroupById,
+    deleteNotificationById,
+    getAIHistory,
     getAllChatGroup,
     getChatGroupByCreatorId,
     getChatSessionsByUserId,
@@ -26,7 +28,8 @@ import { showConfirm } from '../../utils/showConfirm';
 import GroupModal from '../../utils/Modals/GroupModal';
 import NotificationDetailModal from '../../utils/Modals/NotificationDetailModal';
 import { connectWebSocket } from '../../services/stompClient';
-import UserSwitcher from '../../utils/UserSwitcher';
+import { MainContainer, MessageContainer, MessageHeader, MessageInput, MessageList, MinChatUiProvider } from '@minchat/react-chat-ui';
+import { useSelector } from 'react-redux';
 
 
 
@@ -35,7 +38,9 @@ const getOtherUser = (session, currentUserId) =>
 
 
 function ChatList() {
+    const { user } = useSelector((state) => state.auth); // lấy role
     const currentUserId = parseInt(getCurrentUserId());
+    // const currentUserId = String(getCurrentUserId());
     const [sessions, setSessions] = useState([]);
     const [group, setGroup] = useState([]);
     const [myGroup, setmyGroup] = useState([]);
@@ -49,6 +54,66 @@ function ChatList() {
     const [editingGroup, setEditingGroup] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    //AI
+    const [messages, setMessages] = useState([
+        {
+            text: "Xin chào! Tôi là AI, ngày hôm nay bạn ổn chứ?",
+            user: { id: "ai", name: "AI Doctor" },
+        }
+    ]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const history = await getAIHistory(String(currentUserId));
+
+                const formattedHistory = history.map(h => {
+                    const role = String(h.role || "user").toLowerCase();
+                    return {
+                        text: h.message,
+                        user: {
+                            id: role === "ai" ? "ai" : String(currentUserId),  // ép thành string ở đây
+                            name: role === "ai" ? "AI Doctor" : "You"
+                        }
+                    };
+                });
+
+
+                setMessages(prev => [...prev, ...formattedHistory]);
+            } catch (err) {
+                console.error("Lỗi load history:", err);
+            }
+        };
+        fetchHistory();
+    }, [String(currentUserId)]);
+
+    const handleSendMessage = async (text) => {
+        if (!text.trim()) return;
+
+        const userMessage = { text, user: { id: String(currentUserId), name: "You" } };
+        setMessages(prev => [...prev, userMessage]);
+
+        try {
+            const payload = { message: text, userId: String(currentUserId) };
+            const aiReply = await chatAI(payload);
+
+            const aiMessage = {
+                text: String(aiReply),
+                user: { id: "ai", name: "AI Doctor" }
+            };
+            setMessages(prev => [...prev, aiMessage]);
+        } catch (err) {
+            console.error("Lỗi xử lý AI:", err);
+            setMessages(prev => [...prev, {
+                text: "Không thể phản hồi ngay bây giờ.",
+                user: { id: "ai", name: "AI Doctor" }
+            }]);
+        }
+    };
+
+
+
     useEffect(() => {
         if (!currentUserId) return;
 
@@ -210,7 +275,7 @@ function ChatList() {
         try {
             const data = await initiateChatSession(psychologistId, currentUserId);
             if (data.id) {
-                navigate(`/auth/chat/${data.id}`);
+                navigate(`/user/chat/${data.id}`);
             } else {
                 showAlert("No chat session exists. Please create one.", "warning");
             }
@@ -286,9 +351,6 @@ function ChatList() {
         }
     };
 
-
-
-
     const handleOpenNotificationDetail = async (noti) => {
         setSelectedNotification(noti);
         setShowDetailModal(true);
@@ -319,47 +381,101 @@ function ChatList() {
         }
 
         // Điều hướng sang khung chat, truyền receiver qua state
-        navigate(`/auth/chat/${session.id}`, {
+        navigate(`/user/chat/${session.id}`, {
             state: {
                 receiver: otherUser
             }
         });
     };
 
+    async function handleDeleteNotification(id) {
+  try {
+    const isConfirmed = await showConfirm('Are you sure?'); // nếu showConfirm là async
+
+    if (isConfirmed) {
+      await deleteNotificationById(id);
+      
+      // Cập nhật lại danh sách notification
+      setNotifications((prev) => prev.filter((noti) => noti.id !== id));
+
+      showAlert('Delete successfully!', 'success');
+    }
+  } catch (e) {
+    console.log('Error deleting notification:', e);
+    showAlert('Failed to delete notification', 'danger');
+  }
+}
+
+
+
     return (
         <div className="container mt-4">
-            <UserSwitcher />
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-primary mb-0">Messenger</h2>
 
                 <div className="d-flex gap-2">
-                    <button onClick={() => navigate(`/auth/appointment/${currentUserId}`)} className="btn btn-outline-primary">
-                        My Appointments
-                    </button>
+                    {/* Nếu USER */}
+                    {user?.role === 'USER' && (
+                        <>
+                            <button
+                                onClick={() => navigate(`/user/appointment/${currentUserId}`)}
+                                className="btn btn-outline-primary"
+                            >
+                                My Appointments
+                            </button>
 
-                    {/* Dropdown Chat */}
-                    <div className="dropdown">
-                        <button className="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Chat with Psychologist
-                        </button>
-                        <ul className="dropdown-menu">
-                            {psychologists.length === 0 ? (
-                                <li><span className="dropdown-item text-muted">No psychologist found</span></li>
-                            ) : (
-                                psychologists.map((a) => (
-                                    <li key={a.id}>
-                                        <button className="dropdown-item" onClick={() => chatWithPsychologist(a.usersID.id)}>
-                                            {a.usersID?.fullname || 'No name'}
-                                        </button>
-                                    </li>
-                                ))
-                            )}
-                        </ul>
-                    </div>
+                            {/* Dropdown Chat */}
+                            <div className="dropdown">
+                                <button
+                                    className="btn btn-outline-primary dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                >
+                                    Chat with Psychologist
+                                </button>
+                                <ul className="dropdown-menu">
+                                    {psychologists.length === 0 ? (
+                                        <li>
+                                            <span className="dropdown-item text-muted">
+                                                No psychologist found
+                                            </span>
+                                        </li>
+                                    ) : (
+                                        psychologists.map((a) => (
+                                            <li key={a.id}>
+                                                <button
+                                                    className="dropdown-item"
+                                                    onClick={() => chatWithPsychologist(a.usersID.id)}
+                                                >
+                                                    {a.usersID?.fullname || 'No name'}
+                                                </button>
+                                            </li>
+                                        ))
+                                    )}
+                                </ul>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Nếu PSYCHO */}
+                    {user?.role === 'PSYCHO' && (
+                        <>
+                            <button
+                                onClick={() => navigate('/user/appointment/psychologist')}
+                                className="btn btn-outline-success"
+                            >
+                                Manage Appointments
+                            </button>
+                        </>
+                    )}
 
                     {/* Notification Bell */}
                     <div className="dropdown">
-                        <button className="btn position-relative" type="button" data-bs-toggle="dropdown">
+                        <button
+                            className="btn position-relative"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        >
                             <FontAwesomeIcon icon={faBell} size="lg" />
                             {unreadNotifications.length > 0 && (
                                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -374,33 +490,49 @@ function ChatList() {
                             style={{
                                 minWidth: '300px',
                                 maxHeight: '300px',
-                                overflowY: 'auto'
+                                overflowY: 'auto',
                             }}
                         >
                             {notifications.length === 0 ? (
-                                <li className="dropdown-item text-muted">Không có thông báo mới</li>
+                                <li className="dropdown-item text-muted">No new notifications</li>
                             ) : (
                                 notifications.map((noti, index) => (
                                     <li
                                         key={index}
                                         className={`dropdown-item border-bottom ${!noti.read ? 'fw-bold bg-light' : ''}`}
-                                        onClick={() => handleOpenNotificationDetail(noti)}
+                                        style={{ position: 'relative' }}
                                     >
-                                        <div>
+                                        <div onClick={() => handleOpenNotificationDetail(noti)}>
                                             <strong>{noti.title}</strong>
-                                            {!noti.read && (
-                                                <span className="badge bg-primary ms-2">New</span>
-                                            )}
+                                            {!noti.read && <span className="badge bg-primary ms-2">New</span>}
+                                            <div className="text-muted" style={{ fontSize: '12px' }}>
+                                                {noti.message}
+                                            </div>
                                         </div>
-                                        <div className="text-muted" style={{ fontSize: '12px' }}>
-                                            {noti.message}
-                                        </div>
+
+                                        {/* Nút X */}
+                                        <button
+                                            className="btn btn-sm position-absolute top-0 end-0 me-1 mt-1 p-0"
+                                            style={{
+                                                width: '18px',
+                                                height: '18px',
+                                                borderRadius: '50%',
+                                                background: 'red',
+                                                color: 'white',
+                                                fontSize: '12px',
+                                                lineHeight: '12px',
+                                                textAlign: 'center',
+                                            }}
+                                            onClick={() => handleDeleteNotification(index)}
+                                        >
+                                            ×
+                                        </button>
                                     </li>
                                 ))
                             )}
                         </ul>
-                    </div>
 
+                    </div>
                 </div>
             </div>
 
@@ -508,7 +640,7 @@ function ChatList() {
                                     >
                                         <div
                                             className="d-flex align-items-center"
-                                            onClick={() => navigate(`/auth/chat/group/${grp.id}`)}
+                                            onClick={() => navigate(`/user/chat/group/${grp.id}`)}
                                             style={{ cursor: "pointer", flex: 1 }}
                                         >
                                             {grp.avt ? (
@@ -561,7 +693,7 @@ function ChatList() {
                                     <div
                                         key={grp.id}
                                         className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                        onClick={() => navigate(`/auth/chat/group/${grp.id}`)}
+                                        onClick={() => navigate(`/user/chat/group/${grp.id}`)}
                                         style={{ cursor: "pointer" }}
                                     >
                                         <div className="d-flex align-items-center"
@@ -612,7 +744,8 @@ function ChatList() {
 
             {/* Nút Chat AI */}
             <button
-                onClick={() => navigate('/auth/chat/ai')} className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
+                onClick={() => setIsOpen(true)}
+                className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
                 style={{
                     position: "fixed",
                     bottom: "24px",
@@ -630,6 +763,42 @@ function ChatList() {
                     <path d="M20 2H4a2 2 0 0 0-2 2v20l4-4h14a2 2 0 0 0 2-2V4c0-1.1-.9-2-2-2z" />
                 </svg>
             </button>
+
+            {isOpen && (
+                <div
+                    style={{
+                        position: "fixed",
+                        bottom: "20px",
+                        right: "20px",
+                        width: "350px",
+                        height: "500px",
+                        border: "1px solid #ddd",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+                        background: "#fff",
+                        zIndex: 9999
+                    }}
+                >
+                    <MinChatUiProvider theme="#6ea9d7">
+                        <MainContainer style={{ height: "100%" }}>
+                            <MessageContainer>
+                                <MessageHeader
+                                    onBack={() => setIsOpen(false)}
+                                >
+                                    AI Psychologist
+                                </MessageHeader>
+                                <MessageList currentUserId={currentUserId} messages={messages} />
+                                <MessageInput
+                                    placeholder="Nhập tin nhắn..."
+                                    onSendMessage={handleSendMessage}
+                                    showSendButton
+                                />
+                            </MessageContainer>
+                        </MainContainer>
+                    </MinChatUiProvider>
+                </div>
+            )}
 
             <GroupModal
                 show={showModal}

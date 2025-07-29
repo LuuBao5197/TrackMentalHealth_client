@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import {
     deleteAppointment,
-    getAppointmentsByPsyId
+    getAppointmentByUserId
 } from '../../../api/api';
 import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
@@ -21,7 +21,7 @@ function Appointments() {
 
     const fetchAppointments = async () => {
         try {
-            const res = await getAppointmentsByPsyId(userId);
+            const res = await getAppointmentByUserId(userId);
             setAppointments(res);
         } catch (err) {
             showAlert("Không thể tải lịch hẹn.", "error");
@@ -35,11 +35,11 @@ function Appointments() {
     }, []);
 
     const handleAdd = () => {
-        nav(`/auth/appointment/create/${userId}`);
+        nav(`/user/appointment/create/${userId}`);
     };
 
     const handleEdit = (id) => {
-        nav(`/auth/appointment/edit/${id}`);
+        nav(`/user/appointment/edit/${id}`);
     };
 
     const handleDelete = async (id) => {

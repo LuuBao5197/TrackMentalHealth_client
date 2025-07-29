@@ -42,7 +42,13 @@ function ChatGroup() {
                         user: {
                             id: m.sender.id,
                             name: m.sender.fullname || "Người dùng",
+                            avatar:
+                                m.sender.avatar && m.sender.avatar.trim() !== ""
+                                    ? m.sender.avatar
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender.fullname || "U")}`
+
                         },
+
                         timestamp: new Date(m.sendAt).getTime(),
                     }))
                 );
@@ -64,6 +70,7 @@ function ChatGroup() {
             groupId,
             onGroupMessage: (msg) => {
                 const senderId = msg.sender?.id ?? msg.senderId;
+
                 setMessages((prev) => [
                     ...prev,
                     {
@@ -71,12 +78,18 @@ function ChatGroup() {
                         text: msg.content,
                         user: {
                             id: senderId,
-                            name: msg.sender?.fullname ?? msg.senderName ?? "Người dùng",
+                            name: msg.sender?.fullname ?? msg.senderName ?? "User",
+                            avatar:
+                                msg.sender?.avatar ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                    msg.sender?.fullname || "U"
+                                )}`,
                         },
                         timestamp: new Date(msg.sendAt).getTime(),
                     },
                 ]);
             },
+
         });
         return () => disconnect();
     }, [groupId]);
@@ -96,7 +109,7 @@ function ChatGroup() {
         try {
             const session = await initiateChatSession(Number(currentUserId), Number(userId));
             if (session?.id) {
-                nav(`/auth/chat/${session.id}`);
+                nav(`/user/chat/${session.id}`);
             } else {
                 alert("Không thể mở phiên chat riêng!");
             }
@@ -112,7 +125,7 @@ function ChatGroup() {
                 <MessageContainer>
                     {group && (
                         <MessageHeader
-                            onBack={() => nav("/auth/chat/list")}
+                            onBack={() => nav("/user/chat/list")}
                             avatar={
                                 group.avt && group.avt.trim() !== ""
                                     ? group.avt
@@ -120,19 +133,60 @@ function ChatGroup() {
                             }
                         >
                             <div className="d-flex flex-wrap justify-content-between align-items-center w-100">
-                                {/* Group avatar + name */}
+                                {/* Trái: Tên nhóm + Creator + Dropdown thành viên */}
                                 <div className="d-flex align-items-center gap-2">
-                                    {/* Hiển thị avatar nếu có */}
-
                                     <div className="d-flex flex-column">
                                         <strong>{group.name}</strong>
-                                        <small className="text-muted">
+                                        <small className="text-muted d-flex align-items-center gap-2">
                                             Creator: <u>{group.createdBy.fullname.toUpperCase()}</u>
+
+                                            {/* Icon thành viên (dropdown) */}
+                                            <div className="dropdown ms-2">
+                                                <button
+                                                    className="btn btn-link p-0 border-0"
+                                                    type="button"
+                                                    id="memberDropdown"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                >
+                                                    <i className="bi bi-people-fill" style={{ fontSize: "18px", color: 'black' }}></i>
+                                                </button>
+                                                <ul className="dropdown-menu" aria-labelledby="memberDropdown">
+                                                    {participants.length > 0 ? (
+                                                        participants.map((p) => (
+                                                            <li
+                                                                key={p.id}
+                                                                className="dropdown-item d-flex align-items-center"
+                                                                onClick={() => openPrivateChat(p.id)}
+                                                            >
+                                                                <img
+                                                                    src={
+                                                                        p.avatar && p.avatar.trim() !== ""
+                                                                            ? p.avatar
+                                                                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullname || "U")}`
+                                                                    }
+                                                                    alt="avatar"
+                                                                    className="rounded-circle me-2"
+                                                                    style={{ width: "24px", height: "24px" }}
+                                                                    onError={(e) => {
+                                                                        e.target.onerror = null;
+                                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullname || "U")}`;
+                                                                    }}
+                                                                />
+                                                                {p.fullname}
+                                                            </li>
+                                                        ))
+                                                    ) : (
+                                                        <li className="dropdown-item text-muted text-center">No members yet</li>
+                                                    )}
+                                                </ul>
+
+                                            </div>
                                         </small>
                                     </div>
                                 </div>
 
-                                {/* Created date */}
+                                {/* Phải: Ngày tạo */}
                                 <div className="text-end mt-2 mt-sm-0">
                                     <small className="text-muted d-block">
                                         Created at: <u>{new Date(group.createdAt).toLocaleDateString("en-GB")}</u>
@@ -140,6 +194,7 @@ function ChatGroup() {
                                 </div>
                             </div>
                         </MessageHeader>
+
                     )}
 
 
@@ -151,6 +206,7 @@ function ChatGroup() {
                         placeholder="Nhập tin nhắn..."
                         onSendMessage={handleSendMessage}
                         showSendButton
+                        showAttachButton={false}
                     />
                 </MessageContainer>
             </MainContainer>

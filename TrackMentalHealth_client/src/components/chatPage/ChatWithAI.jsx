@@ -73,7 +73,7 @@ function ChatWithAI() {
         <MinChatUiProvider theme="#6ea9d7">
             <MainContainer style={{height: '100vh'}}>
                 <MessageContainer>
-                    <MessageHeader onBack={() => nav('/auth/chat/list')}>AI Psychologist</MessageHeader>
+                    <MessageHeader onBack={() => nav('/user/chat/list')}>AI Psychologist</MessageHeader>
                     <MessageList currentUserId={currentUserId} messages={messages}/>
                     <MessageInput
                         placeholder="Nhập tin nhắn..."

@@ -55,7 +55,8 @@ export const getChatSessionsByUserId = async (id) => {
 };
 
 
-export const getAppointmentsByPsyId = async (id) => {
+//appointment
+export const getAppointmentByUserId = async (id) => {
     try {
         const response = await axios.get(Appointment_url + "list/" + id);
         console.log(response.data);
@@ -200,6 +201,17 @@ export const saveNotification = async (data) => {
 export const changeStatusNotification = async (id) => {
     try {
         const response = await axios.put(notification_url + "changestatus/" + id);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi:', error);
+        throw error;
+    }
+};
+
+export const deleteNotificationById = async (id) => {
+    try {
+        const response = await axios.delete(notification_url + "delete/" + id);
         console.log(response.data);
         return response.data;
     } catch (error) {

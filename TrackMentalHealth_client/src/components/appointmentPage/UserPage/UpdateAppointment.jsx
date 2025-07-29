@@ -71,7 +71,7 @@ function UpdateAppointment() {
             console.log("Payload gửi lên:", data);
             await updateAppointment(appointmentid, data);
             showAlert('Update appointment successfully', 'success');
-            nav('/auth/appointment/' + currentUserId);
+            nav('/user/appointment/' + currentUserId);
         } catch (error) {
             console.error(error);
             alert("Có lỗi xảy ra khi cập nhật lịch hẹn.");

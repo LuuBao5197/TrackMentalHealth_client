@@ -80,23 +80,6 @@ const Router = [
       { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
       { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
-      { path: "chat/list", element: <ChatList /> },
-      { path: "chat/ai", element: <ChatWithAI /> },
-      { path: "chat/:sessionId", element: <ChatWithUser /> },
-      { path: "chat/group/:groupId", element: <ChatGroup /> },
-
-      //appointment
-      { path: "appointment/:userId", element: <Appointments /> },
-      { path: "appointment/edit/:appointmentid", element: <UpdateAppointment /> },
-      { path: "appointment/create/:userId", element: <CreateAppointment /> },
-      { path: "appointment/psychologist", element: <AppointmentManagement /> },
-
-
-      //chat
-      { path: "chat", element: <ChatList /> },
-      { path: "chatlist", element: <ChatList /> },
-      { path: "chatai", element: <ChatWithAI /> },
-      { path: "chat/:id", element: <ChatWithUser /> },
 
     ],
   },
@@ -135,20 +118,43 @@ const Router = [
       { path: 'aboutUs', element: <AboutUs /> },
       { path: 'tests', element: <TestListForUser /> },
 
+      // USER ONLY
       {
-        element: <ProtectedRoute allowedRoles={['USER']} />, // gộp role User và 2
+        element: <ProtectedRoute allowedRoles={['USER']} />,
         children: [
-          // { path: 'homepage', element: <HomePage /> },
           { path: 'write-diary', element: <WriteDiaryPage /> },
           { path: 'history', element: <DiaryHistoryPage /> },
-          { path: "mood-history", element: <MoodHistoryPage /> },
+          { path: 'mood-history', element: <MoodHistoryPage /> },
           { path: 'doTest/:testId', element: <DoTestForm /> },
 
+          // Appointment for USER
+          { path: 'appointment/:userId', element: <Appointments /> },
+          { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
+          { path: 'appointment/create/:userId', element: <CreateAppointment /> },
+        ],
+      },
+
+      // PSYCHO ONLY
+      {
+        element: <ProtectedRoute allowedRoles={['PSYCHO']} />,
+        children: [
+          { path: 'appointment/psychologist', element: <AppointmentManagement /> },
+        ],
+      },
+
+      // CHAT for USER and PSYCHO
+      {
+        element: <ProtectedRoute allowedRoles={['USER', 'PSYCHO']} />,
+        children: [
+          { path: 'chat/list', element: <ChatList /> },
+          { path: 'chat/ai', element: <ChatWithAI /> },
+          { path: 'chat/:sessionId', element: <ChatWithUser /> },
+          { path: 'chat/group/:groupId', element: <ChatGroup /> },
         ],
       },
     ],
-  },
-
+  }
+  ,
   // test_designer
   {
     path: '/testDesigner',
@@ -163,7 +169,7 @@ const Router = [
           { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
-          { path: 'test/doTest', element: <DoTestForm/>}
+          { path: 'test/doTest', element: <DoTestForm /> }
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
