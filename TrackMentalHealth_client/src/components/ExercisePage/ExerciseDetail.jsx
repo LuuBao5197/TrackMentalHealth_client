@@ -13,10 +13,10 @@ const ExerciseDetail = () => {
       .then((res) => {
         setExercise(res.data);
       })
-      .catch((err) => console.error('Lỗi khi tải chi tiết bài tập:', err));
+      .catch((err) => console.error('❌ Error loading exercise detail:', err));
   }, [id]);
 
-  if (!exercise) return <p className="text-center p-4">Đang tải chi tiết bài tập...</p>;
+  if (!exercise) return <p className="text-center p-4">Loading exercise details...</p>;
 
   return (
     <div className="container py-5" style={{ fontFamily: 'Georgia, serif' }}>
@@ -30,7 +30,7 @@ const ExerciseDetail = () => {
                   <div className="icon-circle me-2 text-success">
                     <BsHeadphones />
                   </div>
-                  <span className="badge-text me-3 fw-bold">Giới thiệu bài tập</span>
+                  <span className="badge-text me-3 fw-bold">Exercise Introduction</span>
                 </div>
               </div>
               <h1 className="display-5 fw-bold text-dark mb-3">{exercise.title}</h1>
@@ -42,7 +42,7 @@ const ExerciseDetail = () => {
 
       {/* Media Section */}
       <div className="mb-5">
-        <h2 className="mb-3 text-primary">🎧 Nội dung bài tập</h2>
+        <h2 className="mb-3 text-primary">🎧 Exercise Content</h2>
 
         {exercise.mediaType === 'audio' && (
           <audio
@@ -50,7 +50,7 @@ const ExerciseDetail = () => {
             className="w-100 mb-3"
             src={exercise.mediaUrl}
           >
-            Trình duyệt của bạn không hỗ trợ audio.
+            Your browser does not support audio.
           </audio>
         )}
 
@@ -60,12 +60,12 @@ const ExerciseDetail = () => {
             className="w-100 rounded shadow-sm mb-3"
             src={exercise.mediaUrl}
           >
-            Trình duyệt của bạn không hỗ trợ video.
+            Your browser does not support video.
           </video>
         )}
 
         {exercise.estimatedDuration && (
-          <p className="text-muted">⏱️ Thời lượng ước tính: {exercise.estimatedDuration} giây</p>
+          <p className="text-muted">⏱️ Estimated Duration: {exercise.estimatedDuration} seconds</p>
         )}
       </div>
     </div>
