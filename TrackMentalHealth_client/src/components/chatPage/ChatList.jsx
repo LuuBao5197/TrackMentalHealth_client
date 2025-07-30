@@ -415,14 +415,6 @@ function ChatList() {
                         </>
                     )}
 
-                    {/* Notification Bell */}
-                    <NotificationDropdown
-                        notifications={notifications}
-                        unreadNotifications={unreadNotifications}
-                        handleOpenNotificationDetail={handleOpenNotificationDetail}
-                        handleDeleteNotification={handleDeleteNotification}
-                    />
-
                 </div>
             </div>
 
