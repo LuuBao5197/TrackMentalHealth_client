@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-
-const userId = 1;
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import Swal from 'sweetalert2';
 
 const LessonManager = () => {
+  const navigate = useNavigate();
+  const userInfo = useSelector((state) => state.auth.user);
+  const userId = userInfo?.userId || null;
+
   const [lessons, setLessons] = useState([]);
   const [progressMap, setProgressMap] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,22 +18,44 @@ const LessonManager = () => {
     axios.get('http://localhost:9999/api/lesson')
       .then(res => {
         setLessons(res.data);
+
         res.data.forEach(lesson => {
-          axios
-            .get(`http://localhost:9999/api/user/${userId}/lesson/${lesson.id}/progress-percent`)
-            .then(p => {
-              const rounded = Math.round(p.data);
-              setProgressMap(prev => ({ ...prev, [lesson.id]: rounded }));
-            })
-            .catch(err => {
-              console.error(`Lỗi tải tiến trình cho bài học ${lesson.id}:`, err);
-            });
+          if (userId) {
+            axios
+              .get(`http://localhost:9999/api/user/${userId}/lesson/${lesson.id}/progress-percent`)
+              .then(p => {
+                const rounded = Math.round(p.data);
+                setProgressMap(prev => ({ ...prev, [lesson.id]: rounded }));
+              })
+              .catch(err => {
+                console.error(`Failed to load progress for lesson ${lesson.id}:`, err);
+              });
+          } else {
+            setProgressMap(prev => ({ ...prev, [lesson.id]: 0 }));
+          }
         });
       })
       .catch(err => {
-        console.error('Lỗi khi tải bài học:', err);
+        console.error('Failed to load lessons:', err);
       });
-  }, []);
+  }, [userId]);
+
+  const handleLessonClick = (lessonId) => {
+    if (!userId) {
+      Swal.fire({
+        title: 'You are not logged in',
+        text: 'You need to log in to access this lesson. Would you like to log in now?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Log in',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/auth/login');
+        }
+      });
+    }
+  };
 
   const totalPages = Math.ceil(lessons.length / lessonsPerPage);
   const currentLessons = lessons.slice((currentPage - 1) * lessonsPerPage, currentPage * lessonsPerPage);
@@ -52,42 +78,6 @@ const LessonManager = () => {
           />
         </svg>
         <div className="percentage">{percentage}%</div>
-        <style>{`
-          .circular-progress {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-          .circular-progress svg {
-            transform: rotate(-90deg);
-            width: 100%;
-            height: 100%;
-          }
-          .circular-progress circle {
-            fill: transparent;
-            stroke-width: 6;
-            stroke-linecap: round;
-          }
-          .bg-circle {
-            stroke: #e0e0e0;
-          }
-          .progress-circle {
-            stroke: #007bff;
-            transition: stroke-dashoffset 0.3s;
-          }
-          .percentage {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-          }
-        `}</style>
       </div>
     );
   };
@@ -95,7 +85,7 @@ const LessonManager = () => {
   return (
     <section id="portfolio" className="portfolio section">
       <div className="container section-title" data-aos="fade-up">
-        <h2>List of lessons</h2>
+        <h2>List of Lessons</h2>
         <p>Explore engaging lessons and practice your skills</p>
       </div>
 
@@ -119,9 +109,22 @@ const LessonManager = () => {
                     />
                     <div className="portfolio-overlay">
                       <div className="portfolio-actions">
-                        <Link to={`/auth/lesson/${lesson.id}`} className="details-link">
-                          <i className="bi bi-arrow-right"></i>
-                        </Link>
+                        {userId ? (
+                          <Link to={`/auth/lesson/${lesson.id}`} className="details-link">
+                            <div className="arrow-circle">
+                              <i className="bi bi-arrow-right"></i>
+                            </div>
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={() => handleLessonClick(lesson.id)}
+                            className="details-link btn btn-link p-0 border-0"
+                          >
+                            <div className="arrow-circle">
+                              <i className="bi bi-arrow-right"></i>
+                            </div>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -141,9 +144,9 @@ const LessonManager = () => {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="pagination-custom mt-4 d-flex justify-content-center gap-2 flex-wrap">
-            <button className="btn btn-dark" disabled>Trang {currentPage} / {totalPages}</button>
+            <button className="btn btn-dark" disabled>Page {currentPage} / {totalPages}</button>
             {currentPage > 1 && (
-              <button className="btn btn-dark" onClick={() => setCurrentPage(1)}>Trang đầu</button>
+              <button className="btn btn-dark" onClick={() => setCurrentPage(1)}>First</button>
             )}
             {[...Array(totalPages)].map((_, i) => (
               <button
@@ -155,11 +158,79 @@ const LessonManager = () => {
               </button>
             ))}
             {currentPage < totalPages && (
-              <button className="btn btn-dark" onClick={() => setCurrentPage(totalPages)}>Trang cuối</button>
+              <button className="btn btn-dark" onClick={() => setCurrentPage(totalPages)}>Last</button>
             )}
           </div>
         )}
       </div>
+
+      {/* Styles */}
+      <style>{`
+        .circular-progress {
+          position: relative;
+          width: 80px;
+          height: 80px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .circular-progress svg {
+          transform: rotate(-90deg);
+          width: 100%;
+          height: 100%;
+        }
+
+        .circular-progress circle {
+          fill: transparent;
+          stroke-width: 6;
+          stroke-linecap: round;
+        }
+
+        .bg-circle {
+          stroke: #e0e0e0;
+        }
+
+        .progress-circle {
+          stroke: #007bff;
+          transition: stroke-dashoffset 0.3s;
+        }
+
+        .percentage {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 14px;
+          font-weight: bold;
+          color: #333;
+        }
+
+        .arrow-circle {
+          background-color: white;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .arrow-circle i {
+          color: #6c63ff;
+          font-size: 20px;
+        }
+
+        .arrow-circle:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .details-link {
+          text-decoration: none;
+        }
+      `}</style>
     </section>
   );
 };
