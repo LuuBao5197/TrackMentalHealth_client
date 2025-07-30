@@ -4,7 +4,7 @@ import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import getCroppedImg from '../../utils/handleImage/cropImage';
 import './PostModalForm.css';
 import axios from 'axios';
-import {showAlert} from '../../utils/showAlert';
+import { showAlert } from '../../utils/showAlert';
 const filters = [
   { name: 'None', value: 'none' },
   { name: 'Grayscale', value: 'grayscale(1)' },
@@ -12,10 +12,10 @@ const filters = [
   { name: 'Brightness', value: 'brightness(1.5)' },
   { name: 'Contrast', value: 'contrast(1.5)' },
 ];
-const handleClose = () => {
-  resetForm();
-  onClose();
-};
+// const handleClose = () => {
+//   resetForm();``
+//   onClose();
+// };
 function PostModalForm({ show, handleClose, onPostCreated, userID }) {
   const [content, setContent] = useState('');
   const [rawImages, setRawImages] = useState([]); // blob urls
@@ -93,10 +93,12 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
           'Content-Type': 'multipart/form-data',
         },
       });
-    
+
       showAlert("Status đã được đăng thành công");
       resetForm();
       handleClose();
+      onPostCreated;
+
     } catch (err) {
       showAlert("Dang bai that bai", "error")
       setError('Đăng bài thất bại. Vui lòng thử lại.');

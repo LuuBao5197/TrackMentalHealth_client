@@ -35,6 +35,9 @@ import Unauthorized from '../views/authentication/Unauthorize.jsx';
 import AppointmentManagement from '../components/appointmentPage/PsychologistPage/AppointmentManagement.jsx';
 import ChooseRolePage from '../components/loginPage/ChooseRolePage.jsx';
 import RolesRegisterForm from '../components/loginPage/RolesRegisterForm.jsx';
+import LessonManager from '../components/LessonPage/LessonManager.jsx';
+import ArticleManager from '../components/ArticlePage/ArticleManager.jsx';
+import ExerciseManager from '../components/ExercisePage/ExerciseManager.jsx';
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -121,6 +124,9 @@ const Router = [
       { path: 'social', element: <SocialPage /> },
       { path: 'aboutUs', element: <AboutUs /> },
       { path: 'tests', element: <TestListForUser /> },
+      { path: 'lesson', element: <LessonManager /> },
+      { path: 'artical', element: <ArticleManager /> },
+      { path: 'exercise', element: <ExerciseManager /> },
 
       // USER ONLY
       {
