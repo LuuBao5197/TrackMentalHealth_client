@@ -68,7 +68,7 @@ const Router = [
     path: '/auth',
     element: <BlankLayout />,
     children: [
-      { path: 'roles-register', element: <RolesRegisterForm />},
+      { path: 'roles-register', element: <RolesRegisterForm /> },
       { path: 'choose-role', element: <ChooseRolePage /> },
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
@@ -94,7 +94,7 @@ const Router = [
   //🔐 Private: Cần đăng nhập
   {
     path: '/',
-    element: <UserLayout />,
+    element: <FullLayout />,
     children: [
       { index: true, element: <Navigate to="/user/homepage" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
@@ -141,6 +141,7 @@ const Router = [
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
+
         ],
       },
 
@@ -179,6 +180,31 @@ const Router = [
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
           { path: 'test/doTest', element: <DoTestForm /> }
+        ],
+      },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
+
+    ],
+  },
+  {
+    path: '/contentCreator',
+    element: <FullLayout />,
+    children: [
+      {
+        element: <ProtectedRoute allowedRoles={['CONTENT_CREATOR']} />,
+        children: [
+          { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
+          { path: 'article/edit/:articleId', element: <EditArticle /> },
+          { path: 'question/option/create', element: <OptionPage /> },
+          { path: 'create-lesson', element: <CreateLesson /> },
+          { path: 'create-exercise', element: <CreateExercise /> },
+          { path: 'create-article', element: <CreateArticle /> },
+          { path: 'lesson/:id', element: <LessonDetail /> },
+          { path: 'exercise/:id', element: <ExerciseDetail /> },
+          { path: 'article/:id', element: <ArticleDetail /> },
+          { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
+          { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
+          { path: 'article/edit/:articleId', element: <EditArticle /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
