@@ -3,11 +3,11 @@ import { Card, CardContent, Typography, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const roles = [
-    { id: 1, name: 'USER' },
-    { id: 2, name: 'ADMIN' },
+    { id: 1, name: 'ADMIN' },
+    { id: 2, name: 'PSYCHOLOGIST' },
     { id: 3, name: 'CONTENT_CREATOR' },
     { id: 4, name: 'TEST_DESIGNER' },
-    { id: 5, name: 'PSYCHOLOGIST' },
+    { id: 5, name: 'USER' },
 ];
 
 const UserProfile = () => {

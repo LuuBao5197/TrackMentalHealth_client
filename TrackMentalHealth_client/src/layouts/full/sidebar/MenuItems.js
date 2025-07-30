@@ -163,7 +163,7 @@ const getMenuItemsByRole = (role) => {
     },
     {
       id: uniqueId(),
-      title: 'Manage Lessons',
+      title: 'Create Lesson',
       icon: IconBook, // 📖 Biểu tượng bài học
       href: '/testDesigner/lesson',
     },
@@ -178,18 +178,19 @@ const getMenuItemsByRole = (role) => {
       title: 'Manage Exercise',
       icon: IconBook, // 📖 Biểu tượng bài học
       href: '/testDesigner/exercise',
+
     },
     {
       id: uniqueId(),
-      title: 'Manage Practices',
+      title: 'Create exercise',
       icon: IconListCheck, // ✅ Bài tập, danh sách luyện tập
-      href: '/content/practices',
+      href: '/contentCreator/create-exercise',
     },
     {
       id: uniqueId(),
-      title: 'Approval Progress',
+      title: 'Create article',
       icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
-      href: '/content/approval-progress',
+      href: '/contentCreator/create-article',
     },
   ];
   switch (role) {

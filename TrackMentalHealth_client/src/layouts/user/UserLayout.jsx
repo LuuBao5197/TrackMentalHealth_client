@@ -26,7 +26,11 @@ import { Outlet, useLocation } from 'react-router-dom';
 const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
+  if(userRole){
+    localStorage.setItem('currentUserId',userRole.userId);
+  }
   console.log(userRole);
+  
   const [headerHeight, setHeaderHeight] = useState(0);
   // Add/remove class vào body
   useEffect(() => {
