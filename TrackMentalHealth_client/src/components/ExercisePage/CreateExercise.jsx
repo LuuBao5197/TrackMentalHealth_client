@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2'; // ✅ Thêm SweetAlert2
 
 const token = localStorage.getItem('token');
 let contentCreatorId = null;
@@ -32,7 +33,11 @@ const CreateExercise = () => {
       const now = new Date().toISOString();
 
       if (!values.mediaUrl) {
-        alert('❌ Bạn cần upload tệp media trước khi tạo bài tập.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Thiếu tệp media',
+          text: '❌ Bạn cần upload tệp media trước khi tạo bài tập.',
+        });
         return;
       }
 
@@ -48,11 +53,32 @@ const CreateExercise = () => {
       try {
         console.log('📦 Dữ liệu gửi:', exerciseData);
         await axios.post('http://localhost:9999/api/exercise/', exerciseData);
-        alert('✅ Tạo bài tập thành công!');
+        Swal.fire({
+          icon: 'success',
+          title: '✅ Thành công',
+          text: 'Tạo bài tập thành công!',
+        });
         formik.resetForm();
       } catch (error) {
+        const status = error.response?.status;
+        const backendMessage =
+          error.response?.data?.message || JSON.stringify(error.response?.data);
+
+        if (status === 400) {
+          Swal.fire({
+            icon: 'error',
+            title: '❌ Dữ liệu không hợp lệ',
+            text: backendMessage,
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: `❌ Lỗi từ server (${status || '??'})`,
+            text: backendMessage,
+          });
+        }
+
         console.error('❌ Lỗi khi tạo bài tập:', error.response?.data || error.message);
-        alert('❌ Có lỗi xảy ra khi tạo bài tập.');
       }
     },
   });
@@ -71,7 +97,7 @@ const CreateExercise = () => {
 
       if (file.type.startsWith('image/')) {
         if (onSuccessCallback) {
-          onSuccessCallback(url); // dùng cho ảnh
+          onSuccessCallback(url);
         }
         return;
       }
@@ -83,7 +109,11 @@ const CreateExercise = () => {
       estimateDurationFromFile(file);
     } catch (err) {
       console.error('❌ Upload thất bại:', err.response?.data || err.message);
-      alert('❌ Upload thất bại!');
+      Swal.fire({
+        icon: 'error',
+        title: '❌ Upload thất bại',
+        text: 'Không thể upload tệp. Vui lòng thử lại.',
+      });
     } finally {
       setUploading(false);
     }
@@ -158,7 +188,6 @@ const CreateExercise = () => {
               )}
             </div>
 
-            {/* Ảnh minh họa */}
             <div className="mb-3">
               <label htmlFor="exercisePhoto" className="form-label">Ảnh minh họa</label>
               <input

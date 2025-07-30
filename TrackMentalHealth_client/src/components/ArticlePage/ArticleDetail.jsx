@@ -4,6 +4,7 @@ import axios from 'axios';
 import { BsBookmarkHeart } from 'react-icons/bs';
 import { useSelector } from 'react-redux';
 import { formatDistanceToNow } from 'date-fns';
+import Swal from 'sweetalert2'; // ✅ Thêm dòng này
 
 const ArticleDetail = () => {
   const { id } = useParams();
@@ -17,21 +18,15 @@ const ArticleDetail = () => {
   const userId = userInfo?.userId || null;
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:9999/api/article/${id}`)
+    axios.get(`http://localhost:9999/api/article/${id}`)
       .then((res) => setArticle(res.data))
-      .catch((err) =>
-        console.error('❌ Error loading article details:', err)
-      );
+      .catch((err) => console.error('❌ Error loading article details:', err));
   }, [id]);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:9999/api/article/${id}/comments`)
+    axios.get(`http://localhost:9999/api/article/${id}/comments`)
       .then((res) => setComments(res.data))
-      .catch((err) =>
-        console.error('❌ Error loading comments:', err)
-      );
+      .catch((err) => console.error('❌ Error loading comments:', err));
   }, [id]);
 
   const fetchUserNameById = async (id) => {
@@ -49,7 +44,6 @@ const ArticleDetail = () => {
 
     const loadUsernames = async () => {
       const newUsernames = { ...usernames };
-
       for (const comment of comments) {
         const uid = comment.user?.id || comment.userId;
         if (uid && !newUsernames[uid]) {
@@ -57,12 +51,10 @@ const ArticleDetail = () => {
           newUsernames[uid] = name;
         }
       }
-
       setUsernames(newUsernames);
     };
 
     loadUsernames();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comments]);
 
   const handlePostComment = async () => {
@@ -74,11 +66,29 @@ const ArticleDetail = () => {
         content: commentContent,
         userId: userId
       });
+
       setCommentContent('');
       const res = await axios.get(`http://localhost:9999/api/article/${id}/comments`);
       setComments(res.data);
     } catch (error) {
-      console.error('❌ Failed to post comment:', error.response?.data || error.message);
+      const status = error.response?.status;
+      const message = error.response?.data?.message || error.response?.data || error.message;
+
+      if (status === 400) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Bình luận không hợp lệ',
+          text: message,
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: `Lỗi ${status || 'server'}`,
+          text: message,
+        });
+      }
+
+      console.error('❌ Failed to post comment:', message);
     } finally {
       setPosting(false);
     }
@@ -105,7 +115,6 @@ const ArticleDetail = () => {
 
   return (
     <div className="container py-5" style={{ fontFamily: 'Georgia, serif', fontSize: '1.2em' }}>
-      {/* Hero */}
       <section id="article-hero" className="mb-4">
         <div className="badge-wrapper mb-3">
           <div className="d-inline-flex align-items-center rounded-pill border border-primary px-3 py-1">
@@ -125,11 +134,9 @@ const ArticleDetail = () => {
         </p>
       </section>
 
-      {/* Comments */}
       <hr className="my-5" />
       <h3 className="text-primary mb-3">💬 Comments</h3>
 
-      {/* Comment form */}
       <div className="mb-4">
         {userId ? (
           <>
@@ -155,7 +162,6 @@ const ArticleDetail = () => {
         )}
       </div>
 
-      {/* Comment list */}
       {comments.length > 0 ? (
         comments.map((comment) => {
           const uid = comment.user?.id || comment.userId;
