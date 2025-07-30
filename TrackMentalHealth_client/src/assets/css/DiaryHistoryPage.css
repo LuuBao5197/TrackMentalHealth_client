@@ -1,0 +1,23 @@
+.diary-history {
+  background: linear-gradient(to bottom right, #f3f4f6, #e0f2f1);
+  border-radius: 12px;
+  min-height: 100vh;
+}
+
+.diary-card {
+  background: #ffffff;
+  border-left: 6px solid #80cbc4;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.diary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.diary-content {
+  white-space: pre-wrap;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+}

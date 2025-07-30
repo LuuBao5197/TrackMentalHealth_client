@@ -42,6 +42,11 @@ export const getMoodByUserAndDate = (userId, date) => {
 export const getMyMoods = () => {
   return axios.get(`${API_URL}/my`, getAuthHeaders());
 };
+// ✅ Lấy cảm xúc có phân trang
+export const getMyMoodsPaged = (page = 0, size = 5) => {
+  return axios.get(`${API_URL}/my/page?page=${page}&size=${size}`, getAuthHeaders());
+};
+
 
 // Lấy thống kê biểu đồ cảm xúc theo user đang đăng nhập
 export const getMoodStatistics = () => {

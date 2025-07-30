@@ -95,17 +95,17 @@ const HeroPage = () => {
             <div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
               {moodLevels.map((m) => (
                 <button
-                  key={m.id}
-                  type="button"
-                  className={`btn rounded-pill py-3 px-4 border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
-                  style={{ width: '110px', height: '110px', fontSize: '1rem' }}
-                  onClick={() => setSelectedMoodId(m.id)}
-                >
-                  <div style={{ fontSize: "2.5rem" }}>
-                    {moodIcons[m.name] || '❔'}
-                  </div>
-                  <div className="mt-2">{m.name}</div>
-                </button>
+  key={m.id}
+  type="button"
+  className={`btn btn-mood border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
+  onClick={() => setSelectedMoodId(m.id)}
+>
+  <div style={{ fontSize: "2.5rem" }}>
+    {moodIcons[m.name] || '❔'}
+  </div>
+  <div className="mt-2">{m.name}</div>
+</button>
+
               ))}
             </div>
 
@@ -171,7 +171,7 @@ const HeroPage = () => {
             title="Lịch sử cảm xúc"
             text="Xem biểu đồ và lịch sử cảm xúc của bạn."
             delay="400"
-            link="history-mood"
+            link="/user/mood-history"
           />
 
         </div>

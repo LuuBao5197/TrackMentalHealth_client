@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getDiaries, updateDiary } from '../../api/diaryAPI';
 import { Modal, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../../assets/css/DiaryHistoryPage.css'; // 👉 CSS riêng cho lịch sử
 
 const DiaryHistoryPage = () => {
   const [diaries, setDiaries] = useState([]);
@@ -39,30 +40,26 @@ const DiaryHistoryPage = () => {
     setUpdatedContent(diary.content);
   };
 
-
   const handleSave = async () => {
     try {
       await updateDiary(editingDiary.id, { ...editingDiary, content: updatedContent });
-      alert('Cập nhật thành công');
-
-      // Cập nhật lại danh sách sau khi sửa
+      alert('✅ Cập nhật thành công!');
       setDiaries(diaries.map(d => d.id === editingDiary.id ? { ...d, content: updatedContent } : d));
-
-      // Đóng modal
       setEditingDiary(null);
     } catch (err) {
       console.error(err);
-      alert('Cập nhật thất bại');
+      alert('❌ Cập nhật thất bại');
     }
   };
 
   return (
-    <div className="container py-4">
-      <h2 className="mb-4">Lịch sử nhật ký</h2>
+    <div className="container py-5 diary-history">
+      <h2 className="text-center text-primary mb-4">📖 Lịch Sử Nhật Ký</h2>
+
       {diaries.length === 0 ? (
-        <p>Chưa có nhật ký nào.</p>
+        <p className="text-center text-muted">Chưa có nhật ký nào.</p>
       ) : (
-        <ul className="list-group">
+        <div className="row g-4">
           {diaries.map((diary) => {
             const diaryDate = new Date(diary.date);
             const today = new Date();
@@ -73,31 +70,40 @@ const DiaryHistoryPage = () => {
               diaryDate.getDate() === today.getDate();
 
             return (
-              <li className="list-group-item" key={diary.id}>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>{diary.date}</span>
+              <div className="col-md-6" key={diary.id}>
+                <div className="diary-card shadow-sm p-3 rounded position-relative">
+                  <small className="text-muted">
+                    {diaryDate.toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </small>
                   {isSameDay && (
                     <button
-                      className="btn btn-sm btn-outline-secondary"
+                      className="btn btn-sm btn-outline-primary position-absolute top-0 end-0 mt-2 me-2"
                       onClick={() => handleEditClick(diary)}
                     >
-                      Chỉnh sửa
+                      ✏️
                     </button>
                   )}
+                  <p className="mt-2 mb-0 diary-content">
+                    {diary.content.length > 120
+                      ? `${diary.content.substring(0, 120)}...`
+                      : diary.content}
+                  </p>
                 </div>
-                <p className="mt-2 mb-0">{diary.content.substring(0, 100)}...</p>
-              </li>
+              </div>
             );
           })}
-
-        </ul>
+        </div>
       )}
 
       {/* Modal chỉnh sửa */}
       {editingDiary && (
-        <Modal show onHide={() => setEditingDiary(null)}>
+        <Modal show onHide={() => setEditingDiary(null)} centered>
           <Modal.Header closeButton>
-            <Modal.Title>Chỉnh sửa nhật ký</Modal.Title>
+            <Modal.Title>📝 Chỉnh sửa nhật ký</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <textarea
@@ -111,7 +117,7 @@ const DiaryHistoryPage = () => {
             <Button variant="secondary" onClick={() => setEditingDiary(null)}>
               Hủy
             </Button>
-            <Button variant="primary" onClick={handleSave}>
+            <Button variant="success" onClick={handleSave}>
               Lưu thay đổi
             </Button>
           </Modal.Footer>
