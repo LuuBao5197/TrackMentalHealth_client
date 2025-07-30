@@ -37,8 +37,8 @@ const getOtherUser = (session, currentUserId) =>
 
 function ChatList() {
     const user = useSelector((state) => state.auth); // lấy role
-    const currentUserId = parseInt(getCurrentUserId());
-    // const currentUserId = String(getCurrentUserId());
+    // const currentUserId = parseInt(getCurrentUserId());
+    const currentUserId = String(getCurrentUserId());
     const [sessions, setSessions] = useState([]);
     const [group, setGroup] = useState([]);
     const [myGroup, setmyGroup] = useState([]);
@@ -742,8 +742,8 @@ function ChatList() {
 
             {/* Nút Chat AI */}
             <button
-                // onClick={() => setIsOpen(true)}
-                onClick={()=>navigate('/user/chat/ai')}
+                onClick={() => setIsOpen(true)}
+                // onClick={()=>navigate('/user/chat/ai')}
                 className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
                 style={{
                     position: "fixed",
