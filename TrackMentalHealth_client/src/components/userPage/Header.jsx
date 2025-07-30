@@ -61,7 +61,7 @@ const Header = () => {
           <ul>
             <li><Link to="/user/homepage" className={currentPath === "/user/homepage" ? "active" : ""}>HomePage</Link></li>
             <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
-            <li><Link to="/user/a" className={currentPath === "/user/a" ? "active" : ""}>Mood</Link></li>
+            <li><Link to="/user/write-diary" className={currentPath === "/user/write-diary" ? "active" : ""}>Diary</Link></li>
             <li><Link to="/user/lesson" className={currentPath === "/user/lesson" ? "active" : ""}>Lesson</Link></li>
             <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Blog</Link></li>
             <li><Link to="/user/exercise" className={currentPath === "/user/exercise" ? "active" : ""}>Exercise</Link></li>
