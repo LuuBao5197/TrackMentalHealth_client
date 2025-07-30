@@ -20,11 +20,11 @@ const PendingRegistrations = () => {
     const token = useSelector(state => state.auth.token) || localStorage.getItem('token');
 
     const roleMap = {
-        1: "User",
-        2: "Admin",
+        1: "Admin",
+        2: "Psychologist",
         3: "Content Creator",
         4: "Test Designer",
-        5: "Psychologist",
+        5: "User",
     };
 
     const fetchPendingUsers = async () => {

@@ -8,9 +8,9 @@ import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import CreateIcon from '@mui/icons-material/Create';
 
 const roles = [
-    { name: 'Psychologist', id: 5, icon: <PsychologyIcon fontSize="large" color="primary" /> },
-    { name: 'Test Designer', id: 4, icon: <DesignServicesIcon fontSize="large" color="secondary" /> },
+    { name: 'Psychologist', id: 2, icon: <PsychologyIcon fontSize="large" color="primary" /> },
     { name: 'Content Creator', id: 3, icon: <CreateIcon fontSize="large" sx={{ color: '#f57c00' }} /> },
+    { name: 'Test Designer', id: 4, icon: <DesignServicesIcon fontSize="large" color="secondary" /> },
 ];
 
 const ChooseRolePage = () => {

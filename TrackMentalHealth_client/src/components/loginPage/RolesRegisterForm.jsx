@@ -12,10 +12,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const RolesRegisterForm = () => {
     const roleNames = {
-        2: 'User',
+        2: 'Psychologist',
         3: 'Content Creator',
         4: 'Test Designer',
-        5: 'Psychologist',
+        5: 'User',
     };
     const navigate = useNavigate();
     const location = useLocation();
@@ -52,6 +52,13 @@ const RolesRegisterForm = () => {
         confirmPassword: Yup.string()
             .oneOf([Yup.ref('password'), null], 'Passwords must match')
             .required('Confirm Password is required'),
+        certificates: Yup.mixed().test(
+            'required-certificates',
+            'At least one certificate is required',
+            function (_, context) {
+                return certificates.length > 0;
+            }
+        ),
     });
 
     const formik = useFormik({
@@ -62,7 +69,11 @@ const RolesRegisterForm = () => {
             confirmPassword: '',
         },
         validationSchema,
-        onSubmit: async (values) => {
+        onSubmit: async (values, { setFieldError }) => {
+            if (certificates.length === 0) {
+                setFieldError('certificates', 'At least one certificate is required');
+                return;
+            }
             try {
                 setLoading(true);
                 setEmailForOtp(values.email);
@@ -200,6 +211,11 @@ const RolesRegisterForm = () => {
                         <Box>
                             <Typography variant="body2" mb={0.5}>Upload Certificates (1–5 files)</Typography>
                             <TextField type="file" inputProps={{ multiple: true, accept: '.pdf,.jpg,.png' }} onChange={handleCertificateChange} fullWidth />
+                            {formik.errors.certificates && (
+                                <Typography color="error" variant="caption">
+                                    {formik.errors.certificates}
+                                </Typography>
+                            )}
                         </Box>
                         <Button type="submit" variant="contained" fullWidth disabled={loading}>
                             {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}

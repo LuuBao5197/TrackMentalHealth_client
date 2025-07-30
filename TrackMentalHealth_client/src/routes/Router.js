@@ -146,7 +146,7 @@ const Router = [
 
       // PSYCHO ONLY
       {
-        element: <ProtectedRoute allowedRoles={['PSYCHO']} />,
+        element: <ProtectedRoute allowedRoles={['PSYCHOLOGIST']} />,
         children: [
           { path: 'appointment/psychologist', element: <AppointmentManagement /> },
         ],

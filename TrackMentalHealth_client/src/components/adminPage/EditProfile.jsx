@@ -20,10 +20,10 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
-    fullname: Yup.string().required('Full name is required'),
-    address: Yup.string().required('Address is required'),
-    dob: Yup.string().required('Date of birth is required'),
-    gender: Yup.string().oneOf(['Male', 'Female'], 'Invalid gender').required('Gender is required'),
+    // fullname: Yup.string().required('Full name is required'),
+    // address: Yup.string().required('Address is required'),
+    // dob: Yup.string().required('Date of birth is required'),
+    // gender: Yup.string().oneOf(['Male', 'Female'], 'Invalid gender').required('Gender is required'),
 });
 
 const EditProfile = () => {
