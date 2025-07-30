@@ -106,7 +106,6 @@ function CreateAppointment() {
                         onChange={handleChange}
                         className="form-control"
                         required
-                        disabled={true}
                     />
                 </div>
 

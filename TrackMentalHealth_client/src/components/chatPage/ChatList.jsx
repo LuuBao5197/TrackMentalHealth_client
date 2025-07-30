@@ -407,7 +407,7 @@ function ChatList() {
 
                 <div className="d-flex gap-2">
                     {/* Nếu USER */}
-                    {user?.role === 'USER' && (
+                    {user!= null && (
                         <>
                             <button
                                 onClick={() => navigate(`/user/appointment/${currentUserId}`)}
