@@ -30,8 +30,10 @@ const LoginForm = ({ subtext, subtitle }) => {
 
             if (decoded.role === "USER") {
                 navigate("/user/homepage");
-            } else {
-                navigate("/testDesigner/test/");
+            } else if(decoded.role === "ADMIN") {
+                navigate("/dashboard");
+            } else if(decoded.role === "PSYCHOLOGIST") {
+                navigate("/user/appointment/psychologist");
             }
         } catch (err) {
             console.error("Token decode failed", err);
