@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const userId = 1; // ✅ Bạn có thể lấy userId từ context/login nếu cần
+const userId = 1;
 
 const LessonManager = () => {
   const [lessons, setLessons] = useState([]);
@@ -11,17 +11,14 @@ const LessonManager = () => {
   const lessonsPerPage = 6;
 
   useEffect(() => {
-    // Load bài học
     axios.get('http://localhost:9999/api/lesson')
       .then(res => {
         setLessons(res.data);
-
-        // Với mỗi lesson, gọi API để lấy phần trăm tiến trình
         res.data.forEach(lesson => {
           axios
             .get(`http://localhost:9999/api/user/${userId}/lesson/${lesson.id}/progress-percent`)
             .then(p => {
-              const rounded = Math.round(p.data); // 🔵 Làm tròn phần trăm
+              const rounded = Math.round(p.data);
               setProgressMap(prev => ({ ...prev, [lesson.id]: rounded }));
             })
             .catch(err => {
@@ -96,13 +93,13 @@ const LessonManager = () => {
   };
 
   return (
-    <section className="section">
-      <div className="container section-title">
-        <h2>Danh sách bài học</h2>
-        <p>Khám phá các bài học hấp dẫn và thực hành kỹ năng của bạn</p>
+    <section id="portfolio" className="portfolio section">
+      <div className="container section-title" data-aos="fade-up">
+        <h2>List of lessons</h2>
+        <p>Explore engaging lessons and practice your skills</p>
       </div>
 
-      <div className="container">
+      <div className="container" data-aos="fade-up" data-aos-delay="300">
         <div className="row g-4">
           {currentLessons.map((lesson) => {
             const progress = progressMap[lesson.id] ?? 0;

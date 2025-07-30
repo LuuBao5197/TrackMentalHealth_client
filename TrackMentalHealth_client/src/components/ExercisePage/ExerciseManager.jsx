@@ -8,25 +8,25 @@ const ExerciseManager = () => {
   useEffect(() => {
     axios.get('http://localhost:9999/api/exercise/')
       .then(response => setExercises(response.data))
-      .catch(error => console.error('Lỗi khi tải danh sách bài tập:', error));
+      .catch(error => console.error('❌ Error loading exercises:', error));
   }, []);
 
   return (
     <section id="portfolio" className="portfolio section">
       <div className="container section-title" data-aos="fade-up">
-        <h2>Danh sách bài tập</h2>
-        <p>Thực hành và nâng cao kỹ năng qua các bài tập</p>
+        <h2>Exercise List</h2>
+        <p>Practice and improve your skills through exercises</p>
       </div>
 
       <div className="container" data-aos="fade-up" data-aos-delay="100">
         <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
           {exercises.length === 0 ? (
-            <p>Đang tải dữ liệu hoặc không có bài tập nào.</p>
+            <p>Loading data or no exercises available.</p>
           ) : (
             exercises.map(ex => {
               const imageUrl = ex.photo?.startsWith('http')
                 ? ex.photo
-                : 'assets/img/default-exercise.webp'; // fallback nếu không có ảnh
+                : 'assets/img/default-exercise.webp';
 
               return (
                 <div

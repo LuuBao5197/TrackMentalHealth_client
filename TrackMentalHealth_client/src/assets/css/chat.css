@@ -45,3 +45,30 @@
     transform: translate(-50%, -50%) scale(1);
   }
 }
+
+.member-icon-dropdown .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 0;
+  z-index: 999;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.member-icon-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.member-icon-dropdown .dropdown-item {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.member-icon-dropdown .dropdown-item:hover {
+  background: #f0f0f0;
+}
+

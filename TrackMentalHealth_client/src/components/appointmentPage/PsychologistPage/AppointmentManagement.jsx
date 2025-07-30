@@ -3,14 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus } from 'react-icons/fa';
 import {
     getAppointmentById,
-    getAppointmentsByPsyId,
+    getAppointmentByPsyId,
+    saveNotification,
     updateAppointment
 } from '../../../api/api';
 import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
+import { getCurrentUserId } from '../../../utils/getCurrentUserID';
+import { useSelector } from 'react-redux';
 
 function AppointmentManagement() {
-    const psychologistId = localStorage.getItem("currentUserId");
+
+    const user = useSelector((state) => state.auth.user);
+    const psychologistId = user.userId;
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -31,7 +36,7 @@ function AppointmentManagement() {
 
     const fetchAppointments = async () => {
         try {
-            const res = await getAppointmentsByPsyId(psychologistId);
+            const res = await getAppointmentByPsyId(psychologistId);
             const sorted = res.sort((a, b) => new Date(b.timeStart) - new Date(a.timeStart));
 
             const pending = sorted.filter(a => a.status === 'PENDING');
@@ -46,6 +51,8 @@ function AppointmentManagement() {
 
     useEffect(() => {
         fetchAppointments();
+        console.log(psychologistId);
+
     }, []);
 
     const handleAccept = async (id) => {
@@ -56,6 +63,11 @@ function AppointmentManagement() {
             const appt = await getAppointmentById(id);
             appt.status = "ACCEPTED";
             await updateAppointment(appt.id, appt);
+
+            // Tạo notification cho user
+            const notificationToUser = NotDTO(appt.user.id, 'The expert has accepted your invitation.');
+            await saveNotification(notificationToUser);
+
             showAlert("Appointment accepted!");
             fetchAppointments();
         } catch (err) {
@@ -71,6 +83,11 @@ function AppointmentManagement() {
             const appt = await getAppointmentById(id);
             appt.status = "DECLINED";
             await updateAppointment(appt.id, appt);
+
+            // Tạo notification cho user
+            const notificationToUser = NotDTO(appt.user.id, 'The expert has declined your invitation.');
+            await saveNotification(notificationToUser);
+
             showAlert("Appointment declined.");
             fetchAppointments();
         } catch (err) {
@@ -103,7 +120,7 @@ function AppointmentManagement() {
     const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
     return (
-        <div className="container mt-4">
+        <div className="container mt-4 mb-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-success">My Appointments</h2>
             </div>
