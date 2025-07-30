@@ -192,6 +192,24 @@ const getMenuItemsByRole = (role) => {
       icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
       href: '/contentCreator/create-article',
     },
+    {
+      id: uniqueId(),
+      title: 'Lesson',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/lesson',
+    },
+    {
+      id: uniqueId(),
+      title: 'Article',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Exercise',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/exercise',
+    },
   ];
   switch (role) {
     case 'ADMIN':
