@@ -165,7 +165,20 @@ const getMenuItemsByRole = (role) => {
       id: uniqueId(),
       title: 'Create Lesson',
       icon: IconBook, // 📖 Biểu tượng bài học
-      href: '/contentCreator/create-lesson',
+      href: '/testDesigner/lesson',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Articles',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/testDesigner/article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Exercise',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/testDesigner/exercise',
+
     },
     {
       id: uniqueId(),
