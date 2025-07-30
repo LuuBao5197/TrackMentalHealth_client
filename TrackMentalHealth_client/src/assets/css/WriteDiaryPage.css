@@ -1,0 +1,77 @@
+/* WriteDiaryPage.css */
+.diary-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #f3f4f6, #e0f7fa);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  transition: background 0.5s ease-in-out;
+}
+
+.diary-card {
+  background: #ffffff;
+  padding: 2rem 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 700px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.diary-title {
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #00796b;
+}
+
+.diary-textarea {
+  width: 100%;
+  padding: 1.2rem;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  border: 1px solid #ccc;
+  resize: none;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.diary-textarea:focus {
+  border-color: #80cbc4;
+  background-color: #fff;
+  outline: none;
+}
+
+.diary-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1.2rem;
+  background: #00796b;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.diary-button:hover {
+  background: #004d40;
+  transform: scale(1.02);
+  cursor: pointer;
+}
+
+/* Hiệu ứng vào */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

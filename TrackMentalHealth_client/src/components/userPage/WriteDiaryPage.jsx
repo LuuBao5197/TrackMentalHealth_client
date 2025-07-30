@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { createDiary } from '../../api/diaryAPI';
 import { useNavigate } from 'react-router-dom';
+import '../../assets/css/WriteDiaryPage.css'; // CSS riêng để styling hiệu ứng
 
 const WriteDiaryPage = () => {
   const [content, setContent] = useState('');
@@ -11,30 +12,32 @@ const WriteDiaryPage = () => {
     e.preventDefault();
     try {
       await createDiary({ content });
-      alert('Ghi nhật ký thành công!');
+      alert('📝 Ghi nhật ký thành công!');
       navigate('/history');
     } catch (error) {
       console.error(error);
-      alert('Đã có lỗi xảy ra khi ghi nhật ký.');
+      alert('❌ Đã có lỗi xảy ra khi ghi nhật ký.');
     }
   };
 
   return (
-    <div className="container py-4">
-      <h2 className="mb-4">Ghi nhật ký</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
+    <div className="diary-container">
+      <div className="diary-card">
+        <h2 className="diary-title">🧘‍♀️ Ghi Nhật Ký Cảm Xúc</h2>
+        <form onSubmit={handleSubmit}>
           <textarea
-            className="form-control"
-            rows="8"
-            placeholder="Nhập cảm xúc, suy nghĩ của bạn..."
+            className="diary-textarea"
+            placeholder="Viết ra những điều bạn đang nghĩ, đang cảm nhận..."
+            rows="10"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
           ></textarea>
-        </div>
-        <button type="submit" className="btn btn-primary">Lưu nhật ký</button>
-      </form>
+          <button type="submit" className="diary-button">
+            💾 Lưu Nhật Ký
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
