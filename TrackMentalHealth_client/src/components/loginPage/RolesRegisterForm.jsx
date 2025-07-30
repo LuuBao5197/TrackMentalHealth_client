@@ -12,10 +12,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const RolesRegisterForm = () => {
     const roleNames = {
-        2: 'User',
+        2: 'Psychologist',
         3: 'Content Creator',
         4: 'Test Designer',
-        5: 'Psychologist',
+        5: 'User',
     };
     const navigate = useNavigate();
     const location = useLocation();

@@ -48,8 +48,8 @@ const Login2 = () => {
                 }
                 subtitle={
                   <Stack direction="row" spacing={1} justifyContent="center" mt={3}>
-                    <Typography color="textSecondary" variant="h6" fontWeight="500">
-                      New to Modernize?
+                    <Typography color="textSecondary" variant="h7" fontWeight="500">
+                      New to TrackMentalHealth ?
                     </Typography>
                     <Typography
                       component={Link}

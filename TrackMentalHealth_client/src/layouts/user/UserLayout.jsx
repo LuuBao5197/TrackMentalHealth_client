@@ -26,7 +26,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 const UserLayout = () => {
   // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
-  console.log(userRole);
 
   localStorage.setItem('currentUserId',userRole.userId);
   console.log(localStorage.getItem('currentUserId'));
