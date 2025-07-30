@@ -3,10 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import {
     deleteAppointment,
-    getAppointmentsByPsyId
+    getAppointmentByUserId
 } from '../../../api/api';
 import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
+import { toast, ToastContainer } from 'react-toastify';
 
 function Appointments() {
     const { userId } = useParams();
@@ -21,7 +22,7 @@ function Appointments() {
 
     const fetchAppointments = async () => {
         try {
-            const res = await getAppointmentsByPsyId(userId);
+            const res = await getAppointmentByUserId(userId);
             setAppointments(res);
         } catch (err) {
             showAlert("Không thể tải lịch hẹn.", "error");
@@ -35,19 +36,19 @@ function Appointments() {
     }, []);
 
     const handleAdd = () => {
-        nav(`/auth/appointment/create/${userId}`);
+        nav(`/user/appointment/create/${userId}`);
     };
 
     const handleEdit = (id) => {
-        nav(`/auth/appointment/edit/${id}`);
+        nav(`/user/appointment/edit/${id}`);
     };
 
     const handleDelete = async (id) => {
-        const confirm = await showConfirm("Bạn có chắc muốn xóa lịch hẹn này?");
+        const confirm = await showConfirm("Are you sure?");
         if (confirm) {
             try {
                 await deleteAppointment(id);
-                showAlert("Xóa thành công!", "success");
+                toast.success('Delete appointment successfully');
                 fetchAppointments();
             } catch (err) {
                 showAlert("Lỗi khi xóa lịch hẹn.", "error");
@@ -104,11 +105,10 @@ function Appointments() {
                             <td>{new Date(item.timeStart).toLocaleString()}</td>
                             <td>{item.note || 'Không có'}</td>
                             <td>
-                                <span className={`badge ${
-                                    item.status === 'PENDING' ? 'bg-warning text-dark' :
-                                    item.status === 'ACCEPTED' ? 'bg-success' :
-                                    item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
-                                }`}>
+                                <span className={`badge ${item.status === 'PENDING' ? 'bg-warning text-dark' :
+                                        item.status === 'ACCEPTED' ? 'bg-success' :
+                                            item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
+                                    }`}>
                                     {item.status}
                                 </span>
                             </td>
@@ -165,7 +165,13 @@ function Appointments() {
                     )}
                 </>
             )}
+
+
+            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
+
         </div>
+
+
     );
 }
 

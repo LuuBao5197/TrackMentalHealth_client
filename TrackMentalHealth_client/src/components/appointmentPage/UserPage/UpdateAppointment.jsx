@@ -3,6 +3,7 @@ import { getAppointmentById, getPsychologists, updateAppointment } from '../../.
 import { useNavigate, useParams } from "react-router-dom";
 import { showAlert } from '../../../utils/showAlert';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
+import { ToastContainer } from 'react-toastify';
 
 function UpdateAppointment() {
 
@@ -70,8 +71,8 @@ function UpdateAppointment() {
 
             console.log("Payload gửi lên:", data);
             await updateAppointment(appointmentid, data);
-            showAlert('Update appointment successfully', 'success');
-            nav('/auth/appointment/' + currentUserId);
+            toast('Update appointment successfully');
+            nav('/user/appointment/' + currentUserId);
         } catch (error) {
             console.error(error);
             alert("Có lỗi xảy ra khi cập nhật lịch hẹn.");
@@ -130,6 +131,8 @@ function UpdateAppointment() {
                     Update Appointment
                 </button>
             </form>
+            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
+
         </div>
     );
 }

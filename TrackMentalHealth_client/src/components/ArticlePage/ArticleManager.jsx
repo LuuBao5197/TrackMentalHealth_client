@@ -9,7 +9,7 @@ const ArticleManager = () => {
   const fetchUserNameById = async (id) => {
     try {
       const res = await axios.get(`http://localhost:9999/api/user/${id}`);
-      return res.data.fullname || 'Không rõ';
+      return res.data.username || 'Không rõ';
     } catch (err) {
       console.error(`❌ Lỗi khi lấy tên người dùng với ID ${id}:`, err);
       return 'Không rõ';
@@ -43,8 +43,8 @@ const ArticleManager = () => {
   return (
     <section id="portfolio" className="portfolio section">
       <div className="container section-title" data-aos="fade-up">
-        <h2>📚 Danh sách bài viết</h2>
-        <p>Khám phá những bài viết hữu ích và kiến thức bổ ích</p>
+        <h2>List of articles</h2>
+        <p>Discover useful articles and useful knowledge</p>
       </div>
 
       <div className="container" data-aos="fade-up" data-aos-delay="100">
@@ -54,7 +54,7 @@ const ArticleManager = () => {
           data-aos-delay="300"
         >
           {articles.length === 0 ? (
-            <p>⏳ Đang tải dữ liệu hoặc không có bài viết nào.</p>
+            <p>⏳ Loading data or no posts available.</p>
           ) : (
             articles.map((article) => {
               const imageUrl = article.photo?.startsWith('http')
@@ -90,7 +90,7 @@ const ArticleManager = () => {
                     </div>
                     <div className="portfolio-content">
                       <span className="category">
-                        🖋 Tác giả: {article.authorName || 'Không rõ'}
+                        🖋 Author: {article.authorName || 'Không rõ'}
                       </span>
                       <h3>
                         {article.title?.length > 50
