@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { Link } from 'react-router-dom';
+import DataTable from 'react-data-table-component';
+import { format } from 'date-fns';
 
 const LessonListForCreator = () => {
   const [lessons, setLessons] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('*');
-  const [currentPage, setCurrentPage] = useState(1);
-  const lessonsPerPage = 6;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -18,167 +17,101 @@ const LessonListForCreator = () => {
         const decoded = jwtDecode(token);
         userId = decoded.contentCreatorId;
       } catch (error) {
-        console.error('Token không hợp lệ:', error);
+        console.error('Invalid token:', error);
         return;
       }
     }
 
     if (!userId) {
-      console.error('Không tìm thấy contentCreatorId trong token.');
+      console.error('contentCreatorId not found in token.');
       return;
     }
 
-    axios.get(`http://localhost:9999/api/lesson/creator/${userId}`)
-      .then(response => setLessons(response.data))
-      .catch(error => console.error('Lỗi khi tải danh sách bài học:', error));
+    axios
+      .get(`http://localhost:9999/api/lesson/creator/${userId}`)
+      .then((response) => setLessons(response.data))
+      .catch((error) => console.error('Error loading lessons:', error));
   }, []);
 
-  const getLessonCategoryClass = (lesson) => {
-    return `filter-${lesson.category?.toLowerCase() || 'general'}`;
-  };
-
-  const filteredLessons = lessons.filter((lesson) => {
-    if (activeFilter === '*') return true;
-    return getLessonCategoryClass(lesson) === activeFilter;
-  });
-
-  const totalPages = Math.ceil(filteredLessons.length / lessonsPerPage);
-  const startIndex = (currentPage - 1) * lessonsPerPage;
-  const currentLessons = filteredLessons.slice(startIndex, startIndex + lessonsPerPage);
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  const columns = [
+    {
+      name: 'Image',
+      cell: (row) => (
+        <img
+          src={row.photo?.startsWith('http') ? row.photo : '/assets/img/default-lesson.webp'}
+          alt={row.title}
+          style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 4 }}
+        />
+      ),
+      width: '100px',
+    },
+    { name: 'Title', selector: (row) => row.title, sortable: true },
+    {
+      name: 'Category',
+      selector: (row) => row.category || 'Uncategorized',
+    },
+    {
+      name: 'Status',
+      selector: (row) => (row.status === 'true' ? 'Active' : 'Inactive'),
+      cell: (row) => (
+        <span
+          className={`badge ${row.status === 'true' ? 'bg-success' : 'bg-secondary'}`}
+        >
+          {row.status === 'true' ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      name: 'Created At',
+      selector: (row) => row.createdAt,
+      cell: (row) => format(new Date(row.createdAt), 'dd/MM/yyyy HH:mm'),
+      sortable: true,
+    },
+    {
+      name: 'Updated At',
+      selector: (row) => row.updatedAt,
+      cell: (row) => format(new Date(row.updatedAt), 'dd/MM/yyyy HH:mm'),
+      sortable: true,
+    },
+    {
+      name: 'Actions',
+      cell: (row) => (
+        <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
+          <Link
+            to={`/auth/lesson/${row.id}`}
+            className="btn btn-sm btn-outline-primary"
+          >
+            View
+          </Link>
+          <Link
+            to={`/auth/lesson/edit/${row.id}`}
+            state={{ lesson: row }}
+            className="btn btn-sm btn-outline-secondary"
+          >
+            Edit
+          </Link>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+    
+  ];
 
   return (
-    <>
-      <style>{`
-        .pagination-custom .btn {
-          min-width: 50px;
-          font-weight: 600;
-          border-radius: 4px;
-          padding: 8px 12px;
-          transition: all 0.2s ease-in-out;
-        }
-
-        .pagination-custom .btn-danger {
-          background-color: #dc3545;
-          color: #fff;
-        }
-
-        .pagination-custom .btn-dark {
-          background-color: #1f1f1f;
-          color: #c0d3df;
-          border: none;
-        }
-
-        .pagination-custom .btn:hover {
-          opacity: 0.9;
-        }
-
-        .pagination-custom .page-label {
-          cursor: default;
-        }
-
-        .edit-icon-link {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background-color: #6f42c1;
-          color: white;
-          border-radius: 50%;
-          padding: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: 0.3s;
-          font-size: 16px;
-          z-index: 10;
-        }
-
-        .edit-icon-link:hover {
-          background-color: #5a32a3;
-          color: #fff;
-        }
-      `}</style>
-
-      <section id="portfolio" className="portfolio section">
-        <div className="container section-title" data-aos="fade-up">
-          <h2>Danh sách bài học bạn đã tạo</h2>
-          <p>Khám phá các bài học bạn đã tạo</p>
-        </div>
-
-        <div className="container" data-aos="fade-up" data-aos-delay="100">
-          <div className="isotope-layout" data-default-filter="*" data-layout="masonry" data-sort="original-order">
-            <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
-              {currentLessons.map((lesson) => {
-                const imageUrl = lesson.photo?.startsWith('http') ? lesson.photo : 'assets/img/default-lesson.webp';
-                return (
-                  <div key={lesson.id} className={`col-lg-6 col-md-6 portfolio-item isotope-item ${getLessonCategoryClass(lesson)}`}>
-                    <div className="portfolio-card position-relative">
-                      <div className="portfolio-image">
-                        <img src={imageUrl} className="img-fluid" alt={lesson.title} loading="lazy" />
-                        <div className="portfolio-overlay">
-                          <div className="portfolio-actions">
-                            {/* Link xem chi tiết bài học */}
-                            <Link to={`/auth/lesson/${lesson.id}`} className="details-link">
-                              <i className="bi bi-arrow-right"></i>
-                            </Link>
-
-                            {/* Link chỉnh sửa bài học */}
-                            <Link
-                              to={`/auth/lesson/edit/${lesson.id}`}
-                              state={{ lesson }}
-                              className="details-link"
-                            >
-                              <i className="bi bi-pencil-fill"></i>
-                            </Link>
-
-                          </div>
-                        </div>
-                      </div>
-                      <div className="portfolio-content">
-                        <h3>{lesson.title}</h3>
-                        <p>{lesson.description?.substring(0, 100)}...</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="pagination-custom mt-4 d-flex justify-content-center align-items-center gap-2 flex-wrap">
-                <button className="page-label btn btn-dark" disabled>
-                  Trang {currentPage} / {totalPages}
-                </button>
-                {currentPage > 1 && (
-                  <button className="btn btn-dark" onClick={() => goToPage(1)}>
-                    Trang đầu
-                  </button>
-                )}
-                {[...Array(totalPages)].map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToPage(index + 1)}
-                    className={`btn ${currentPage === index + 1 ? 'btn-danger' : 'btn-dark'}`}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
-                {currentPage < totalPages && (
-                  <button className="btn btn-dark" onClick={() => goToPage(totalPages)}>
-                    Trang cuối
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    </>
+    <div className="container mt-5">
+      <h2 className="mb-3">List of Lessons You Have Created</h2>
+      <DataTable
+        columns={columns}
+        data={lessons}
+        pagination
+        highlightOnHover
+        striped
+        responsive
+        noDataComponent="No lessons found."
+      />
+    </div>
   );
 };
 

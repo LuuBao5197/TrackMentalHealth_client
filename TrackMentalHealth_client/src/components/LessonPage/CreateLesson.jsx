@@ -7,11 +7,10 @@ import { useNavigate } from 'react-router-dom';
 
 const CreateLesson = () => {
   const [uploading, setUploading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [steps, setSteps] = useState([{ title: '', content: '', mediaType: '', mediaUrl: '' }]);
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
-  const navigate = useNavigate();
   let userId = null;
 
   if (token) {
@@ -19,9 +18,24 @@ const CreateLesson = () => {
       const decoded = jwtDecode(token);
       userId = decoded.contentCreatorId;
     } catch (error) {
-      console.error('❌ Token không hợp lệ:', error);
+      console.error('❌ Invalid token:', error);
     }
   }
+
+  const validate = (values) => {
+    const errors = {};
+    if (!values.title) errors.title = 'Title is required';
+    if (!values.description) errors.description = 'Description is required';
+    if (!values.photo) errors.photo = 'Cover photo is required';
+
+    steps.forEach((step, index) => {
+      if (!step.title || !step.content) {
+        errors[`step-${index}`] = 'Each step must have a title and content';
+      }
+    });
+
+    return errors;
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -30,18 +44,16 @@ const CreateLesson = () => {
       status: false,
       photo: '',
     },
+    validate,
     onSubmit: async (values) => {
-      const now = new Date().toISOString();
-
-      // Chưa đăng nhập thì hiện dialog
       if (!userId) {
         Swal.fire({
-          title: 'Bạn chưa đăng nhập',
-          text: 'Bạn cần đăng nhập để tạo bài học. Bạn có muốn đăng nhập ngay không?',
+          title: 'Not Logged In',
+          text: 'You must log in to create a lesson. Do you want to log in now?',
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonText: 'Đăng nhập',
-          cancelButtonText: 'Hủy',
+          confirmButtonText: 'Login',
+          cancelButtonText: 'Cancel',
         }).then((result) => {
           if (result.isConfirmed) {
             navigate('/auth/login');
@@ -50,16 +62,13 @@ const CreateLesson = () => {
         return;
       }
 
-      if (!values.photo) {
-        Swal.fire('Thiếu ảnh đại diện', '❌ Ảnh đại diện là bắt buộc!', 'error');
-        return;
-      }
+      const now = new Date().toISOString();
 
       const lessonData = {
         title: values.title,
         description: values.description,
         photo: values.photo,
-        status: values.status.toString(),
+        status: 'false',
         createdBy: userId,
         createdAt: now,
         updatedAt: now,
@@ -74,26 +83,17 @@ const CreateLesson = () => {
 
       try {
         await axios.post('http://localhost:9999/api/lesson/save', lessonData);
-        Swal.fire('✅ Thành công', 'Tạo bài học thành công!', 'success');
+        Swal.fire('✅ Success', 'Lesson created successfully!', 'success');
         formik.resetForm();
         setSteps([{ title: '', content: '', mediaType: '', mediaUrl: '' }]);
       } catch (error) {
         const status = error.response?.status;
         const backendMessage = error.response?.data?.message || JSON.stringify(error.response?.data);
-
-        if (status === 400) {
-          Swal.fire({
-            icon: 'error',
-            title: '❌ Dữ liệu không hợp lệ',
-            text: backendMessage,
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: `❌ Lỗi từ server (${status || '??'})`,
-            text: backendMessage,
-          });
-        }
+        Swal.fire({
+          icon: 'error',
+          title: status === 400 ? '❌ Invalid Data' : `❌ Server Error (${status || '??'})`,
+          text: backendMessage,
+        });
       }
     },
   });
@@ -110,7 +110,7 @@ const CreateLesson = () => {
 
   const removeStep = (index) => {
     if (steps.length <= 1) {
-      Swal.fire('⚠️ Không thể xoá', 'Cần có ít nhất một bước học.', 'warning');
+      Swal.fire('⚠️ Cannot Remove', 'At least one step is required.', 'warning');
       return;
     }
     const updatedSteps = steps.filter((_, i) => i !== index);
@@ -136,7 +136,7 @@ const CreateLesson = () => {
       else if (file.type.startsWith('video/')) detectedMediaType = 'video';
       else if (file.type.startsWith('audio/')) detectedMediaType = 'audio';
       else {
-        Swal.fire('❌ Lỗi', 'Loại tệp không được hỗ trợ.', 'error');
+        Swal.fire('❌ Error', 'Unsupported file type.', 'error');
         setUploading(false);
         return;
       }
@@ -150,7 +150,7 @@ const CreateLesson = () => {
         onSuccessCallback(url);
       }
     } catch (err) {
-      Swal.fire('❌ Upload thất bại', 'Không thể tải lên file.', 'error');
+      Swal.fire('❌ Upload Failed', 'File upload failed.', 'error');
     } finally {
       setUploading(false);
     }
@@ -160,45 +160,40 @@ const CreateLesson = () => {
     <div className="container my-5" style={{ maxWidth: '850px' }}>
       <div className="card shadow">
         <div className="card-body p-4">
-          <h2 className="mb-4 text-primary">📝 Tạo Bài Học Mới</h2>
-
-          {errorMessage && (
-            <div className="alert alert-danger" role="alert">
-              {errorMessage}
-            </div>
-          )}
+          <h2 className="mb-4 text-primary">📝 Create New Lesson</h2>
 
           <form onSubmit={formik.handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="title" className="form-label">Tiêu đề bài học</label>
+              <label htmlFor="title" className="form-label">Lesson Title</label>
               <input
                 type="text"
-                className="form-control"
+                className={`form-control ${formik.errors.title ? 'is-invalid' : ''}`}
                 id="title"
                 name="title"
                 onChange={formik.handleChange}
                 value={formik.values.title}
-                required
               />
+              {formik.errors.title && <div className="invalid-feedback">{formik.errors.title}</div>}
             </div>
 
             <div className="mb-3">
-              <label htmlFor="description" className="form-label">Mô tả</label>
+              <label htmlFor="description" className="form-label">Description</label>
               <textarea
-                className="form-control"
+                className={`form-control ${formik.errors.description ? 'is-invalid' : ''}`}
                 id="description"
                 name="description"
                 rows="4"
                 onChange={formik.handleChange}
                 value={formik.values.description}
               />
+              {formik.errors.description && <div className="invalid-feedback">{formik.errors.description}</div>}
             </div>
 
             <div className="mb-3">
-              <label htmlFor="lessonPhoto" className="form-label">Ảnh đại diện bài học <span className="text-danger">*</span></label>
+              <label htmlFor="lessonPhoto" className="form-label">Thumbnail Image <span className="text-danger">*</span></label>
               <input
                 type="file"
-                className="form-control"
+                className={`form-control ${formik.errors.photo ? 'is-invalid' : ''}`}
                 id="lessonPhoto"
                 accept="image/*"
                 onChange={(e) => {
@@ -209,107 +204,82 @@ const CreateLesson = () => {
                     formik.setFieldValue('photo', '');
                   }
                 }}
-                required
               />
+              {formik.errors.photo && <div className="invalid-feedback">{formik.errors.photo}</div>}
               {formik.values.photo && (
                 <div className="mt-2 text-center">
                   <img
                     src={formik.values.photo}
-                    alt="Ảnh đại diện"
+                    alt="Lesson Cover"
                     style={{ maxHeight: '150px', borderRadius: '8px', objectFit: 'cover' }}
                   />
                 </div>
               )}
             </div>
 
-            <div className="form-check mb-4">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="statusCheck"
-                name="status"
-                onChange={formik.handleChange}
-                checked={formik.values.status}
-              />
-              <label className="form-check-label" htmlFor="statusCheck">
-                Kích hoạt bài học
-              </label>
-            </div>
-
             <hr />
-            <h4 className="text-secondary mb-3">📚 Các Bước Học</h4>
+            <h4 className="text-secondary mb-3">📚 Lesson Steps</h4>
 
             {steps.map((step, index) => (
               <div key={index} className="border rounded p-3 mb-4 bg-light">
-                <h5 className="mb-3">Bước {index + 1}</h5>
+                <h5 className="mb-3">Step {index + 1}</h5>
 
                 <div className="mb-2">
-                  <label htmlFor={`stepTitle-${index}`} className="form-label">Tiêu đề bước</label>
+                  <label htmlFor={`stepTitle-${index}`} className="form-label">Step Title</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${!step.title && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                     id={`stepTitle-${index}`}
                     value={step.title}
                     onChange={(e) => handleStepChange(index, 'title', e.target.value)}
-                    required
                   />
                 </div>
 
                 <div className="mb-2">
-                  <label htmlFor={`stepContent-${index}`} className="form-label">Nội dung bước</label>
+                  <label htmlFor={`stepContent-${index}`} className="form-label">Step Content</label>
                   <textarea
-                    className="form-control"
+                    className={`form-control ${!step.content && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                     id={`stepContent-${index}`}
                     value={step.content}
                     onChange={(e) => handleStepChange(index, 'content', e.target.value)}
                     rows="5"
-                    placeholder="Nhập nội dung, có thể nhấn Enter để xuống dòng"
+                    placeholder="Enter content, press Enter for new lines"
                   />
                 </div>
 
-                <div className="row g-2">
-                  <div className="col-md-12">
-                    <label htmlFor={`stepMedia-${index}`} className="form-label">
-                      Tệp media
-                      {step.mediaType && ` (${step.mediaType.toUpperCase()})`}
-                      {!step.mediaType && ` (Chưa chọn)`}
-                    </label>
-                    <input
-                      type="file"
-                      className="form-control"
-                      id={`stepMedia-${index}`}
-                      accept="video/*,image/*,audio/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          handleUpload(file, index);
-                        } else {
-                          handleStepChange(index, 'mediaType', '');
-                          handleStepChange(index, 'mediaUrl', '');
-                        }
-                      }}
-                    />
-
-                    {step.mediaUrl && (
-                      <small className="text-muted d-block mt-1">
-                        URL: {step.mediaUrl}
-                      </small>
-                    )}
-
-                    {step.mediaUrl && !uploading && (
-                      <div className="mt-2 text-center">
-                        {step.mediaType === 'video' && (
-                          <video controls src={step.mediaUrl} style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px' }} />
-                        )}
-                        {step.mediaType === 'audio' && (
-                          <audio controls src={step.mediaUrl} style={{ maxWidth: '100%' }} />
-                        )}
-                        {step.mediaType === 'photo' && (
-                          <img src={step.mediaUrl} alt="Media Preview" style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'contain' }} />
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <div className="mb-2">
+                  <label htmlFor={`stepMedia-${index}`} className="form-label">
+                    Media File {step.mediaType && `(${step.mediaType.toUpperCase()})`}
+                    {!step.mediaType && ' (Not selected)'}
+                  </label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    id={`stepMedia-${index}`}
+                    accept="video/*,image/*,audio/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        handleUpload(file, index);
+                      } else {
+                        handleStepChange(index, 'mediaType', '');
+                        handleStepChange(index, 'mediaUrl', '');
+                      }
+                    }}
+                  />
+                  {step.mediaUrl && (
+                    <div className="mt-2 text-center">
+                      {step.mediaType === 'video' && (
+                        <video controls src={step.mediaUrl} style={{ maxWidth: '100%', maxHeight: '250px' }} />
+                      )}
+                      {step.mediaType === 'audio' && (
+                        <audio controls src={step.mediaUrl} style={{ width: '100%' }} />
+                      )}
+                      {step.mediaType === 'photo' && (
+                        <img src={step.mediaUrl} alt="Step Media" style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }} />
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {steps.length > 1 && (
@@ -319,7 +289,7 @@ const CreateLesson = () => {
                       className="btn btn-danger btn-sm"
                       onClick={() => removeStep(index)}
                     >
-                      ❌ Xoá bước này
+                      ❌ Remove this step
                     </button>
                   </div>
                 )}
@@ -327,11 +297,11 @@ const CreateLesson = () => {
             ))}
 
             <button type="button" className="btn btn-outline-secondary mb-4" onClick={addStep}>
-              + Thêm bước học
+              + Add Step
             </button>
 
             <button type="submit" className="btn btn-primary w-100" disabled={uploading}>
-              {uploading ? '⏳ Đang upload...' : '🚀 Tạo bài học'}
+              {uploading ? '⏳ Uploading...' : '🚀 Create Lesson'}
             </button>
           </form>
         </div>

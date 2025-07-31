@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { Link } from 'react-router-dom';
+import DataTable from 'react-data-table-component';
+import { format } from 'date-fns';
 
 const ExerciseListForCreator = () => {
   const [exercises, setExercises] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('*');
-  const [currentPage, setCurrentPage] = useState(1);
-  const exercisesPerPage = 6;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -18,165 +17,128 @@ const ExerciseListForCreator = () => {
         const decoded = jwtDecode(token);
         userId = decoded.contentCreatorId;
       } catch (error) {
-        console.error('Token không hợp lệ:', error);
+        console.error('Invalid token:', error);
         return;
       }
     }
 
     if (!userId) {
-      console.error('Không tìm thấy contentCreatorId trong token.');
+      console.error('contentCreatorId not found in token.');
       return;
     }
 
-    axios.get(`http://localhost:9999/api/exercise/creator/${userId}`)
-      .then(response => setExercises(response.data))
-      .catch(error => console.error('Lỗi khi tải danh sách bài tập:', error));
+    axios
+      .get(`http://localhost:9999/api/exercise/creator/${userId}`)
+      .then((response) => setExercises(response.data))
+      .catch((error) => console.error('Failed to load exercise list:', error));
   }, []);
 
-  const getExerciseCategoryClass = (exercise) => {
-    return `filter-${exercise.mediaType?.toLowerCase() || 'general'}`;
-  };
-
-  const filteredExercises = exercises.filter((ex) => {
-    if (activeFilter === '*') return true;
-    return getExerciseCategoryClass(ex) === activeFilter;
-  });
-
-  const totalPages = Math.ceil(filteredExercises.length / exercisesPerPage);
-  const startIndex = (currentPage - 1) * exercisesPerPage;
-  const currentExercises = filteredExercises.slice(startIndex, startIndex + exercisesPerPage);
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  const columns = [
+    {
+      name: 'Image',
+      cell: (row) => (
+        <img
+          src={row.photo?.startsWith('http') ? row.photo : '/assets/img/default-exercise.webp'}
+          alt={row.title}
+          style={{
+            width: 80,
+            height: 50,
+            objectFit: 'cover',
+            borderRadius: 4,
+          }}
+        />
+      ),
+      width: '100px',
+    },
+    {
+      name: 'Title',
+      selector: (row) => row.title,
+      sortable: true,
+      cell: (row) => (
+        <div style={{
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: 250,
+        }}>
+          {row.title}
+        </div>
+      ),
+    },
+    {
+      name: 'Type',
+      selector: (row) => row.mediaType || 'Unknown',
+    },
+    {
+      name: 'Duration',
+      selector: (row) =>
+        row.estimatedDuration
+          ? `${Math.round(row.estimatedDuration / 60)} min`
+          : 'Unknown',
+    },
+    {
+      name: 'Status',
+      selector: (row) =>
+        row.status === 'true' || row.status === true ? 'Active' : 'Inactive',
+      cell: (row) => (
+        <span
+          className={`badge ${row.status === 'true' || row.status === true
+            ? 'bg-success'
+            : 'bg-secondary'
+            }`}
+        >
+          {row.status === 'true' || row.status === true ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      name: 'Created At',
+      selector: (row) => row.createdAt,
+      cell: (row) =>
+        row.createdAt
+          ? format(new Date(row.createdAt), 'dd/MM/yyyy HH:mm')
+          : '',
+      sortable: true,
+    },
+    {
+      name: 'Actions',
+      cell: (row) => (
+        <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
+          <Link
+            to={`/auth/exercise/${row.id}`}
+            className="btn btn-sm btn-outline-primary"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            View
+          </Link>
+          <Link
+            to={`/auth/exercise/edit/${row.id}`}
+            state={{ exercise: row }}
+            className="btn btn-sm btn-outline-secondary"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            Edit
+          </Link>
+        </div>
+      ),
+      ignoreRowClick: true,
+      button: true,
+    },
+  ];
 
   return (
-    <>
-      <style>{`
-        .pagination-custom .btn {
-          min-width: 50px;
-          font-weight: 600;
-          border-radius: 4px;
-          padding: 8px 12px;
-          transition: all 0.2s ease-in-out;
-        }
-
-        .pagination-custom .btn-danger {
-          background-color: #dc3545;
-          color: #fff;
-        }
-
-        .pagination-custom .btn-dark {
-          background-color: #1f1f1f;
-          color: #c0d3df;
-          border: none;
-        }
-
-        .pagination-custom .btn:hover {
-          opacity: 0.9;
-        }
-
-        .pagination-custom .page-label {
-          cursor: default;
-        }
-
-        .details-link {
-          margin: 0 5px;
-          color: white;
-        }
-
-        .details-link i {
-          font-size: 1.2rem;
-        }
-      `}</style>
-
-      <section id="portfolio" className="portfolio section">
-        <div className="container section-title" data-aos="fade-up">
-          <h2>Danh sách bài tập</h2>
-          <p>Khám phá các bài tập bạn đã tạo</p>
-        </div>
-
-        <div className="container" data-aos="fade-up" data-aos-delay="100">
-          <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
-            {currentExercises.length === 0 ? (
-              <p>Đang tải dữ liệu hoặc không có bài tập nào.</p>
-            ) : (
-              currentExercises.map(ex => {
-                const imageUrl = ex.photo?.startsWith('http')
-                  ? ex.photo
-                  : 'assets/img/default-exercise.webp'; // fallback ảnh
-
-                return (
-                  <div
-                    key={ex.id}
-                    className={`col-lg-6 col-md-6 portfolio-item isotope-item ${getExerciseCategoryClass(ex)}`}
-                  >
-                    <div className="portfolio-card position-relative">
-                      <div className="portfolio-image">
-                        <img
-                          src={imageUrl}
-                          className="img-fluid"
-                          alt={ex.title}
-                          loading="lazy"
-                        />
-                        <div className="portfolio-overlay">
-                          <div className="portfolio-actions d-flex justify-content-center">
-                            <Link to={`/auth/exercise/${ex.id}`} className="details-link">
-                              <i className="bi bi-arrow-right"></i>
-                            </Link>
-                            <Link
-                              to={`/auth/exercise/edit/${ex.id}`}
-                              state={{ exercise: ex }}
-                              className="details-link"
-                            >
-                              <i className="bi bi-pencil-fill"></i>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="portfolio-content">
-                        <span className="category">{ex.mediaType}</span>
-                        <h3>{ex.title}</h3>
-                        <p>{ex.instruction?.substring(0, 100)}...</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="pagination-custom mt-4 d-flex justify-content-center align-items-center gap-2 flex-wrap">
-              <button className="page-label btn btn-dark" disabled>
-                Trang {currentPage} / {totalPages}
-              </button>
-              {currentPage > 1 && (
-                <button className="btn btn-dark" onClick={() => goToPage(1)}>
-                  Trang đầu
-                </button>
-              )}
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToPage(index + 1)}
-                  className={`btn ${currentPage === index + 1 ? 'btn-danger' : 'btn-dark'}`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-              {currentPage < totalPages && (
-                <button className="btn btn-dark" onClick={() => goToPage(totalPages)}>
-                  Trang cuối
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-    </>
+    <div className="container mt-5">
+      <h2 className="mb-3">List of Exercises You Have Created</h2>
+      <DataTable
+        columns={columns}
+        data={exercises}
+        pagination
+        highlightOnHover
+        striped
+        responsive
+        noDataComponent="No exercises found."
+      />
+    </div>
   );
 };
 

@@ -16,9 +16,17 @@ const CreateArticle = () => {
       const decoded = jwtDecode(token);
       userId = decoded.userId || decoded.contentCreatorId;
     } catch (error) {
-      console.error('❌ Token không hợp lệ:', error);
+      console.error('❌ Invalid token:', error);
     }
   }
+
+  const validate = (values) => {
+    const errors = {};
+    if (!values.title) errors.title = 'Title is required';
+    if (!values.content) errors.content = 'Content is required';
+    if (!values.photo) errors.photo = 'Cover image is required';
+    return errors;
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -26,16 +34,16 @@ const CreateArticle = () => {
       content: '',
       photo: '',
     },
+    validate,
     onSubmit: async (values) => {
-      // Nếu chưa đăng nhập, hiển thị dialog
       if (!userId) {
         Swal.fire({
-          title: 'Bạn chưa đăng nhập',
-          text: 'Bạn cần đăng nhập để tạo bài viết. Bạn có muốn đăng nhập ngay không?',
+          title: 'Not Logged In',
+          text: 'You must log in to create an article. Do you want to log in now?',
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonText: 'Đăng nhập',
-          cancelButtonText: 'Hủy',
+          confirmButtonText: 'Login',
+          cancelButtonText: 'Cancel',
         }).then((result) => {
           if (result.isConfirmed) {
             navigate('/auth/login');
@@ -53,28 +61,17 @@ const CreateArticle = () => {
 
       try {
         await axios.post('http://localhost:9999/api/article/', articleData);
-        Swal.fire('✅ Thành công', 'Tạo bài viết thành công!', 'success');
+        Swal.fire('✅ Success', 'Article created successfully!', 'success');
         formik.resetForm();
       } catch (error) {
         const status = error.response?.status;
         const backendMessage = error.response?.data?.message || JSON.stringify(error.response?.data);
 
-        if (status === 400) {
-          Swal.fire({
-            icon: 'error',
-            title: '❌ Dữ liệu không hợp lệ',
-            text: backendMessage,
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: `❌ Lỗi từ server (${status || '??'})`,
-            text: backendMessage,
-          });
-        }
-
-        console.log('📤 Dữ liệu gửi đi:', articleData);
-        console.error('❌ Chi tiết lỗi:', error.response?.data || error.message);
+        Swal.fire({
+          icon: 'error',
+          title: status === 400 ? '❌ Invalid Data' : `❌ Server Error (${status || '??'})`,
+          text: backendMessage,
+        });
       }
     },
   });
@@ -91,11 +88,9 @@ const CreateArticle = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const url = res.data.url;
-      formik.setFieldValue('photo', url);
+      formik.setFieldValue('photo', res.data.url);
     } catch (err) {
-      Swal.fire('❌ Upload thất bại', 'Không thể tải lên ảnh.', 'error');
-      console.error('❌ Upload ảnh thất bại:', err.response?.data || err.message);
+      Swal.fire('❌ Upload Failed', 'Unable to upload image.', 'error');
     } finally {
       setUploading(false);
     }
@@ -105,49 +100,50 @@ const CreateArticle = () => {
     <div className="container my-5" style={{ maxWidth: '700px' }}>
       <div className="card shadow">
         <div className="card-body p-4">
-          <h2 className="mb-4 text-primary">📝 Tạo Bài Viết Mới</h2>
+          <h2 className="mb-4 text-primary">📝 Create New Article</h2>
 
           <form onSubmit={formik.handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Tiêu đề bài viết</label>
+              <label className="form-label">Article Title</label>
               <input
                 type="text"
-                className="form-control"
+                className={`form-control ${formik.errors.title && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                 name="title"
                 onChange={formik.handleChange}
                 value={formik.values.title}
-                required
               />
+              {formik.errors.title && <div className="invalid-feedback">{formik.errors.title}</div>}
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Nội dung bài viết</label>
+              <label className="form-label">Content</label>
               <textarea
-                className="form-control"
+                className={`form-control ${formik.errors.content && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                 name="content"
                 rows="6"
                 onChange={formik.handleChange}
                 value={formik.values.content}
-                required
               />
+              {formik.errors.content && <div className="invalid-feedback">{formik.errors.content}</div>}
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Ảnh minh họa</label>
+              <label className="form-label">Thumbnail Image</label>
               <input
                 type="file"
-                className="form-control"
+                className={`form-control ${formik.errors.photo && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) handleUpload(file);
                 }}
               />
+              {formik.errors.photo && <div className="invalid-feedback">{formik.errors.photo}</div>}
               {formik.values.photo && (
                 <div className="mt-2 text-center">
                   <img
                     src={formik.values.photo}
-                    alt="Ảnh minh họa"
+                    alt="Thumbnail"
                     style={{ maxHeight: '150px', borderRadius: '8px', objectFit: 'cover' }}
                   />
                 </div>
@@ -159,7 +155,7 @@ const CreateArticle = () => {
               className="btn btn-success w-100"
               disabled={uploading}
             >
-              {uploading ? '⏳ Đang upload...' : '🚀 Tạo bài viết'}
+              {uploading ? '⏳ Uploading...' : '🚀 Create Article'}
             </button>
           </form>
         </div>
