@@ -30,6 +30,22 @@ export const getMessagesBySessionId = async (id) => {
         throw error;
     }
 };
+//check ủnread 
+
+export const hasUnreadMessages = async (id) => {
+    try {
+        const response = await axios.get(`${chat_url}has-unread/${id}`);
+        console.log(response.data);
+        return response.data;
+        // console.log(response.data);
+    } catch (error) {
+        console.error('Lỗi khi gọi API:', error);
+        throw error;
+    }
+};
+
+
+
 
 //create chat sesssiom
 export const initiateChatSession = async (senderId, receiverId) => {

@@ -106,8 +106,8 @@ function Appointments() {
                             <td>{item.note || 'Không có'}</td>
                             <td>
                                 <span className={`badge ${item.status === 'PENDING' ? 'bg-warning text-dark' :
-                                        item.status === 'ACCEPTED' ? 'bg-success' :
-                                            item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
+                                    item.status === 'ACCEPTED' ? 'bg-success' :
+                                        item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
                                     }`}>
                                     {item.status}
                                 </span>
