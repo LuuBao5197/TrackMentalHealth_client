@@ -165,7 +165,20 @@ const getMenuItemsByRole = (role) => {
       id: uniqueId(),
       title: 'Create Lesson',
       icon: IconBook, // 📖 Biểu tượng bài học
-      href: '/contentCreator/create-lesson',
+      href: '/testDesigner/lesson',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Articles',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/testDesigner/article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Manage Exercise',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/testDesigner/exercise',
+
     },
     {
       id: uniqueId(),
@@ -178,6 +191,24 @@ const getMenuItemsByRole = (role) => {
       title: 'Create article',
       icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
       href: '/contentCreator/create-article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Lesson',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/lesson',
+    },
+    {
+      id: uniqueId(),
+      title: 'Article',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Exercise',
+      icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/exercise',
     },
   ];
   switch (role) {

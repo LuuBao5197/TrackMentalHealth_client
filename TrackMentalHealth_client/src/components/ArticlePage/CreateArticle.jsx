@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const CreateArticle = () => {
   const [uploading, setUploading] = useState(false);
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
   let userId = null;
 
   if (token) {
@@ -21,9 +24,26 @@ const CreateArticle = () => {
     initialValues: {
       title: '',
       content: '',
-      photo: '', // ✅ Trường ảnh bài viết
+      photo: '',
     },
     onSubmit: async (values) => {
+      // Nếu chưa đăng nhập, hiển thị dialog
+      if (!userId) {
+        Swal.fire({
+          title: 'Bạn chưa đăng nhập',
+          text: 'Bạn cần đăng nhập để tạo bài viết. Bạn có muốn đăng nhập ngay không?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Đăng nhập',
+          cancelButtonText: 'Hủy',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate('/auth/login');
+          }
+        });
+        return;
+      }
+
       const articleData = {
         ...values,
         author: userId,
@@ -33,12 +53,28 @@ const CreateArticle = () => {
 
       try {
         await axios.post('http://localhost:9999/api/article/', articleData);
-        alert('✅ Tạo bài viết thành công!');
+        Swal.fire('✅ Thành công', 'Tạo bài viết thành công!', 'success');
         formik.resetForm();
       } catch (error) {
+        const status = error.response?.status;
+        const backendMessage = error.response?.data?.message || JSON.stringify(error.response?.data);
+
+        if (status === 400) {
+          Swal.fire({
+            icon: 'error',
+            title: '❌ Dữ liệu không hợp lệ',
+            text: backendMessage,
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: `❌ Lỗi từ server (${status || '??'})`,
+            text: backendMessage,
+          });
+        }
+
         console.log('📤 Dữ liệu gửi đi:', articleData);
-        console.error('❌ Lỗi khi tạo bài viết:', error.response?.data || error.message);
-        alert('❌ Có lỗi xảy ra khi tạo bài viết.');
+        console.error('❌ Chi tiết lỗi:', error.response?.data || error.message);
       }
     },
   });
@@ -56,10 +92,10 @@ const CreateArticle = () => {
       });
 
       const url = res.data.url;
-      formik.setFieldValue('photo', url); // ✅ Gán URL ảnh vào photo
+      formik.setFieldValue('photo', url);
     } catch (err) {
+      Swal.fire('❌ Upload thất bại', 'Không thể tải lên ảnh.', 'error');
       console.error('❌ Upload ảnh thất bại:', err.response?.data || err.message);
-      alert('❌ Upload ảnh thất bại!');
     } finally {
       setUploading(false);
     }
@@ -96,7 +132,6 @@ const CreateArticle = () => {
               />
             </div>
 
-            {/* Upload ảnh bài viết */}
             <div className="mb-3">
               <label className="form-label">Ảnh minh họa</label>
               <input

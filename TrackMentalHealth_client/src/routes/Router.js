@@ -38,7 +38,9 @@ import RolesRegisterForm from '../components/loginPage/RolesRegisterForm.jsx';
 import LessonManager from '../components/LessonPage/LessonManager.jsx';
 import ArticleManager from '../components/ArticlePage/ArticleManager.jsx';
 import ExerciseManager from '../components/ExercisePage/ExerciseManager.jsx';
-
+import LessonListForCreator from '../components/LessonPage/LessonListForCreator.jsx';
+import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreator.jsx';
+import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -195,7 +197,6 @@ const Router = [
         children: [
           { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
           { path: 'article/edit/:articleId', element: <EditArticle /> },
-          { path: 'question/option/create', element: <OptionPage /> },
           { path: 'create-lesson', element: <CreateLesson /> },
           { path: 'create-exercise', element: <CreateExercise /> },
           { path: 'create-article', element: <CreateArticle /> },
@@ -205,6 +206,9 @@ const Router = [
           { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
           { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
           { path: 'article/edit/:articleId', element: <EditArticle /> },
+          { path: 'lesson', element: <LessonListForCreator /> },
+          { path: 'article', element: <ArticleListForCreator /> },
+          { path: 'exercise', element: <ExerciseListForCreator /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

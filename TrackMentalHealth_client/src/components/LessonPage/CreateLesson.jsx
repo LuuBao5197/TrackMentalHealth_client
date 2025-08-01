@@ -1,14 +1,17 @@
-
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const CreateLesson = () => {
   const [uploading, setUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [steps, setSteps] = useState([{ title: '', content: '', mediaType: '', mediaUrl: '' }]);
 
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
   let userId = null;
 
   if (token) {
@@ -20,10 +23,6 @@ const CreateLesson = () => {
     }
   }
 
-  const [steps, setSteps] = useState([
-    { title: '', content: '', mediaType: '', mediaUrl: '' },
-  ]);
-
   const formik = useFormik({
     initialValues: {
       title: '',
@@ -34,9 +33,25 @@ const CreateLesson = () => {
     onSubmit: async (values) => {
       const now = new Date().toISOString();
 
-      // Kiểm tra nếu ảnh đại diện chưa được tải lên
+      // Chưa đăng nhập thì hiện dialog
+      if (!userId) {
+        Swal.fire({
+          title: 'Bạn chưa đăng nhập',
+          text: 'Bạn cần đăng nhập để tạo bài học. Bạn có muốn đăng nhập ngay không?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Đăng nhập',
+          cancelButtonText: 'Hủy',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate('/auth/login');
+          }
+        });
+        return;
+      }
+
       if (!values.photo) {
-        alert('❌ Ảnh đại diện là bắt buộc!');
+        Swal.fire('Thiếu ảnh đại diện', '❌ Ảnh đại diện là bắt buộc!', 'error');
         return;
       }
 
@@ -58,8 +73,8 @@ const CreateLesson = () => {
       };
 
       try {
-        const response = await axios.post('http://localhost:9999/api/lesson/save', lessonData);
-        alert('✅ Tạo bài học thành công!');
+        await axios.post('http://localhost:9999/api/lesson/save', lessonData);
+        Swal.fire('✅ Thành công', 'Tạo bài học thành công!', 'success');
         formik.resetForm();
         setSteps([{ title: '', content: '', mediaType: '', mediaUrl: '' }]);
       } catch (error) {
@@ -67,9 +82,17 @@ const CreateLesson = () => {
         const backendMessage = error.response?.data?.message || JSON.stringify(error.response?.data);
 
         if (status === 400) {
-          alert(`❌ ${backendMessage}`);
+          Swal.fire({
+            icon: 'error',
+            title: '❌ Dữ liệu không hợp lệ',
+            text: backendMessage,
+          });
         } else {
-          alert(`❌ Lỗi từ server (${status || '??'}): ${backendMessage}`);
+          Swal.fire({
+            icon: 'error',
+            title: `❌ Lỗi từ server (${status || '??'})`,
+            text: backendMessage,
+          });
         }
       }
     },
@@ -87,7 +110,7 @@ const CreateLesson = () => {
 
   const removeStep = (index) => {
     if (steps.length <= 1) {
-      alert("❗ Cần có ít nhất một bước học.");
+      Swal.fire('⚠️ Không thể xoá', 'Cần có ít nhất một bước học.', 'warning');
       return;
     }
     const updatedSteps = steps.filter((_, i) => i !== index);
@@ -113,7 +136,7 @@ const CreateLesson = () => {
       else if (file.type.startsWith('video/')) detectedMediaType = 'video';
       else if (file.type.startsWith('audio/')) detectedMediaType = 'audio';
       else {
-        alert('❌ Loại tệp không được hỗ trợ.');
+        Swal.fire('❌ Lỗi', 'Loại tệp không được hỗ trợ.', 'error');
         setUploading(false);
         return;
       }
@@ -127,7 +150,7 @@ const CreateLesson = () => {
         onSuccessCallback(url);
       }
     } catch (err) {
-      alert('❌ Upload thất bại!');
+      Swal.fire('❌ Upload thất bại', 'Không thể tải lên file.', 'error');
     } finally {
       setUploading(false);
     }
