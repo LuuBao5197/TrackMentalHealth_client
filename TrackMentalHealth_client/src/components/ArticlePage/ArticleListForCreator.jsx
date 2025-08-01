@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 
 const ArticleListForCreator = () => {
   const [articles, setArticles] = useState([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -34,6 +35,10 @@ const ArticleListForCreator = () => {
         console.error('Error loading article list:', error)
       );
   }, []);
+
+  const filteredArticles = articles.filter((article) =>
+    article.title?.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const columns = [
     {
@@ -96,15 +101,28 @@ const ArticleListForCreator = () => {
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-    },    
+    },
   ];
 
   return (
     <div className="container mt-5">
       <h2 className="mb-3">📚 List of Articles You Have Created</h2>
+
+      {/* Search box */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control w-50"
+          style={{ maxWidth: '500px' }}
+          placeholder="Search articles by title..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+
       <DataTable
         columns={columns}
-        data={articles}
+        data={filteredArticles}
         pagination
         highlightOnHover
         striped

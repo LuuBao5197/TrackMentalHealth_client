@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 
 const LessonListForCreator = () => {
   const [lessons, setLessons] = useState([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -32,6 +33,10 @@ const LessonListForCreator = () => {
       .then((response) => setLessons(response.data))
       .catch((error) => console.error('Error loading lessons:', error));
   }, []);
+
+  const filteredLessons = lessons.filter((lesson) =>
+    lesson.title?.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const columns = [
     {
@@ -96,15 +101,28 @@ const LessonListForCreator = () => {
       allowOverflow: true,
       button: true,
     },
-    
   ];
 
   return (
     <div className="container mt-5">
       <h2 className="mb-3">List of Lessons You Have Created</h2>
+
+      {/* Search box */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control w-50"
+          style={{ maxWidth: '500px' }}
+          placeholder="Search lessons by title..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+
+
       <DataTable
         columns={columns}
-        data={lessons}
+        data={filteredLessons}
         pagination
         highlightOnHover
         striped

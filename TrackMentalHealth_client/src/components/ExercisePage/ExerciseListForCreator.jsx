@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 
 const ExerciseListForCreator = () => {
   const [exercises, setExercises] = useState([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -32,6 +33,10 @@ const ExerciseListForCreator = () => {
       .then((response) => setExercises(response.data))
       .catch((error) => console.error('Failed to load exercise list:', error));
   }, []);
+
+  const filteredExercises = exercises.filter((exercise) =>
+    exercise.title?.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const columns = [
     {
@@ -129,9 +134,22 @@ const ExerciseListForCreator = () => {
   return (
     <div className="container mt-5">
       <h2 className="mb-3">List of Exercises You Have Created</h2>
+
+      {/* Search box */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control w-50"
+          style={{ maxWidth: '500px' }}
+          placeholder="Search exercises by title..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+
       <DataTable
         columns={columns}
-        data={exercises}
+        data={filteredExercises}
         pagination
         highlightOnHover
         striped
