@@ -197,7 +197,6 @@ const Router = [
         children: [
           { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
           { path: 'article/edit/:articleId', element: <EditArticle /> },
-          { path: 'question/option/create', element: <OptionPage /> },
           { path: 'create-lesson', element: <CreateLesson /> },
           { path: 'create-exercise', element: <CreateExercise /> },
           { path: 'create-article', element: <CreateArticle /> },
