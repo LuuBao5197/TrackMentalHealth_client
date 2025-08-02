@@ -71,4 +71,15 @@
 .member-icon-dropdown .dropdown-item:hover {
   background: #f0f0f0;
 }
+.red-dot {
+  position: absolute;
+  top: 10px;   /* dịch lên trên chữ Chat */
+  right: -2px; /* dịch qua phải của chữ Chat */
+  width: 18px;
+  height: 18px;
+  background-color: red;
+  border-radius: 50%;
+  border: 2px solid white; /* viền trắng cho đẹp */
+}
+
 
