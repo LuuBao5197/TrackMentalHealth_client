@@ -4,7 +4,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getUserInfo } from "../../api/userAPI";
-import { getNotificationsByUserId, deleteNotificationById, changeStatusNotification } from "../../api/api";
+import { getNotificationsByUserId, deleteNotificationById, changeStatusNotification, hasUnreadMessages } from "../../api/api";
 import { logout } from "../../redux/slices/authSlice";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { connectWebSocket } from "../../services/stompClient";
@@ -13,22 +13,21 @@ import NotificationDropdown from "../notification/NotificationDropdown";
 import imgLogo from "@assets/images/logos/logoTMH.png";
 import NotificationDetailModal from "../../utils/Modals/NotificationDetailModal";
 
-
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Lấy user info từ redux
   const userInfo = useSelector((state) => state.auth.user);
   const userID = userInfo?.userId;
   const [user, setUser] = useState(null);
 
-  // Notification state
   const [notifications, setNotifications] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState([]);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false); // state mới
 
   const currentUserId = parseInt(getCurrentUserId());
   const currentPath = location.pathname;
@@ -42,7 +41,7 @@ const Header = () => {
     }
   }, [userID]);
 
-  // Fetch notifications + websocket
+  // Fetch notifications
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -59,7 +58,6 @@ const Header = () => {
 
     fetchNotifications();
 
-    // WebSocket lắng nghe notification realtime
     const disconnect = connectWebSocket({
       sessionId: null,
       groupId: null,
@@ -70,9 +68,29 @@ const Header = () => {
         }
         toast.info(`🔔 ${notification.title}: ${notification.message}`);
       },
+      // Khi có tin nhắn realtime
+      onMessage: (message) => {
+        if (message.receiverId === currentUserId && !message.isRead) {
+          setHasUnreadChat(true);
+        }
+      },
     });
 
     return () => disconnect && disconnect();
+  }, [currentUserId]);
+
+  // Check unread chat khi load trang
+  useEffect(() => {
+    if (!currentUserId) return;
+    const checkUnread = async () => {
+      try {
+        const result = await hasUnreadMessages(currentUserId);
+        setHasUnreadChat(result);
+      } catch (err) {
+        console.error("Lỗi check unread chat:", err);
+      }
+    };
+    checkUnread();
   }, [currentUserId]);
 
   // Mark notification as read
@@ -90,7 +108,6 @@ const Header = () => {
       );
     }
   };
-
 
   // Delete notification
   const handleDeleteNotification = async (id) => {
@@ -136,7 +153,15 @@ const Header = () => {
             <li><Link to="/user/exercise" className={currentPath === "/user/exercise" ? "active" : ""}>Exercise</Link></li>
             <li><Link to="/user/social" className={currentPath === "/user/social" ? "active" : ""}>Community Social</Link></li>
             <li><Link to="/user/tests" className={currentPath === "/user/tests" ? "active" : ""}>Mental Tests</Link></li>
-            <li><Link to="/user/chat/list" className={currentPath === "/user/chat/list" ? "active" : ""}>Chat</Link></li>
+            <li>
+              <Link
+                to="/user/chat/list"
+                className={`position-relative ${currentPath === "/user/chat/list" ? "active" : ""}`}
+              >
+                Chat
+                {hasUnreadChat && <span className="red-dot"></span>}
+              </Link>
+            </li>
             <li><Link to="/user/f" className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li>
           </ul>
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -145,15 +170,12 @@ const Header = () => {
         {/* Notification + User menu */}
         {userInfo ? (
           <div className="d-flex align-items-center gap-3">
-            {/* Notification Dropdown */}
             <NotificationDropdown
               notifications={notifications}
               unreadNotifications={unreadNotifications}
               handleOpenNotificationDetail={handleOpenNotificationDetail}
               handleDeleteNotification={handleDeleteNotification}
             />
-
-            {/* User avatar */}
             <div className="dropdown">
               <a
                 href="#"
@@ -201,10 +223,12 @@ const Header = () => {
 
       <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
 
-
-
+      <NotificationDetailModal
+        show={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        notification={selectedNotification}
+      />
     </header>
-
   );
 };
 

@@ -414,7 +414,6 @@ function ChatList() {
                             </button>
                         </>
                     )}
-
                 </div>
             </div>
 
