@@ -30,7 +30,10 @@ const LessonListForCreator = () => {
 
     axios
       .get(`http://localhost:9999/api/lesson/creator/${userId}`)
-      .then((response) => setLessons(response.data))
+      .then((response) => {
+        console.log('Lessons data:', response.data); // Debug: Check the data
+        setLessons(response.data);
+      })
       .catch((error) => console.error('Error loading lessons:', error));
   }, []);
 
@@ -53,7 +56,7 @@ const LessonListForCreator = () => {
     { name: 'Title', selector: (row) => row.title, sortable: true },
     {
       name: 'Category',
-      selector: (row) => row.category || 'Uncategorized',
+      selector: (row) => row.category || 'Uncategorized', // Should display "aaa" if present
     },
     {
       name: 'Status',
@@ -118,7 +121,6 @@ const LessonListForCreator = () => {
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
-
 
       <DataTable
         columns={columns}

@@ -3,6 +3,7 @@ import { useFormik } from 'formik';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
 
 const EditLesson = () => {
     const { lessonId } = useParams();
@@ -23,18 +24,36 @@ const EditLesson = () => {
         }
     }
 
+    const validate = (values) => {
+        const errors = {};
+        if (!values.title) errors.title = 'Title is required';
+        if (!values.description) errors.description = 'Description is required';
+        if (!values.photo) errors.photo = 'Cover photo is required';
+        if (!values.category) errors.category = 'Category is required';
+
+        steps.forEach((step, index) => {
+            if (!step.title || !step.content) {
+                errors[`step-${index}`] = 'Each step must have a title and content';
+            }
+        });
+
+        return errors;
+    };
+
     const formik = useFormik({
         initialValues: {
             title: '',
             description: '',
             status: false,
             photo: '',
+            category: '', // ✅ Added category field
         },
+        validate,
         onSubmit: async (values) => {
             const now = new Date().toISOString();
 
             if (!lessonDataFetched) {
-                alert('❌ Error: Failed to fetch the original lesson data.');
+                Swal.fire('❌ Error', 'Failed to fetch the original lesson data.', 'error');
                 return;
             }
 
@@ -47,6 +66,7 @@ const EditLesson = () => {
                 createdAt: lessonDataFetched.createdAt,
                 updatedAt: now,
                 createdBy: lessonDataFetched.createdBy,
+                category: values.category, // ✅ Include category
                 lessonSteps: steps.map((step, index) => {
                     const originalStep = lessonDataFetched.lessonSteps?.find(s => s.stepNumber === (index + 1));
                     return {
@@ -64,10 +84,11 @@ const EditLesson = () => {
 
             try {
                 await axios.post('http://localhost:9999/api/lesson/save', lessonToSubmit);
-                alert('✅ Lesson has been updated!');
+                Swal.fire('✅ Success', 'Lesson has been updated!', 'success');
+                navigate('/lessons');
             } catch (error) {
                 console.error('❌ Error during update:', error.response?.data || error.message);
-                alert('❌ An error occurred while updating the lesson.');
+                Swal.fire('❌ Error', 'An error occurred while updating the lesson.', 'error');
             }
         },
     });
@@ -87,13 +108,14 @@ const EditLesson = () => {
                     description: fetchedLesson.description || '',
                     status: fetchedLesson.status === 'true' || fetchedLesson.status === true,
                     photo: fetchedLesson.photo || '',
+                    category: fetchedLesson.category || '', // ✅ Set category from fetched data
                 });
 
                 setLessonDataFetched(fetchedLesson);
                 setSteps(fetchedLesson.lessonSteps || []);
             } catch (err) {
                 console.error('❌ Failed to load lesson data:', err.response?.data || err.message);
-                alert('❌ Failed to load lesson data. Please check the ID or your connection.');
+                Swal.fire('❌ Error', 'Failed to load lesson data. Please check the ID or your connection.', 'error');
                 navigate('/lessons');
             }
         };
@@ -109,6 +131,15 @@ const EditLesson = () => {
 
     const addStep = () => {
         setSteps([...steps, { title: '', content: '', mediaType: '', mediaUrl: '' }]);
+    };
+
+    const removeStep = (index) => {
+        if (steps.length <= 1) {
+            Swal.fire('⚠️ Cannot Remove', 'At least one step is required.', 'warning');
+            return;
+        }
+        const updatedSteps = steps.filter((_, i) => i !== index);
+        setSteps(updatedSteps);
     };
 
     const handleUpload = async (file, stepIndex = -1, onSuccess) => {
@@ -132,7 +163,7 @@ const EditLesson = () => {
             } else if (file.type.startsWith('audio/')) {
                 detectedMediaType = 'audio';
             } else {
-                alert('Unsupported file type. Please upload an image, video, or audio file.');
+                Swal.fire('❌ Error', 'Unsupported file type. Please upload an image, video, or audio file.', 'error');
                 setUploading(false);
                 return;
             }
@@ -147,7 +178,7 @@ const EditLesson = () => {
             }
         } catch (err) {
             console.error('❌ Upload failed:', err.response?.data || err.message);
-            alert('❌ Upload failed!');
+            Swal.fire('❌ Error', 'Upload failed!', 'error');
         } finally {
             setUploading(false);
         }
@@ -162,33 +193,56 @@ const EditLesson = () => {
                     </h2>
 
                     <form onSubmit={formik.handleSubmit}>
+                        {/* Title */}
                         <div className="mb-3">
                             <label htmlFor="title" className="form-label">Lesson Title</label>
                             <input
                                 type="text"
-                                className="form-control"
+                                className={`form-control ${formik.errors.title ? 'is-invalid' : ''}`}
                                 id="title"
                                 name="title"
                                 onChange={formik.handleChange}
                                 value={formik.values.title}
-                                required
                             />
+                            {formik.errors.title && <div className="invalid-feedback">{formik.errors.title}</div>}
                         </div>
 
+                        {/* Description */}
                         <div className="mb-3">
                             <label htmlFor="description" className="form-label">Description</label>
                             <textarea
-                                className="form-control"
+                                className={`form-control ${formik.errors.description ? 'is-invalid' : ''}`}
                                 id="description"
                                 name="description"
                                 rows="4"
                                 onChange={formik.handleChange}
                                 value={formik.values.description}
                             />
+                            {formik.errors.description && <div className="invalid-feedback">{formik.errors.description}</div>}
                         </div>
 
+                        {/* Category */}
                         <div className="mb-3">
-                            <label className="form-label">Lesson Cover Image</label>
+                            <label htmlFor="category" className="form-label">Lesson Category</label>
+                            <select
+                                className={`form-select ${formik.errors.category ? 'is-invalid' : ''}`}
+                                id="category"
+                                name="category"
+                                value={formik.values.category}
+                                onChange={formik.handleChange}
+                            >
+                                <option value="">-- Select Category --</option>
+                                <option value="Emotional Skills">Emotional Skills</option>
+                                <option value="Stress Management">Stress Management</option>
+                                <option value="Self-Awareness">Self-Awareness</option>
+                                <option value="Motivation">Motivation</option>
+                            </select>
+                            {formik.errors.category && <div className="invalid-feedback">{formik.errors.category}</div>}
+                        </div>
+
+                        {/* Photo */}
+                        <div className="mb-3">
+                            <label htmlFor="lessonPhoto" className="form-label">Thumbnail Image <span className="text-danger">*</span></label>
                             {lessonDataFetched?.photo && !formik.values.photo && (
                                 <div className="mb-2">
                                     <strong>Current Image:</strong>
@@ -217,17 +271,22 @@ const EditLesson = () => {
 
                             <input
                                 type="file"
-                                className="form-control mt-2"
+                                className={`form-control ${formik.errors.photo ? 'is-invalid' : ''}`}
+                                id="lessonPhoto"
                                 accept="image/*"
                                 onChange={(e) => {
                                     const file = e.target.files[0];
                                     if (file) {
                                         handleUpload(file, -1, (url) => formik.setFieldValue('photo', url));
+                                    } else {
+                                        formik.setFieldValue('photo', '');
                                     }
                                 }}
                             />
+                            {formik.errors.photo && <div className="invalid-feedback">{formik.errors.photo}</div>}
                         </div>
 
+                        {/* Status */}
                         <div className="form-check mb-4">
                             <input
                                 className="form-check-input"
@@ -253,18 +312,17 @@ const EditLesson = () => {
                                     <label htmlFor={`stepTitle-${index}`} className="form-label">Step Title</label>
                                     <input
                                         type="text"
-                                        className="form-control"
+                                        className={`form-control ${!step.title && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                                         id={`stepTitle-${index}`}
                                         value={step.title}
                                         onChange={(e) => handleStepChange(index, 'title', e.target.value)}
-                                        required
                                     />
                                 </div>
 
                                 <div className="mb-2">
                                     <label htmlFor={`stepContent-${index}`} className="form-label">Step Content</label>
                                     <textarea
-                                        className="form-control"
+                                        className={`form-control ${!step.content && formik.submitCount > 0 ? 'is-invalid' : ''}`}
                                         id={`stepContent-${index}`}
                                         value={step.content}
                                         onChange={(e) => handleStepChange(index, 'content', e.target.value)}
@@ -272,7 +330,7 @@ const EditLesson = () => {
                                     />
                                 </div>
 
-                                <div className="col-md-12">
+                                <div className="mb-2">
                                     <label htmlFor={`stepMedia-${index}`} className="form-label">
                                         Media File ({step.mediaType ? step.mediaType.toUpperCase() : 'Not selected'})
                                     </label>
@@ -293,24 +351,7 @@ const EditLesson = () => {
                                         </div>
                                     )}
 
-                                    <input
-                                        type="file"
-                                        className="form-control"
-                                        id={`stepMedia-${index}`}
-                                        accept="video/*,image/*,audio/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                handleUpload(file, index);
-                                            }
-                                        }}
-                                    />
                                     {step.mediaUrl && (
-                                        <small className="text-muted d-block mt-1">
-                                            URL: {step.mediaUrl}
-                                        </small>
-                                    )}
-                                    {step.mediaUrl && !uploading && (
                                         <div className="mt-2 text-center">
                                             {step.mediaType === 'video' && (
                                                 <video controls src={step.mediaUrl} style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px' }} />
@@ -323,7 +364,40 @@ const EditLesson = () => {
                                             )}
                                         </div>
                                     )}
+
+                                    <input
+                                        type="file"
+                                        className="form-control"
+                                        id={`stepMedia-${index}`}
+                                        accept="video/*,image/*,audio/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                handleUpload(file, index);
+                                            } else {
+                                                handleStepChange(index, 'mediaType', '');
+                                                handleStepChange(index, 'mediaUrl', '');
+                                            }
+                                        }}
+                                    />
+                                    {step.mediaUrl && (
+                                        <small className="text-muted d-block mt-1">
+                                            URL: {step.mediaUrl}
+                                        </small>
+                                    )}
                                 </div>
+
+                                {steps.length > 1 && (
+                                    <div className="text-end mt-3">
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() => removeStep(index)}
+                                        >
+                                            ❌ Remove this step
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))}
 
@@ -341,7 +415,7 @@ const EditLesson = () => {
                                 className="btn btn-primary"
                                 disabled={uploading}
                             >
-                                {uploading ? 'Uploading...' : '💾 Save Lesson'}
+                                {uploading ? '⏳ Uploading...' : '💾 Save Lesson'}
                             </button>
                         </div>
                     </form>

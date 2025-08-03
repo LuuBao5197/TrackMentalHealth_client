@@ -27,6 +27,7 @@ const CreateLesson = () => {
     if (!values.title) errors.title = 'Title is required';
     if (!values.description) errors.description = 'Description is required';
     if (!values.photo) errors.photo = 'Cover photo is required';
+    if (!values.category) errors.category = 'Category is required';
 
     steps.forEach((step, index) => {
       if (!step.title || !step.content) {
@@ -43,6 +44,7 @@ const CreateLesson = () => {
       description: '',
       status: false,
       photo: '',
+      category: '', // ✅ category field
     },
     validate,
     onSubmit: async (values) => {
@@ -72,6 +74,7 @@ const CreateLesson = () => {
         createdBy: userId,
         createdAt: now,
         updatedAt: now,
+        category: values.category, // ✅ include category
         lessonSteps: steps.map((step, index) => ({
           stepNumber: index + 1,
           title: step.title,
@@ -163,6 +166,7 @@ const CreateLesson = () => {
           <h2 className="mb-4 text-primary">📝 Create New Lesson</h2>
 
           <form onSubmit={formik.handleSubmit}>
+            {/* Title */}
             <div className="mb-3">
               <label htmlFor="title" className="form-label">Lesson Title</label>
               <input
@@ -176,6 +180,7 @@ const CreateLesson = () => {
               {formik.errors.title && <div className="invalid-feedback">{formik.errors.title}</div>}
             </div>
 
+            {/* Description */}
             <div className="mb-3">
               <label htmlFor="description" className="form-label">Description</label>
               <textarea
@@ -189,6 +194,26 @@ const CreateLesson = () => {
               {formik.errors.description && <div className="invalid-feedback">{formik.errors.description}</div>}
             </div>
 
+            {/* Category */}
+            <div className="mb-3">
+              <label htmlFor="category" className="form-label">Lesson Category</label>
+              <select
+                className={`form-select ${formik.errors.category ? 'is-invalid' : ''}`}
+                id="category"
+                name="category"
+                value={formik.values.category}
+                onChange={formik.handleChange}
+              >
+                <option value="">-- Select Category --</option>
+                <option value="Emotional Skills">Emotional Skills</option>
+                <option value="Stress Management">Stress Management</option>
+                <option value="Self-Awareness">Self-Awareness</option>
+                <option value="Motivation">Motivation</option>
+              </select>
+              {formik.errors.category && <div className="invalid-feedback">{formik.errors.category}</div>}
+            </div>
+
+            {/* Photo */}
             <div className="mb-3">
               <label htmlFor="lessonPhoto" className="form-label">Thumbnail Image <span className="text-danger">*</span></label>
               <input
@@ -225,21 +250,19 @@ const CreateLesson = () => {
                 <h5 className="mb-3">Step {index + 1}</h5>
 
                 <div className="mb-2">
-                  <label htmlFor={`stepTitle-${index}`} className="form-label">Step Title</label>
+                  <label className="form-label">Step Title</label>
                   <input
                     type="text"
                     className={`form-control ${!step.title && formik.submitCount > 0 ? 'is-invalid' : ''}`}
-                    id={`stepTitle-${index}`}
                     value={step.title}
                     onChange={(e) => handleStepChange(index, 'title', e.target.value)}
                   />
                 </div>
 
                 <div className="mb-2">
-                  <label htmlFor={`stepContent-${index}`} className="form-label">Step Content</label>
+                  <label className="form-label">Step Content</label>
                   <textarea
                     className={`form-control ${!step.content && formik.submitCount > 0 ? 'is-invalid' : ''}`}
-                    id={`stepContent-${index}`}
                     value={step.content}
                     onChange={(e) => handleStepChange(index, 'content', e.target.value)}
                     rows="5"
@@ -248,14 +271,13 @@ const CreateLesson = () => {
                 </div>
 
                 <div className="mb-2">
-                  <label htmlFor={`stepMedia-${index}`} className="form-label">
+                  <label className="form-label">
                     Media File {step.mediaType && `(${step.mediaType.toUpperCase()})`}
                     {!step.mediaType && ' (Not selected)'}
                   </label>
                   <input
                     type="file"
                     className="form-control"
-                    id={`stepMedia-${index}`}
                     accept="video/*,image/*,audio/*"
                     onChange={(e) => {
                       const file = e.target.files[0];
