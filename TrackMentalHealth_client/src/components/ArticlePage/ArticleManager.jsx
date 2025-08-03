@@ -5,14 +5,13 @@ import { Link } from 'react-router-dom';
 const ArticleManager = () => {
   const [articles, setArticles] = useState([]);
 
-  // Hàm lấy tên tác giả từ ID
   const fetchUserNameById = async (id) => {
     try {
       const res = await axios.get(`http://localhost:9999/api/user/${id}`);
-      return res.data.username || 'Không rõ';
+      return res.data.username || 'Unknown';
     } catch (err) {
-      console.error(`❌ Lỗi khi lấy tên người dùng với ID ${id}:`, err);
-      return 'Không rõ';
+      console.error(`❌ Failed to fetch user with ID ${id}:`, err);
+      return 'Unknown';
     }
   };
 
@@ -20,20 +19,23 @@ const ArticleManager = () => {
     const fetchArticlesWithAuthors = async () => {
       try {
         const res = await axios.get('http://localhost:9999/api/article/');
-        const rawArticles = res.data;
+        // Filter only articles with status === true
+        const rawArticles = res.data.filter(
+          article => article.status === true || article.status === 'true'
+        );
 
         const articlesWithNames = await Promise.all(
           rawArticles.map(async (article) => {
             const authorName = article.author
               ? await fetchUserNameById(article.author)
-              : 'Không rõ';
+              : 'Unknown';
             return { ...article, authorName };
           })
         );
 
         setArticles(articlesWithNames);
       } catch (error) {
-        console.error('❌ Lỗi khi tải danh sách bài viết:', error);
+        console.error('❌ Failed to load articles:', error);
       }
     };
 
@@ -60,8 +62,8 @@ const ArticleManager = () => {
               const imageUrl = article.photo?.startsWith('http')
                 ? article.photo
                 : article.photo
-                  ? `http://localhost:9999/uploads/${article.photo}`
-                  : 'assets/img/default-article.webp';
+                ? `http://localhost:9999/uploads/${article.photo}`
+                : 'assets/img/default-article.webp';
 
               return (
                 <div
@@ -76,7 +78,6 @@ const ArticleManager = () => {
                         alt={article.title}
                         loading="lazy"
                       />
-
                       <div className="portfolio-overlay">
                         <div className="portfolio-actions">
                           <Link
@@ -90,7 +91,7 @@ const ArticleManager = () => {
                     </div>
                     <div className="portfolio-content">
                       <span className="category">
-                        🖋 Author: {article.authorName || 'Không rõ'}
+                        🖋 Author: {article.authorName || 'Unknown'}
                       </span>
                       <h3>
                         {article.title?.length > 50

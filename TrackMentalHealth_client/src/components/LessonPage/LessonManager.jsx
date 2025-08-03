@@ -17,9 +17,15 @@ const LessonManager = () => {
   useEffect(() => {
     axios.get('http://localhost:9999/api/lesson')
       .then(res => {
-        setLessons(res.data);
+        console.log('All lessons:', res.data);
+        // Lọc bài học có status === true hoặc 'true'
+        const activeLessons = res.data.filter(
+          lesson => lesson.status === true || lesson.status === 'true'
+        );
+        console.log('Filtered active lessons:', activeLessons);
+        setLessons(activeLessons);
 
-        res.data.forEach(lesson => {
+        activeLessons.forEach(lesson => {
           if (userId) {
             axios
               .get(`http://localhost:9999/api/user/${userId}/lesson/${lesson.id}/progress-percent`)
@@ -141,7 +147,6 @@ const LessonManager = () => {
           })}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="pagination-custom mt-4 d-flex justify-content-center gap-2 flex-wrap">
             <button className="btn btn-dark" disabled>Page {currentPage} / {totalPages}</button>
@@ -164,7 +169,6 @@ const LessonManager = () => {
         )}
       </div>
 
-      {/* Styles */}
       <style>{`
         .circular-progress {
           position: relative;

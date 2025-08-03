@@ -78,10 +78,6 @@ const Router = [
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'unauthorized', element: <Unauthorized /> },
-
-      { path: 'create-lesson', element: <CreateLesson /> },
-      { path: 'create-exercise', element: <CreateExercise /> },
-      { path: 'create-article', element: <CreateArticle /> },
       { path: 'lesson/:id', element: <LessonDetail /> },
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },

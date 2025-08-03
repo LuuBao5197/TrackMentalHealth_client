@@ -7,7 +7,12 @@ const ExerciseManager = () => {
 
   useEffect(() => {
     axios.get('http://localhost:9999/api/exercise/')
-      .then(response => setExercises(response.data))
+      .then(response => {
+        const activeExercises = response.data.filter(
+          ex => ex.status === true || ex.status === 'true'
+        );
+        setExercises(activeExercises);
+      })
       .catch(error => console.error('❌ Error loading exercises:', error));
   }, []);
 
@@ -26,7 +31,9 @@ const ExerciseManager = () => {
             exercises.map(ex => {
               const imageUrl = ex.photo?.startsWith('http')
                 ? ex.photo
-                : 'assets/img/default-exercise.webp';
+                : ex.photo
+                  ? `http://localhost:9999/uploads/${ex.photo}`
+                  : 'assets/img/default-exercise.webp';
 
               return (
                 <div
