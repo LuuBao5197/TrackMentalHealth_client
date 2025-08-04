@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Formik, Field, Form, FieldArray, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
@@ -11,7 +11,9 @@ const questionTypes = [
     { value: 'SCORE_BASED', label: 'Score Based (each option has a point)' },
 ];
 
+
 const CreateQuestionForm = () => {
+    const [topic, setTopic] = useState(null);
     const [preview, setPreview] = useState(null);
 
     const validationSchema = Yup.object({
@@ -67,7 +69,7 @@ const CreateQuestionForm = () => {
                             const contents = opts.map((opt) => opt.content.trim().toLocaleLowerCase());
                             const uniqueContents = new Set(contents);
                             return (
-                                opts?.some((opt) => opt.correct === true) && uniqueContents.size === OpacitySharp.length
+                                opts?.some((opt) => opt.correct === true) && uniqueContents.size === opts.length
 
                             )
 
@@ -76,6 +78,16 @@ const CreateQuestionForm = () => {
             }),
     });
 
+    const fetchTopic = async() => {
+        const data = await axios.get("http://localhost:9999/api/topic");
+        console.log(data)
+        setTopic(data.data);
+    }
+    useEffect(() => {
+        fetchTopic();
+    }, [])
+    
+
     return (
         <div className="container mt-4">
             <h3>Create a Question</h3>
@@ -83,10 +95,12 @@ const CreateQuestionForm = () => {
                 initialValues={{
                     content: '',
                     type: '',
+                    topicID: null,
                     options: [],
                 }}
                 validationSchema={validationSchema}
                 onSubmit={async (values, { resetForm }) => {
+                    console.log(values);
                     try {
                         await axios.post('http://localhost:9999/api/questions', values);
                         alert('Question created successfully');
@@ -134,6 +148,34 @@ const CreateQuestionForm = () => {
                             </Field>
                             <ErrorMessage
                                 name="type"
+                                component="div"
+                                className="text-danger"
+                            />
+                        </div>
+
+                         <div className="mb-3">
+                            <label>Question Topic</label>
+                            <Field
+                                as="select"
+                                name="topicID"
+                                className="form-select"
+                                // onChange={(e) => {
+                                //     const topicID = e.target.value;
+                                //     const topic = {
+                                //         "id": topicID
+                                //     }
+                                //     setFieldValue('topic', topic);
+                                // }}
+                            >
+                                {/* <option value="">Select topic</option> */}
+                                {topic&&topic.map((q) => (
+                                    <option key={q.id} value={q.id}>
+                                        {q.name}
+                                    </option>
+                                ))}
+                            </Field>
+                            <ErrorMessage
+                                name="topicID"
                                 component="div"
                                 className="text-danger"
                             />
