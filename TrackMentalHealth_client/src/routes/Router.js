@@ -42,6 +42,7 @@ import LessonListForCreator from '../components/LessonPage/LessonListForCreator.
 import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreator.jsx';
 import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
 import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
+import QuizForm from '../components/QuizPage/QuizForm.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -179,7 +180,8 @@ const Router = [
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
           { path: 'test/doTest', element: <DoTestForm /> },
-          { path: 'question/create', element: <CreateQuestionForm />}
+          { path: 'question/create', element: <CreateQuestionForm />},
+          { path: 'quiz/create', element: <QuizForm />}
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
