@@ -11,6 +11,7 @@ import {
   IconDropletQuestion,
   IconInputX,
   IconDoorEnter,
+  IconQuestionMark,
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -118,6 +119,24 @@ const getMenuItemsByRole = (role) => {
       icon: IconInputX,
       href: '/testDesigner/test/importfile',
     },
+    {
+      navlabel: true,
+      subheader: 'Quiz Overview',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create Question with Options',
+      icon: IconQuestionMark,
+      href: '/testDesigner/question/create',
+    },
+     {
+      id: uniqueId(),
+      title: 'Create Quiz and choice Question',
+      icon: IconQuestionMark,
+      href: '/testDesigner/quiz/create',
+    },
+    
+
 
   ];
   const MenuitemsPsy = [
