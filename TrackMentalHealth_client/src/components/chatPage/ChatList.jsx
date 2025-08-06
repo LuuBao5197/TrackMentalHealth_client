@@ -20,8 +20,6 @@ import {
 } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { showAlert } from "../../utils/showAlert";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 import { getCurrentUserId } from '../../utils/getCurrentUserID';
 import '../../assets/css/chat.css';
 import { showConfirm } from '../../utils/showConfirm';
@@ -30,6 +28,7 @@ import NotificationDetailModal from '../../utils/Modals/NotificationDetailModal'
 import { connectWebSocket } from '../../services/stompClient';
 import { MainContainer, MessageContainer, MessageHeader, MessageInput, MessageList, MinChatUiProvider } from '@minchat/react-chat-ui';
 import { useSelector } from 'react-redux';
+import NotificationDropdown from '../notification/NotificationDropdown';
 
 const getOtherUser = (session, currentUserId) =>
     session.sender.id === currentUserId ? session.receiver : session.sender;
@@ -167,17 +166,6 @@ function ChatList() {
             }
         };
 
-        const fetchNotifications = async () => {
-            try {
-                const data = await getNotificationsByUserId(currentUserId);
-                setNotifications(data);
-                const unread = Array.isArray(data) ? data.filter(n => !n.read) : [];
-                setUnreadNotifications(unread);
-            } catch (err) {
-                console.error("❌ Lỗi khi lấy thông báo:", err);
-            }
-        };
-
         const fetchPsychologists = async () => {
             try {
                 const data = await getPsychologists();
@@ -206,7 +194,6 @@ function ChatList() {
         };
 
         // Gọi các fetch ban đầu
-        fetchNotifications();
         fetchSessions();
         fetchPsychologists();
         fetchChatGroup();
@@ -256,8 +243,6 @@ function ChatList() {
                 });
             }
         });
-
-
 
         return () => {
             if (disconnect) disconnect();
@@ -345,22 +330,6 @@ function ChatList() {
         }
     };
 
-    const handleOpenNotificationDetail = async (noti) => {
-        setSelectedNotification(noti);
-        setShowDetailModal(true);
-
-        if (!noti.read) {
-            await changeStatusNotification(noti.id);
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === noti.id ? { ...n, read: true } : n))
-            );
-            setUnreadNotifications((prev) =>
-                prev.filter((n) => n.id !== noti.id)
-            );
-
-        }
-    };
-
     const handleClick = async (session) => {
         const otherUser = getOtherUser(session, currentUserId);
         try {
@@ -382,21 +351,6 @@ function ChatList() {
         });
     };
 
-    async function handleDeleteNotification(id) {
-        try {
-            const isConfirmed = await showConfirm('Are you sure?');
-
-            if (isConfirmed) {
-                await deleteNotificationById(id);
-                // Cập nhật lại danh sách notification
-                setNotifications((prev) => prev.filter((noti) => noti.id !== id));
-                toast.success('Delete successfully');
-            }
-        } catch (e) {
-            console.log('Error deleting notification:', e);
-            showAlert('Failed to delete notification', 'danger');
-        }
-    }
 
 
 
@@ -407,7 +361,7 @@ function ChatList() {
 
                 <div className="d-flex gap-2">
                     {/* Nếu USER */}
-                    {user?.role === 'USER' && (
+                    {user != null && (
                         <>
                             <button
                                 onClick={() => navigate(`/user/appointment/${currentUserId}`)}
@@ -460,77 +414,6 @@ function ChatList() {
                             </button>
                         </>
                     )}
-
-                    {/* Notification Bell */}
-                    <div className="dropdown">
-                        <button
-                            className="btn position-relative"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                        >
-                            <FontAwesomeIcon icon={faBell} size="lg" />
-                            {unreadNotifications.length > 0 && (
-                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {unreadNotifications.length}
-                                    <span className="visually-hidden">unread notifications</span>
-                                </span>
-                            )}
-                        </button>
-
-                        <ul
-                            className="dropdown-menu dropdown-menu-end"
-                            style={{
-                                minWidth: '300px',
-                                maxHeight: '300px',
-                                overflowY: 'auto',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            {notifications.length === 0 ? (
-                                <li className="dropdown-item text-muted">No new notifications</li>
-                            ) : (
-                                notifications.map((noti, index) => (
-                                    <li
-                                        key={index}
-                                        className={`dropdown-item border-bottom ${!noti.read ? 'fw-bold bg-light' : ''}`}
-                                        style={{ position: 'relative' }}
-                                    >
-                                        <div onClick={() => handleOpenNotificationDetail(noti)}>
-                                            <strong>{noti.title}</strong>
-                                            {!noti.read && <span className="badge bg-primary ms-2">New</span>}
-                                            <div className="text-muted" style={{ fontSize: '12px' }}>
-                                                {noti.message}
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            className="btn btn-sm position-absolute top-0 end-0 me-1 mt-1 p-0"
-                                            style={{
-                                                width: '20px',
-                                                height: '20px',
-                                                borderRadius: '50%',
-                                                border: '1px solid #dc3545', // viền đỏ outline
-                                                backgroundColor: 'transparent', // nền trong suốt
-                                                color: '#dc3545', // chữ đỏ
-                                                fontSize: '14px',
-                                                lineHeight: '14px',
-                                                textAlign: 'center',
-                                                transition: 'background-color 0.2s ease'
-                                            }}
-                                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8d7da')}
-                                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                                            onClick={() => handleDeleteNotification(noti.id)}
-                                        >
-                                            <FontAwesomeIcon icon={faTrashAlt} />
-
-                                        </button>
-
-                                    </li>
-                                ))
-                            )}
-                        </ul>
-
-                    </div>
                 </div>
             </div>
 
@@ -743,7 +626,7 @@ function ChatList() {
             {/* Nút Chat AI */}
             <button
                 // onClick={() => setIsOpen(true)}
-                onClick={()=>navigate('/user/chat/ai')}
+                onClick={() => navigate('/user/chat/ai')}
                 className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
                 style={{
                     position: "fixed",

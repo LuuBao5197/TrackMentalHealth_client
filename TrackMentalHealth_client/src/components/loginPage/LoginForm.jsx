@@ -30,9 +30,15 @@ const LoginForm = ({ subtext, subtitle }) => {
 
             if (decoded.role === "USER") {
                 navigate("/user/homepage");
-            } else {
+            } else if(decoded.role === "ADMIN") {
+                navigate("/dashboard");
+            } else if(decoded.role === "PSYCHOLOGIST") {
+                navigate("/user/appointment/psychologist");
+            } else if(decoded.role === "TEST_DESIGNER") {
                 navigate("/testDesigner/test/");
-            }
+            } else if(decoded.role === "CONTENT_CREATOR") {
+                navigate("/contentCreator/create-lesson");
+            } 
         } catch (err) {
             console.error("Token decode failed", err);
         }

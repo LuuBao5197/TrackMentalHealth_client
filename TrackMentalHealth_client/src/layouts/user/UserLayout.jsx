@@ -30,7 +30,7 @@ const UserLayout = () => {
   if (userRole) {
   localStorage.setItem('currentUserId',userRole.userId);
   }
-  console.log(localStorage.getItem('currentUserId'));
+
   
   const [headerHeight, setHeaderHeight] = useState(0);
   // Add/remove class vào body

@@ -17,7 +17,7 @@ const EditArticle = () => {
       const decoded = jwtDecode(token);
       userId = decoded.userId;
     } catch (error) {
-      console.error('❌ Token không hợp lệ:', error);
+      console.error('❌ Invalid token:', error);
     }
   }
 
@@ -26,7 +26,7 @@ const EditArticle = () => {
       title: '',
       content: '',
       status: false,
-      photo: '', // 👈 thêm photo vào initialValues
+      photo: '',
     },
     onSubmit: async (values) => {
       const now = new Date().toISOString();
@@ -35,16 +35,16 @@ const EditArticle = () => {
         id: articleId,
         status: values.status.toString(),
         updatedAt: now,
-        photo: values.photo, // 👈 gửi ảnh lên server
+        photo: values.photo,
       };
 
       try {
-        console.log('📦 Dữ liệu gửi đi để cập nhật:', articleData);
+        console.log('📦 Article data to update:', articleData);
         await axios.put(`http://localhost:9999/api/article/${articleId}`, articleData);
-        alert('✅ Cập nhật bài viết thành công!');
+        alert('✅ Article updated successfully!');
       } catch (error) {
-        console.error('❌ Lỗi khi cập nhật bài viết:', error.response?.data || error.message);
-        alert('❌ Có lỗi xảy ra khi cập nhật bài viết.');
+        console.error('❌ Failed to update article:', error.response?.data || error.message);
+        alert('❌ An error occurred while updating the article.');
       }
     },
   });
@@ -61,12 +61,12 @@ const EditArticle = () => {
           title: fetchedArticle.title || '',
           content: fetchedArticle.content || '',
           status: fetchedArticle.status === 'true' || fetchedArticle.status === true,
-          photo: fetchedArticle.photo || '', // 👈 load ảnh nếu có
+          photo: fetchedArticle.photo || '',
         });
         setCreatedAt(fetchedArticle.createdAt);
       } catch (err) {
-        console.error('❌ Không thể tải dữ liệu bài viết:', err);
-        alert('❌ Không thể tải dữ liệu bài viết.');
+        console.error('❌ Failed to load article:', err);
+        alert('❌ Failed to load article.');
       }
     };
 
@@ -84,10 +84,10 @@ const EditArticle = () => {
       });
 
       const url = res.data.url;
-      formik.setFieldValue('photo', url); // 👈 set ảnh sau khi upload
+      formik.setFieldValue('photo', url);
     } catch (err) {
-      console.error('❌ Upload ảnh thất bại:', err.response?.data || err.message);
-      alert('❌ Upload ảnh thất bại!');
+      console.error('❌ Failed to upload image:', err.response?.data || err.message);
+      alert('❌ Image upload failed!');
     } finally {
       setUploading(false);
     }
@@ -97,11 +97,11 @@ const EditArticle = () => {
     <div className="container my-5" style={{ maxWidth: '700px' }}>
       <div className="card shadow">
         <div className="card-body p-4">
-          <h2 className="mb-4 text-primary">✏️ Chỉnh sửa Bài Viết</h2>
+          <h2 className="mb-4 text-primary">✏️ Edit Article</h2>
 
           <form onSubmit={formik.handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Tiêu đề bài viết</label>
+              <label className="form-label">Article Title</label>
               <input
                 type="text"
                 className="form-control"
@@ -113,7 +113,7 @@ const EditArticle = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Nội dung bài viết</label>
+              <label className="form-label">Content</label>
               <textarea
                 className="form-control"
                 name="content"
@@ -124,9 +124,8 @@ const EditArticle = () => {
               />
             </div>
 
-            {/* Ảnh minh họa */}
             <div className="mb-3">
-              <label htmlFor="articlePhoto" className="form-label">Ảnh minh họa</label>
+              <label htmlFor="articlePhoto" className="form-label">Cover Image</label>
               <input
                 type="file"
                 className="form-control"
@@ -143,7 +142,7 @@ const EditArticle = () => {
                 <div className="mt-2 text-center">
                   <img
                     src={formik.values.photo}
-                    alt="Ảnh minh họa"
+                    alt="Cover"
                     style={{ maxHeight: '180px', borderRadius: '8px', objectFit: 'cover' }}
                   />
                 </div>
@@ -160,12 +159,12 @@ const EditArticle = () => {
                 id="statusCheck"
               />
               <label className="form-check-label" htmlFor="statusCheck">
-                Kích hoạt bài viết
+                Activate Article
               </label>
             </div>
 
             <button type="submit" className="btn btn-primary w-100" disabled={uploading}>
-              {uploading ? '⏳ Đang upload ảnh...' : '💾 Lưu thay đổi'}
+              {uploading ? '⏳ Uploading...' : '💾 Save Changes'}
             </button>
           </form>
         </div>
