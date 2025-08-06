@@ -11,6 +11,7 @@ import {
   IconDropletQuestion,
   IconInputX,
   IconDoorEnter,
+  IconQuestionMark,
 } from '@tabler/icons-react';
 
 import { uniqueId } from 'lodash';
@@ -118,6 +119,24 @@ const getMenuItemsByRole = (role) => {
       icon: IconInputX,
       href: '/testDesigner/test/importfile',
     },
+    {
+      navlabel: true,
+      subheader: 'Quiz Overview',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create Question with Options',
+      icon: IconQuestionMark,
+      href: '/testDesigner/question/create',
+    },
+     {
+      id: uniqueId(),
+      title: 'Create Quiz and choice Question',
+      icon: IconQuestionMark,
+      href: '/testDesigner/quiz/create',
+    },
+    
+
 
   ];
   const MenuitemsPsy = [
@@ -158,26 +177,40 @@ const getMenuItemsByRole = (role) => {
   ];
   const MenuitemsContentCreator = [
     {
-      navlabel: true,
-      subheader: 'Content Creator Management',
-    },
-    {
       id: uniqueId(),
-      title: 'Manage Lessons',
+      title: 'Create Lesson',
       icon: IconBook, // 📖 Biểu tượng bài học
-      href: '/content/lessons',
+      href: '/contentCreator/lesson',
     },
     {
       id: uniqueId(),
-      title: 'Manage Practices',
-      icon: IconListCheck, // ✅ Bài tập, danh sách luyện tập
-      href: '/content/practices',
+      title: 'Manage Articles',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/contentCreator/article',
     },
     {
       id: uniqueId(),
-      title: 'Approval Progress',
+      title: 'Manage Exercise',
+      icon: IconBook, // 📖 Biểu tượng bài học
+      href: '/contentCreator/exercise',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create lesson',
+      icon: IconFileText, // 📄 Biểu tượng tiến trình duyệt nội dung
+      href: '/contentCreator/create-lesson',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create article',
       icon: IconFileCheck, // 📄 Biểu tượng tiến trình duyệt nội dung
-      href: '/content/approval-progress',
+      href: '/contentCreator/create-article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Create exercise',
+      icon: IconListCheck, // ✅ Bài tập, danh sách luyện tập
+      href: '/contentCreator/create-exercise',
     },
   ];
   switch (role) {

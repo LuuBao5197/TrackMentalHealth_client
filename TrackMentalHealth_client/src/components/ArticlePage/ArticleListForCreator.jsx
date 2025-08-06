@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { Link } from 'react-router-dom';
+import DataTable from 'react-data-table-component';
+import { format } from 'date-fns';
 
 const ArticleListForCreator = () => {
   const [articles, setArticles] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const articlesPerPage = 6;
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -17,13 +18,13 @@ const ArticleListForCreator = () => {
         const decoded = jwtDecode(token);
         userId = decoded.contentCreatorId;
       } catch (error) {
-        console.error('Token không hợp lệ:', error);
+        console.error('Invalid token:', error);
         return;
       }
     }
 
     if (!userId) {
-      console.error('Không tìm thấy contentCreatorId trong token.');
+      console.error('contentCreatorId not found in token.');
       return;
     }
 
@@ -31,155 +32,104 @@ const ArticleListForCreator = () => {
       .get(`http://localhost:9999/api/article/creator/${userId}`)
       .then((response) => setArticles(response.data))
       .catch((error) =>
-        console.error('Lỗi khi tải danh sách bài viết:', error)
+        console.error('Error loading article list:', error)
       );
   }, []);
 
-  const totalPages = Math.ceil(articles.length / articlesPerPage);
-  const startIndex = (currentPage - 1) * articlesPerPage;
-  const currentArticles = articles.slice(startIndex, startIndex + articlesPerPage);
+  const filteredArticles = articles.filter((article) =>
+    article.title?.toLowerCase().includes(searchText.toLowerCase())
+  );
 
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  const columns = [
+    {
+      name: 'Image',
+      cell: (row) => (
+        <img
+          src={row.photo?.startsWith('http') ? row.photo : '/assets/img/default-article.webp'}
+          alt={row.title}
+          style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 4 }}
+        />
+      ),
+      width: '100px',
+    },
+    {
+      name: 'Title',
+      selector: (row) => row.title,
+      sortable: true,
+    },
+    {
+      name: 'Status',
+      selector: (row) => row.status === 'true' || row.status === true ? 'Active' : 'Inactive',
+      cell: (row) => (
+        <span
+          className={`badge ${row.status === 'true' || row.status === true ? 'bg-success' : 'bg-secondary'}`}
+        >
+          {row.status === 'true' || row.status === true ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      name: 'Created At',
+      selector: (row) => row.createdAt,
+      cell: (row) =>
+        row.createdAt
+          ? format(new Date(row.createdAt), 'dd/MM/yyyy HH:mm')
+          : 'N/A',
+      sortable: true,
+    },
+    {
+      name: 'Actions',
+      cell: (row) => (
+        <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
+          <Link
+            to={`/auth/article/${row.id}`}
+            className="btn btn-sm btn-outline-primary"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            View
+          </Link>
+          <Link
+            to={`/auth/article/edit/${row.id}`}
+            state={{ article: row }}
+            className="btn btn-sm btn-outline-secondary"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            Edit
+          </Link>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
 
   return (
-    <>
-      <style>{`
-        .pagination-custom .btn {
-          min-width: 50px;
-          font-weight: 600;
-          border-radius: 4px;
-          padding: 8px 12px;
-          transition: all 0.2s ease-in-out;
-        }
+    <div className="container mt-5">
+      <h2 className="mb-3">📚 List of Articles You Have Created</h2>
 
-        .pagination-custom .btn-danger {
-          background-color: #dc3545;
-          color: #fff;
-        }
+      {/* Search box */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control w-50"
+          style={{ maxWidth: '500px' }}
+          placeholder="Search articles by title..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
 
-        .pagination-custom .btn-dark {
-          background-color: #1f1f1f;
-          color: #c0d3df;
-          border: none;
-        }
-
-        .pagination-custom .btn:hover {
-          opacity: 0.9;
-        }
-
-        .pagination-custom .page-label {
-          cursor: default;
-        }
-
-        .details-link {
-          margin: 0 5px;
-          color: white;
-        }
-
-        .details-link i {
-          font-size: 1.2rem;
-        }
-      `}</style>
-
-      <section id="portfolio" className="portfolio section">
-        <div className="container section-title" data-aos="fade-up">
-          <h2>📚 Danh sách bài viết</h2>
-          <p>Khám phá những bài viết bạn đã tạo</p>
-        </div>
-
-        <div className="container" data-aos="fade-up" data-aos-delay="100">
-          <div className="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
-            {currentArticles.length === 0 ? (
-              <p>⏳ Không có bài viết nào.</p>
-            ) : (
-              currentArticles.map((article) => {
-                const imageUrl = article.photo?.startsWith('http')
-                  ? article.photo
-                  : article.photo
-                    ? `http://localhost:9999/uploads/${article.photo}`
-                    : 'assets/img/default-article.webp';
-
-                return (
-                  <div
-                    key={article.id}
-                    className="col-lg-6 col-md-6 portfolio-item isotope-item filter-article"
-                  >
-                    <div className="portfolio-card position-relative">
-                      <div className="portfolio-image">
-                        <img
-                          src={imageUrl}
-                          className="img-fluid"
-                          alt={article.title}
-                          loading="lazy"
-                        />
-                        <div className="portfolio-overlay">
-                          <div className="portfolio-actions d-flex justify-content-center">
-                            <Link to={`/auth/article/${article.id}`} className="details-link">
-                              <i className="bi bi-arrow-right"></i>
-                            </Link>
-                            <Link
-                              to={`/auth/article/edit/${article.id}`}
-                              state={{ article }}
-                              className="details-link"
-                            >
-                              <i className="bi bi-pencil-fill"></i>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="portfolio-content">
-                        <span className="category">🖋 Tác giả: {article.author || 'Không rõ'}</span>
-                        <h3>
-                          {article.title?.length > 50
-                            ? article.title.substring(0, 50) + '...'
-                            : article.title}
-                        </h3>
-                        <p>
-                          {article.content?.length > 100
-                            ? article.content.substring(0, 100) + '...'
-                            : article.content}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="pagination-custom mt-4 d-flex justify-content-center align-items-center gap-2 flex-wrap">
-              <button className="page-label btn btn-dark" disabled>
-                Trang {currentPage} / {totalPages}
-              </button>
-              {currentPage > 1 && (
-                <button className="btn btn-dark" onClick={() => goToPage(1)}>
-                  Trang đầu
-                </button>
-              )}
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToPage(index + 1)}
-                  className={`btn ${currentPage === index + 1 ? 'btn-danger' : 'btn-dark'}`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-              {currentPage < totalPages && (
-                <button className="btn btn-dark" onClick={() => goToPage(totalPages)}>
-                  Trang cuối
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-    </>
+      <DataTable
+        columns={columns}
+        data={filteredArticles}
+        pagination
+        highlightOnHover
+        striped
+        responsive
+        noDataComponent="⏳ No articles found."
+      />
+    </div>
   );
 };
 

@@ -57,18 +57,28 @@ const RegisterForm = () => {
             confirmPassword: '',
         },
         validationSchema,
-        onSubmit: async (values) => {
+        onSubmit: async (values, { setFieldError }) => {
             try {
                 setLoading(true);
                 setEmailForOtp(values.email);
+
                 await axios.post('http://localhost:9999/api/users/send-otp-register', null, {
                     params: { email: values.email }
                 });
+
                 setOtpDialogOpen(true);
                 setOtpSentMessage('OTP has been sent to your email.');
                 setResendCooldown(60);
             } catch (error) {
-                console.error('Error sending OTP:', error);
+                if (
+                    error.response &&
+                    error.response.status === 400 &&
+                    error.response.data?.error === 'Email already exists'
+                ) {
+                    setFieldError('email', 'Email already exists');
+                } else {
+                    console.error('Error sending OTP:', error);
+                }
             } finally {
                 setLoading(false);
             }

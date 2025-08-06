@@ -106,7 +106,6 @@ function CreateAppointment() {
                         onChange={handleChange}
                         className="form-control"
                         required
-                        disabled={true}
                     />
                 </div>
 
@@ -137,7 +136,8 @@ function CreateAppointment() {
                             <span className='text-danger'>Select Psychologist</span></option>
                         {psychologists.map(p => (
                             <option value={p.id}>
-                                {p.usersID.fullname}
+                                {/* {p.usersID.fullname}
+                                  */}
                             </option>
                         ))}
                     </select>

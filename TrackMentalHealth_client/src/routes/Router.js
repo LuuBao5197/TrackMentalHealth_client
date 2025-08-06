@@ -38,7 +38,11 @@ import RolesRegisterForm from '../components/loginPage/RolesRegisterForm.jsx';
 import LessonManager from '../components/LessonPage/LessonManager.jsx';
 import ArticleManager from '../components/ArticlePage/ArticleManager.jsx';
 import ExerciseManager from '../components/ExercisePage/ExerciseManager.jsx';
-
+import LessonListForCreator from '../components/LessonPage/LessonListForCreator.jsx';
+import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreator.jsx';
+import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
+import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
+import QuizForm from '../components/QuizPage/QuizForm.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -68,7 +72,7 @@ const Router = [
     path: '/auth',
     element: <BlankLayout />,
     children: [
-      { path: 'roles-register', element: <RolesRegisterForm />},
+      { path: 'roles-register', element: <RolesRegisterForm /> },
       { path: 'choose-role', element: <ChooseRolePage /> },
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
@@ -76,10 +80,6 @@ const Router = [
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'unauthorized', element: <Unauthorized /> },
-
-      { path: 'create-lesson', element: <CreateLesson /> },
-      { path: 'create-exercise', element: <CreateExercise /> },
-      { path: 'create-article', element: <CreateArticle /> },
       { path: 'lesson/:id', element: <LessonDetail /> },
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
@@ -94,7 +94,7 @@ const Router = [
   //🔐 Private: Cần đăng nhập
   {
     path: '/',
-    element: <UserLayout />,
+    element: <FullLayout />,
     children: [
       { index: true, element: <Navigate to="/user/homepage" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
@@ -141,12 +141,13 @@ const Router = [
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
+
         ],
       },
 
       // PSYCHO ONLY
       {
-        element: <ProtectedRoute allowedRoles={['PSYCHO']} />,
+        element: <ProtectedRoute allowedRoles={['PSYCHOLOGIST']} />,
         children: [
           { path: 'appointment/psychologist', element: <AppointmentManagement /> },
         ],
@@ -178,7 +179,36 @@ const Router = [
           { path: 'test/edit/:id', element: <OptionPage /> },
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
-          { path: 'test/doTest', element: <DoTestForm /> }
+          { path: 'test/doTest', element: <DoTestForm /> },
+          { path: 'question/create', element: <CreateQuestionForm />},
+          { path: 'quiz/create', element: <QuizForm />}
+        ],
+      },
+      { path: '*', element: <Navigate to="/auth/404" replace /> },
+
+    ],
+  },
+  {
+    path: '/contentCreator',
+    element: <FullLayout />,
+    children: [
+      {
+        element: <ProtectedRoute allowedRoles={['CONTENT_CREATOR']} />,
+        children: [
+          { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
+          { path: 'article/edit/:articleId', element: <EditArticle /> },
+          { path: 'create-lesson', element: <CreateLesson /> },
+          { path: 'create-exercise', element: <CreateExercise /> },
+          { path: 'create-article', element: <CreateArticle /> },
+          { path: 'lesson/:id', element: <LessonDetail /> },
+          { path: 'exercise/:id', element: <ExerciseDetail /> },
+          { path: 'article/:id', element: <ArticleDetail /> },
+          { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
+          { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
+          { path: 'article/edit/:articleId', element: <EditArticle /> },
+          { path: 'lesson', element: <LessonListForCreator /> },
+          { path: 'article', element: <ArticleListForCreator /> },
+          { path: 'exercise', element: <ExerciseListForCreator /> },
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

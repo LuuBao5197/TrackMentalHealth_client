@@ -3,7 +3,7 @@ import { getAppointmentById, getPsychologists, updateAppointment } from '../../.
 import { useNavigate, useParams } from "react-router-dom";
 import { showAlert } from '../../../utils/showAlert';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 function UpdateAppointment() {
 
@@ -92,7 +92,6 @@ function UpdateAppointment() {
                         onChange={handleChange}
                         className="form-control"
                         required
-                        disabled={true}
                     />
                 </div>
 
