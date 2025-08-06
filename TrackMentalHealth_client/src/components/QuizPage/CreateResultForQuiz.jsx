@@ -7,48 +7,49 @@ import { showAlert } from '../../utils/showAlert';
 
 const PAGE_SIZE = 5;
 
-const TestResultForm = () => {
+const QuizResultForm = () => {
     const [maxScore, setMaxScore] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [testList, setTestList] = useState([]);
+    const [quizList, setQuizList] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    const fetchTests = async (page = 1, search = '') => {
+    const fetchQuizs = async (page = 1, search = '') => {
         try {
-            const res = await axios.get('http://localhost:9999/api/test/', {
+            const res = await axios.get('http://localhost:9999/api/quizzes', {
                 params: { page, size: PAGE_SIZE, search }
             });
-            setTestList(res.data.data || []);
+            console.log(res);
+            setQuizList(res.data.data || []);
             setTotalPages(res.data.totalPages || 1);
             setCurrentPage(res.data.currentPage || 1);
         } catch (err) {
-            alert('Không thể tải danh sách bài test');
+            alert('Không thể tải danh sách bài quiz');
         }
     };
 
     const validationSchema = Yup.object({
-        testId: Yup.number().required('Bắt buộc chọn bài test'),
+        quizId: Yup.number().required('Bắt buộc chọn bài quiz'),
         results: Yup.array().of(
             Yup.object().shape({
-                scoreFrom: Yup.number().required('Bắt buộc').min(0, 'Điểm phải >= 0'),
-                scoreTo: Yup.number()
-                    .required('Bắt buộc')
+                minScore: Yup.number().required('Bắt buộc').min(0, 'Điểm phải >= 0').max(99, 'Điểm phải <= 99)'),
+                maxScore: Yup.number()
+                    .required('Bắt buộc').max(100, 'Điểm phải <=100')
                     .test('greater-than-from', 'Đến phải >= Từ', function (value) {
-                        const { scoreFrom } = this.parent;
-                        return value >= scoreFrom;
+                        const { minScore } = this.parent;
+                        return value >= minScore;
                     }),
-                description: Yup.string().required('Bắt buộc')
+                resultLabel: Yup.string().required('Bắt buộc')
             })
         )
     });
 
     const formik = useFormik({
         initialValues: {
-            testId: '',
-            testName: '',
-            results: [{ scoreFrom: '', scoreTo: '', description: '' }]
+            quizId: '',
+            quizName: '',
+            results: [{ minScore: '', maxScore: '', resultLabel: '' }]
         },
         validationSchema,
         validateOnChange: true,
@@ -58,11 +59,11 @@ const TestResultForm = () => {
             if (Object.keys(errors).length > 0) {
                 formikHelpers.setTouched(
                     {
-                        testId: true,
+                        quizId: true,
                         results: values.results.map(() => ({
-                            scoreFrom: true,
-                            scoreTo: true,
-                            description: true,
+                            minScore: true,
+                            maxScore: true,
+                            resultLabel: true,
                         })),
                     },
                     false
@@ -70,10 +71,10 @@ const TestResultForm = () => {
                 return;
             }
 
-            const sorted = [...values.results].sort((a, b) => a.scoreFrom - b.scoreFrom);
+            const sorted = [...values.results].sort((a, b) => a.minScore - b.minScore);
             for (let i = 1; i < sorted.length; i++) {
-                const prevTo = sorted[i - 1].scoreTo;
-                const currFrom = sorted[i].scoreFrom;
+                const prevTo = sorted[i - 1].maxScore;
+                const currFrom = sorted[i].minScore;
                 if (currFrom !== prevTo + 1) {
                     alert(`Khoảng điểm phải nối tiếp sau khoảng trước đó (bắt đầu từ ${prevTo + 1})`);
                     return;
@@ -82,15 +83,16 @@ const TestResultForm = () => {
 
             try {
                 const payload = values.results.map((r) => ({
-                    minScore: r.scoreFrom,
-                    maxScore: r.scoreTo,
-                    resultText: r.description,
-                    test: { id: values.testId }
+                    minScore: r.minScore,
+                    maxScore: r.maxScore,
+                    resultLabel: r.resultLabel,
+                    quiz: { id: values.quizId }
                 }));
-                await axios.post('http://localhost:9999/api/test/multiTestResult', payload);
-                showAlert('Create test success', 'success');
+                console.log(payload);
+                await axios.post('http://localhost:9999/api/quiz-results/multiQuizResult', payload);
+                showAlert('Create quiz success', 'success');
             } catch (err) {
-                  showAlert(`Create test fail ${err}`, 'error');
+                  showAlert(`Create quiz fail ${err}`, 'error');
             }
         }
     });
@@ -99,42 +101,34 @@ const TestResultForm = () => {
 
     const handleOpenModal = () => {
         setShowModal(true);
-        fetchTests(1, searchTerm);
+        fetchQuizs(1, searchTerm);
     };
 
-    const handleSelectTest = async (test) => {
-        setFieldValue('testId', test.id);
-        setFieldValue('testName', test.title);
+    const handleSelectQuiz = async (quiz) => {
+        setFieldValue('quizId', quiz.id);
+        setFieldValue('quizName', quiz.title);
         setShowModal(false);
 
-        try {
-            const res = await axios.get(`http://localhost:9999/api/test/${test.id}/getMaxScore`);
-            setMaxScore(Number(res.data) || 0);
-        } catch (err) {
-            alert('Không thể lấy điểm tối đa');
-            setMaxScore(null);
-        }
     };
 
     return (
         <FormikProvider value={formik}>
             <Form onSubmit={handleSubmit} className="container mt-1">
-                <h4>Thiết lập Thang điểm</h4>
+                <h4>Thiết lập Thang điểm (%)</h4>
 
                 <Form.Group className="mb-3 mt-3">
-                    {/* <Form.Label>Bài Test</Form.Label> */}
                     <div className="input-group w-50">
                         <Form.Control
                             readOnly
-                            value={values.testName}
-                            placeholder="Chọn bài test"
-                            isInvalid={!!(touched.testId && errors.testId)}
+                            value={values.quizName}
+                            placeholder="Chọn bài quiz"
+                            isInvalid={!!(touched.quizId && errors.quizId)}
                         />
                         <Button variant="outline-secondary" onClick={handleOpenModal}>Chọn</Button>
                     </div>
-                    {touched.testId && errors.testId && (
+                    {touched.quizId && errors.quizId && (
                         <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
-                            {errors.testId}
+                            {errors.quizId}
                         </Form.Control.Feedback>
                     )}
                 </Form.Group>
@@ -153,40 +147,40 @@ const TestResultForm = () => {
                                     <Col md={2}>
                                         <Form.Control
                                             type="number"
-                                            name={`results[${index}].scoreFrom`}
+                                            name={`results[${index}].minScore`}
                                             placeholder="Từ"
-                                            value={result.scoreFrom}
+                                            value={result.minScore}
                                             onChange={handleChange}
-                                            isInvalid={!!(errors.results?.[index]?.scoreFrom && touched.results?.[index]?.scoreFrom)}
+                                            isInvalid={!!(errors.results?.[index]?.minScore && touched.results?.[index]?.minScore)}
                                         />
                                         <Form.Control.Feedback type="invalid">
-                                            {errors.results?.[index]?.scoreFrom}
+                                            {errors.results?.[index]?.minScore}
                                         </Form.Control.Feedback>
                                     </Col>
                                     <Col md={2}>
                                         <Form.Control
                                             type="number"
-                                            name={`results[${index}].scoreTo`}
+                                            name={`results[${index}].maxScore`}
                                             placeholder="Đến"
-                                            value={result.scoreTo}
+                                            value={result.maxScore}
                                             onChange={handleChange}
-                                            isInvalid={!!(errors.results?.[index]?.scoreTo && touched.results?.[index]?.scoreTo)}
+                                            isInvalid={!!(errors.results?.[index]?.maxScore && touched.results?.[index]?.maxScore)}
                                         />
                                         <Form.Control.Feedback type="invalid">
-                                            {errors.results?.[index]?.scoreTo}
+                                            {errors.results?.[index]?.maxScore}
                                         </Form.Control.Feedback>
                                     </Col>
                                     <Col md={6}>
                                         <Form.Control
                                             type="text"
-                                            name={`results[${index}].description`}
+                                            name={`results[${index}].resultLabel`}
                                             placeholder="Kết quả và gợi ý giải pháp"
-                                            value={result.description}
+                                            value={result.resultLabel}
                                             onChange={handleChange}
-                                            isInvalid={!!(errors.results?.[index]?.description && touched.results?.[index]?.description)}
+                                            isInvalid={!!(errors.results?.[index]?.resultLabel && touched.results?.[index]?.resultLabel)}
                                         />
                                         <Form.Control.Feedback type="invalid">
-                                            {errors.results?.[index]?.description}
+                                            {errors.results?.[index]?.resultLabel}
                                         </Form.Control.Feedback>
                                     </Col>
                                     <Col md={2}>
@@ -199,8 +193,8 @@ const TestResultForm = () => {
                                 className="mt-2"
                                 onClick={() => {
                                     const last = values.results[values.results.length - 1];
-                                    const newScoreFrom = last?.scoreTo !== '' && !isNaN(last?.scoreTo) ? Number(last.scoreTo) + 1 : '';
-                                    push({ scoreFrom: newScoreFrom, scoreTo: '', description: '' });
+                                    const newScoreFrom = last?.maxScore !== '' && !isNaN(last?.maxScore) ? Number(last.maxScore) + 1 : '';
+                                    push({ minScore: newScoreFrom, maxScore: '', resultLabel: '' });
                                 }}
                             >
                                 Thêm kết quả
@@ -214,7 +208,7 @@ const TestResultForm = () => {
 
             <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Chọn bài Test</Modal.Title>
+                    <Modal.Title>Chọn bài Quiz</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <input
@@ -224,29 +218,29 @@ const TestResultForm = () => {
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
-                            fetchTests(1, e.target.value);
+                            fetchQuizs(1, e.target.value);
                         }}
                     />
                     <ul className="list-group">
-                        {console.log(testList)}
-                        {testList.filter(test=>test.hasResult == false).map(test => (
+                        {console.log(quizList)}
+                        {quizList.filter(quiz=>quiz.hasResults == true).map(quiz => (
                             <li
-                                key={test.id}
+                                key={quiz.id}
                                 className="list-group-item list-group-item-action"
                                 style={{ cursor: 'pointer' }}
-                                onClick={() => handleSelectTest(test)}
+                                onClick={() => handleSelectQuiz(quiz)}
                             >
-                                {test.title}
+                                {quiz.title}
                             </li>
                         ))}
                     </ul>
                 </Modal.Body>
                 <Modal.Footer className="d-flex justify-content-between">
                     <div>
-                        <Button variant="secondary" onClick={() => fetchTests(currentPage - 1, searchTerm)} disabled={currentPage === 1}>
+                        <Button variant="secondary" onClick={() => fetchQuizs(currentPage - 1, searchTerm)} disabled={currentPage === 1}>
                             ← Trước
                         </Button>{' '}
-                        <Button variant="secondary" onClick={() => fetchTests(currentPage + 1, searchTerm)} disabled={currentPage === totalPages}>
+                        <Button variant="secondary" onClick={() => fetchQuizs(currentPage + 1, searchTerm)} disabled={currentPage === totalPages}>
                             Sau →
                         </Button>
                     </div>
@@ -257,4 +251,4 @@ const TestResultForm = () => {
     );
 };
 
-export default TestResultForm;
+export default QuizResultForm;
