@@ -135,6 +135,12 @@ const getMenuItemsByRole = (role) => {
       icon: IconQuestionMark,
       href: '/testDesigner/quiz/create',
     },
+       {
+      id: uniqueId(),
+      title: 'Create Quiz Result',
+      icon: IconQuestionMark,
+      href: '/testDesigner/quiz/quizResult/create',
+    },
     
 
 
