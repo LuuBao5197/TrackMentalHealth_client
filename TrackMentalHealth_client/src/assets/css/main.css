@@ -3009,6 +3009,10 @@ section,
   transform: translateX(5px);
 }
 
+.ck-editor__editable {
+  min-height: 300px;
+}
+
 @media (max-width: 767px) {
   .service-details .service-cta {
     padding: 40px 20px;

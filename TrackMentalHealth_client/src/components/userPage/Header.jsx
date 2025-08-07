@@ -116,6 +116,7 @@ const Header = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
       setUnreadNotifications((prev) => prev.filter((n) => n.id !== id));
       toast.success("Notification deleted");
+      
     } catch (err) {
       toast.error("Delete failed");
     }
@@ -153,6 +154,10 @@ const Header = () => {
             <li><Link to="/user/exercise" className={currentPath === "/user/exercise" ? "active" : ""}>Exercise</Link></li>
             <li><Link to="/user/social" className={currentPath === "/user/social" ? "active" : ""}>Community Social</Link></li>
             <li><Link to="/user/tests" className={currentPath === "/user/tests" ? "active" : ""}>Mental Tests</Link></li>
+            <li><Link to="/user/quizs" className={currentPath === "/user/quizs" ? "active" : ""}>Quiz</Link></li>
+
+            
+
             <li>
               <Link
                 to="/user/chat/list"
