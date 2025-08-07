@@ -43,6 +43,8 @@ import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreat
 import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
 import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
 import QuizForm from '../components/QuizPage/QuizForm.jsx';
+import QuizResultForm from '../components/QuizPage/CreateResultForQuiz.jsx';
+import DoQuizForm from '../components/QuizPage/DoQuizForm.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -136,11 +138,13 @@ const Router = [
           { path: 'history', element: <DiaryHistoryPage /> },
           { path: 'mood-history', element: <MoodHistoryPage /> },
           { path: 'doTest/:testId', element: <DoTestForm /> },
+          { path: 'doQuiz/:quizId', element: <DoQuizForm/>},
 
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
+          
 
         ],
       },
@@ -181,7 +185,9 @@ const Router = [
           { path: 'test/testResult/create', element: <TestResultForm /> },
           { path: 'test/doTest', element: <DoTestForm /> },
           { path: 'question/create', element: <CreateQuestionForm />},
-          { path: 'quiz/create', element: <QuizForm />}
+          { path: 'quiz/create', element: <QuizForm />},
+          { path: 'quiz/quizResult/create', element: <QuizResultForm/>},
+          
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

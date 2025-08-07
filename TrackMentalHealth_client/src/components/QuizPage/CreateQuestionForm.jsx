@@ -78,7 +78,7 @@ const CreateQuestionForm = () => {
             }),
     });
 
-    const fetchTopic = async() => {
+    const fetchTopic = async () => {
         const data = await axios.get("http://localhost:9999/api/topic");
         console.log(data)
         setTopic(data.data);
@@ -86,7 +86,7 @@ const CreateQuestionForm = () => {
     useEffect(() => {
         fetchTopic();
     }, [])
-    
+
 
     return (
         <div className="container mt-4">
@@ -95,7 +95,7 @@ const CreateQuestionForm = () => {
                 initialValues={{
                     content: '',
                     type: '',
-                    topicID: null,
+                    topicID: '',
                     options: [],
                 }}
                 validationSchema={validationSchema}
@@ -153,7 +153,7 @@ const CreateQuestionForm = () => {
                             />
                         </div>
 
-                         <div className="mb-3">
+                        <div className="mb-3">
                             <label>Question Topic</label>
                             <Field
                                 as="select"
@@ -161,14 +161,11 @@ const CreateQuestionForm = () => {
                                 className="form-select"
                                 // onChange={(e) => {
                                 //     const topicID = e.target.value;
-                                //     const topic = {
-                                //         "id": topicID
-                                //     }
-                                //     setFieldValue('topic', topic);
+                                //     setFieldValue('topicID', topicID);
                                 // }}
                             >
                                 {/* <option value="">Select topic</option> */}
-                                {topic&&topic.map((q) => (
+                                {topic && topic.map((q) => (
                                     <option key={q.id} value={q.id}>
                                         {q.name}
                                     </option>
@@ -189,7 +186,7 @@ const CreateQuestionForm = () => {
                                             type="button"
                                             className="mb-2"
                                             onClick={() => {
-                                                const base = { content: '' };
+                                                const base = { content: '', score: 0 };
                                                 if (values.type === 'SCORE_BASED') {
                                                     base.score = 0;
                                                 } else {
@@ -222,11 +219,18 @@ const CreateQuestionForm = () => {
                                                     type="checkbox"
                                                     label="Correct Answer"
                                                     checked={opt.correct}
-                                                    onChange={(e) =>
+                                                    onChange={(e) => {
                                                         setFieldValue(
                                                             `options[${index}].correct`,
                                                             e.target.checked
                                                         )
+                                                        if (e.target.checked) {
+                                                            setFieldValue(`options[${index}].score`, 1);
+                                                        } else {
+                                                            setFieldValue(`options[${index}].score`, 0)
+                                                        }
+
+                                                    }
                                                     }
                                                 />
                                             )}
@@ -238,10 +242,13 @@ const CreateQuestionForm = () => {
                                                     label="Correct Answer"
                                                     checked={opt.correct}
                                                     onChange={() => {
-                                                        values.options.forEach((_, i) =>
-                                                            setFieldValue(`options[${i}].correct`, false)
+                                                        values.options.forEach((_, i) => {
+                                                            setFieldValue(`options[${i}].correct`, false);
+                                                            setFieldValue(`options[${i}].score`, 0); // 
+                                                        }
                                                         );
                                                         setFieldValue(`options[${index}].correct`, true);
+                                                        setFieldValue(`options[${index}].score`, 1); // ✅ set điểm cho đáp án được chọn
                                                     }}
                                                 />
                                             )}
@@ -307,8 +314,8 @@ const CreateQuestionForm = () => {
                                             {values.type === 'SCORE_BASED'
                                                 ? `→ Score: ${opt.score}`
                                                 : opt.correct
-                                                ? '✔ Correct'
-                                                : ''}
+                                                    ? '✔ Correct'
+                                                    : ''}
                                         </li>
                                     ))}
                                 </ul>
