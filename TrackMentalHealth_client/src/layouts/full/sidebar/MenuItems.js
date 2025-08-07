@@ -178,7 +178,7 @@ const getMenuItemsByRole = (role) => {
   const MenuitemsContentCreator = [
     {
       id: uniqueId(),
-      title: 'Create Lesson',
+      title: 'Manage Lesson',
       icon: IconBook, // 📖 Biểu tượng bài học
       href: '/contentCreator/lesson',
     },
