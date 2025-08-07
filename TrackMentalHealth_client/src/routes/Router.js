@@ -45,6 +45,7 @@ import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
 import QuizForm from '../components/QuizPage/QuizForm.jsx';
 import QuizResultForm from '../components/QuizPage/CreateResultForQuiz.jsx';
 import DoQuizForm from '../components/QuizPage/DoQuizForm.jsx';
+import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -60,7 +61,6 @@ const Register = Loadable(lazy(() => import('../views/authentication/Register'))
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../components/userPage/HomePage.jsx')));
 const AboutUs = Loadable(lazy(() => import('../components/userPage/AboutSection.jsx')));
-const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const ImportTestPage = Loadable(lazy(() => import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const TestListPage = Loadable(lazy(() => import('../components/testPage/TestList.jsx')))
@@ -126,6 +126,7 @@ const Router = [
       { path: 'social', element: <SocialPage /> },
       { path: 'aboutUs', element: <AboutUs /> },
       { path: 'tests', element: <TestListForUser /> },
+      { path: 'quizs', element: <QuizListForUser /> },
       { path: 'lesson', element: <LessonManager /> },
       { path: 'artical', element: <ArticleManager /> },
       { path: 'exercise', element: <ExerciseManager /> },
@@ -139,6 +140,7 @@ const Router = [
           { path: 'mood-history', element: <MoodHistoryPage /> },
           { path: 'doTest/:testId', element: <DoTestForm /> },
           { path: 'doQuiz/:quizId', element: <DoQuizForm/>},
+          
 
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
