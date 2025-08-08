@@ -88,20 +88,25 @@ const ArticleListForCreator = () => {
           >
             View
           </Link>
-          <Link
-            to={`/auth/article/edit/${row.id}`}
-            state={{ article: row }}
-            className="btn btn-sm btn-outline-secondary"
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            Edit
-          </Link>
+    
+          {/* Chỉ hiện Edit nếu status chưa phải true */}
+          {row.status !== 'true' && row.status !== true && (
+            <Link
+              to={`/auth/article/edit/${row.id}`}
+              state={{ article: row }}
+              className="btn btn-sm btn-outline-secondary"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Edit
+            </Link>
+          )}
         </div>
       ),
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
     },
+    
   ];
 
   return (

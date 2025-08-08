@@ -116,19 +116,23 @@ const ExerciseListForCreator = () => {
           >
             View
           </Link>
-          <Link
-            to={`/auth/exercise/edit/${row.id}`}
-            state={{ exercise: row }}
-            className="btn btn-sm btn-outline-secondary"
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            Edit
-          </Link>
+    
+          {/* Chỉ hiện Edit nếu chưa public */}
+          {row.status !== 'true' && (
+            <Link
+              to={`/auth/exercise/edit/${row.id}`}
+              state={{ exercise: row }}
+              className="btn btn-sm btn-outline-secondary"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Edit
+            </Link>
+          )}
         </div>
       ),
       ignoreRowClick: true,
       button: true,
-    },
+    },    
   ];
 
   return (

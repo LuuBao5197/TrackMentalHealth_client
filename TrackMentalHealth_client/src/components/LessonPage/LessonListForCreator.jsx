@@ -91,19 +91,24 @@ const LessonListForCreator = () => {
           >
             View
           </Link>
-          <Link
-            to={`/auth/lesson/edit/${row.id}`}
-            state={{ lesson: row }}
-            className="btn btn-sm btn-outline-secondary"
-          >
-            Edit
-          </Link>
+    
+          {/* Chỉ hiển thị nút Edit nếu status !== 'true' */}
+          {row.status !== 'true' && (
+            <Link
+              to={`/auth/lesson/edit/${row.id}`}
+              state={{ lesson: row }}
+              className="btn btn-sm btn-outline-secondary"
+            >
+              Edit
+            </Link>
+          )}
         </div>
       ),
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
     },
+    
   ];
 
   return (
