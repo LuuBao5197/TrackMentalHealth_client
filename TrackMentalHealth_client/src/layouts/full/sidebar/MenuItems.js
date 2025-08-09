@@ -47,6 +47,24 @@ const getMenuItemsByRole = (role) => {
     },
     {
       id: uniqueId(),
+      title: 'Lesson Approval',
+      icon: IconPercentage,
+      href: '/lesson',
+    },
+    {
+      id: uniqueId(), 
+      title: 'Article Approval',
+      icon: IconPercentage,
+      href: '/article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Exericse Approval',
+      icon: IconPercentage,
+      href: '/exercise',
+    },
+    {
+      id: uniqueId(),
       title: 'Approval Thresholds ',
       icon: IconPercentage,
       href: '/ui/typography',
