@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import CKEditorComponent from '../../utils/ckeditor/CkEditorComponent'
 const questionTypes = [
     { value: '', label: 'All Types' },
     { value: 'MULTI_CHOICE', label: 'Multiple Choice' },
@@ -36,7 +36,7 @@ const QuizForm = () => {
                 topicId: searchParams.topicId,
                 type: searchParams.type,
                 page: searchParams.page,
-                size: 5
+                size: 4
             }
         });
         setQuestions(res.data.content);
@@ -47,17 +47,30 @@ const QuizForm = () => {
         const res = await axios.get('http://localhost:9999/api/topic');
         setTopics(res.data);
     };
-
-    const toggleQuestion = (id) => {
-        setSelectedQuestions((prev) =>
-            prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]
-        );
+    const toggleQuestion = (id, setFieldValue) => {
+        setSelectedQuestions((prev) => {
+            const newSelection = prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id];
+            setFieldValue('selectedQuestionIds', newSelection);
+            return newSelection;
+        });
     };
+
 
     const schema = Yup.object().shape({
         title: Yup.string().required('Title is required'),
         timeLimit: Yup.number().min(1, 'Minimum 1 minute').required('Time is required'),
         description: Yup.string().required('Description is required'),
+        numberOfQuestions: Yup.number()
+            .required('Required')
+            .min(1, 'At least 1 question')
+            .test(
+                'max-questions',
+                'Must be less than or equal to the number of selected questions',
+                function (value) {
+                    const { selectedQuestionIds } = this.parent;
+                    return (!selectedQuestionIds) || value <= selectedQuestionIds.length;
+                }
+            )
     });
 
     return (
@@ -65,14 +78,15 @@ const QuizForm = () => {
             {/* {console.log(questions)} */}
             <h3>Create New Quiz</h3>
             <Formik
-                initialValues={{ title: '', timeLimit: '', description: '', selectedQuestionIds: [] }}
+                initialValues={{ title: '', timeLimit: '', description: '', numberOfQuestions: 0, selectedQuestionIds: [] }}
                 validationSchema={schema}
                 onSubmit={async (values, { setSubmitting }) => {
                     const payload = {
                         title: values.title,
                         timeLimit: values.timeLimit,
                         description: values.description,
-                        questionIds: selectedQuestions
+                        questionIds: selectedQuestions,
+                        numberOfQuestions: values.numberOfQuestions
                     };
 
                     try {
@@ -100,11 +114,23 @@ const QuizForm = () => {
                             <Field name="timeLimit" type="number" className="form-control" />
                             <ErrorMessage name="timeLimit" component="div" className="text-danger" />
                         </div>
-                        <div className="mb-3">
+                        {/* <div className="mb-3">
                             <label className="form-label">Description</label>
-                            <Field name="description" className="form-control" />
+                            <Field name="description" className="form-control" component />
                             <ErrorMessage name="description" component="div" className="text-danger" />
+                        </div> */}
+                        <Field
+                            name="description"
+                            component={CKEditorComponent}
+                            label="Giới thiệu ngắn"
+                            placeholder="Viết giới thiệu ngắn..."
+                        />
+                        <div className="mb-3">
+                            <label className="form-label">Number of Questions to Show</label>
+                            <Field name="numberOfQuestions" type="number" className="form-control" />
+                            <ErrorMessage name="numberOfQuestions" component="div" className="text-danger" />
                         </div>
+
 
                         {/* FILTERS */}
                         <div className="border rounded p-3 mb-3">
@@ -161,7 +187,7 @@ const QuizForm = () => {
                                         type="checkbox"
                                         className="form-check-input"
                                         checked={selectedQuestions.includes(q.id)}
-                                        onChange={() => toggleQuestion(q.id)}
+                                        onChange={() => toggleQuestion(q.id, setFieldValue)}
                                     />
                                     <label className="form-check-label">
                                         {q.content} ({q.topicName}) - {q.type}

@@ -9,12 +9,16 @@ import RecentTransactions from './components/RecentTransactions';
 import ProductPerformance from './components/ProductPerformance';
 import Blog from './components/Blog';
 import MonthlyEarnings from './components/MonthlyEarnings';
+import AdminStatisticsCard from './components/AdminStatisticsCard';
 
 
 const Dashboard = () => {
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box>
+        <Grid item xs={12}>
+        < AdminStatisticsCard /> {/* Thêm vào vị trí bạn muốn */}
+        </Grid>
         <Grid container spacing={3}>
           <Grid item xs={12} lg={8}>
             <SalesOverview />

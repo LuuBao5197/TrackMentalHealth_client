@@ -19,8 +19,15 @@ import CallSignalListener from '../../components/chatPage/chatvideo/CallSignalLi
 
 
 const UserLayout = () => {
-  const [headerHeight, setHeaderHeight] = useState(0);
+  // Thêm class vào body
   const userRole = useSelector((state) => state.auth.user);
+
+  if (userRole) {
+  localStorage.setItem('currentUserId',userRole.userId);
+  }
+
+  
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   useEffect(() => {
     document.body.classList.add('index-page');

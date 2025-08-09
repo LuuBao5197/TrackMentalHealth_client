@@ -1,41 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import { format } from 'date-fns';
+import Swal from 'sweetalert2';
 
-const LessonListForCreator = () => {
+const LessonApprovalForAdmin = () => {
   const [lessons, setLessons] = useState([]);
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    let userId = null;
+    loadLessons();
+  }, []);
 
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        userId = decoded.contentCreatorId;
-      } catch (error) {
-        console.error('Invalid token:', error);
-        return;
-      }
-    }
-
-    if (!userId) {
-      console.error('contentCreatorId not found in token.');
-      return;
-    }
-
+  const loadLessons = () => {
     axios
-      .get(`http://localhost:9999/api/lesson/creator/${userId}`)
+      .get(`http://localhost:9999/api/lesson`) // Admin lấy tất cả lesson
       .then((response) => {
-        console.log('Lessons data:', response.data); // Debug: Check the data
         setLessons(response.data);
       })
       .catch((error) => console.error('Error loading lessons:', error));
-  }, []);
+  };
+
+  const approveLesson = (id) => {
+    Swal.fire({
+      title: 'Approve this lesson?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, approve it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios
+          .put(`http://localhost:9999/api/lesson/${id}/approve`) // Backend đổi status thành true
+          .then(() => {
+            Swal.fire('Approved!', 'Lesson has been approved.', 'success');
+            loadLessons();
+          })
+          .catch((error) => {
+            console.error('Error approving lesson:', error);
+            Swal.fire('Error', 'Could not approve lesson.', 'error');
+          });
+      }
+    });
+  };
 
   const filteredLessons = lessons.filter((lesson) =>
     lesson.title?.toLowerCase().includes(searchText.toLowerCase())
@@ -54,13 +60,9 @@ const LessonListForCreator = () => {
       width: '100px',
     },
     { name: 'Title', selector: (row) => row.title, sortable: true },
-    {
-      name: 'Category',
-      selector: (row) => row.category || 'Uncategorized', // Should display "aaa" if present
-    },
+    { name: 'Category', selector: (row) => row.category || 'Uncategorized' },
     {
       name: 'Status',
-      selector: (row) => (row.status === 'true' ? 'Active' : 'Inactive'),
       cell: (row) => (
         <span
           className={`badge ${row.status === 'true' ? 'bg-success' : 'bg-secondary'}`}
@@ -71,13 +73,11 @@ const LessonListForCreator = () => {
     },
     {
       name: 'Created At',
-      selector: (row) => row.createdAt,
       cell: (row) => format(new Date(row.createdAt), 'dd/MM/yyyy HH:mm'),
       sortable: true,
     },
     {
       name: 'Updated At',
-      selector: (row) => row.updatedAt,
       cell: (row) => format(new Date(row.updatedAt), 'dd/MM/yyyy HH:mm'),
       sortable: true,
     },
@@ -85,22 +85,21 @@ const LessonListForCreator = () => {
       name: 'Actions',
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
-          <Link
-            to={`/auth/lesson/${row.id}`}
+          <button
+            onClick={() => window.location.href = `/TrackMentalHealth/auth/lesson/${row.id}`}
             className="btn btn-sm btn-outline-primary"
           >
             View
-          </Link>
-    
-          {/* Chỉ hiển thị nút Edit nếu status !== 'true' */}
+          </button>
+
+          {/* Chỉ hiển thị nút Approve nếu chưa duyệt */}
           {row.status !== 'true' && (
-            <Link
-              to={`/auth/lesson/edit/${row.id}`}
-              state={{ lesson: row }}
-              className="btn btn-sm btn-outline-secondary"
+            <button
+              onClick={() => approveLesson(row.id)}
+              className="btn btn-sm btn-outline-success"
             >
-              Edit
-            </Link>
+              Approve
+            </button>
           )}
         </div>
       ),
@@ -108,14 +107,12 @@ const LessonListForCreator = () => {
       allowOverflow: true,
       button: true,
     },
-    
   ];
 
   return (
     <div className="container mt-5">
-      <h2 className="mb-3">List of Lessons You Have Created</h2>
+      <h2 className="mb-3">Lesson Approval</h2>
 
-      {/* Search box */}
       <div className="mb-3">
         <input
           type="text"
@@ -140,4 +137,4 @@ const LessonListForCreator = () => {
   );
 };
 
-export default LessonListForCreator;
+export default LessonApprovalForAdmin;
