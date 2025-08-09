@@ -46,6 +46,9 @@ import QuizForm from '../components/QuizPage/QuizForm.jsx';
 import QuizResultForm from '../components/QuizPage/CreateResultForQuiz.jsx';
 import DoQuizForm from '../components/QuizPage/DoQuizForm.jsx';
 import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
+import LessonApprovalForAdmin from '../components/LessonPage/LessonApprovalForAdmin.jsx';
+import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalForAdmin.jsx';
+import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -103,6 +106,10 @@ const Router = [
       {
         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
         children: [
+          { path: 'lesson', element: <LessonApprovalForAdmin /> },
+          { path: 'article', element: <ArticleApprovalForAdmin /> },
+          { path: 'exercise', element: <ExerciseApprovalForAdmin /> },
+
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
           { path: 'icons', element: <Icons /> },
