@@ -83,3 +83,40 @@
 }
 
 
+
+.call-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 9999;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.btn-group {
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+}
+
+.btn-accept, .btn-decline, .btn-cancel {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-accept {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-decline, .btn-cancel {
+  background-color: #dc3545;
+  color: white;
+}
