@@ -5,7 +5,7 @@ import axios from 'axios';
 import { Card, Button, Form as BootstrapForm } from 'react-bootstrap';
 import CKEditorComponent from '../../utils/ckeditor/CkEditorComponent';
 import CkeditorPreview from '../../utils/ckeditor/CkEditorPreview';
-
+import { showAlert } from '../../utils/showAlert';
 const questionTypes = [
     { value: 'MULTI_CHOICE', label: 'Multiple Choice (many correct)' },
     { value: 'SINGLE_CHOICE', label: 'Single Choice (one correct)' },
@@ -35,7 +35,7 @@ const CreateQuestionForm = () => {
                 is: 'MATCHING',
                 then: (schema) =>
                     schema
-                        .min(1, 'At least one matching pair is required')
+                        .min(2, 'At least two matching pair is required')
                         .of(
                             Yup.object({
                                 leftItem: Yup.string().required('Left item is required'),
@@ -125,7 +125,6 @@ const CreateQuestionForm = () => {
                                 opts?.some((opt) => opt.correct === true) && uniqueContents.size === opts.length
 
                             )
-
                         }
                         ),
             })
@@ -159,8 +158,8 @@ const CreateQuestionForm = () => {
                 onSubmit={async (values, { resetForm }) => {
                     console.log(values);
                     try {
-                        // await axios.post('http://localhost:9999/api/questions', values);
-                        alert('Question created successfully');
+                        await axios.post('http://localhost:9999/api/questions', values);
+                        showAlert('Question created successfully');
                         resetForm();
                         setPreview(null);
                     } catch (err) {
@@ -261,7 +260,7 @@ const CreateQuestionForm = () => {
                                 ))}
                             </Field>
                             <ErrorMessage
-                                name="type"
+                                name="difficulty"
                                 component="div"
                                 className="text-danger"
                             />
