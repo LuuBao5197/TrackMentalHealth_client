@@ -1,38 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import { format } from 'date-fns';
+import Swal from 'sweetalert2';
 
-const ExerciseListForCreator = () => {
+const ExerciseApprovalForAdmin = () => {
   const [exercises, setExercises] = useState([]);
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    let userId = null;
+    loadExercises();
+  }, []);
 
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        userId = decoded.contentCreatorId;
-      } catch (error) {
-        console.error('Invalid token:', error);
-        return;
-      }
-    }
-
-    if (!userId) {
-      console.error('contentCreatorId not found in token.');
-      return;
-    }
-
+  const loadExercises = () => {
     axios
-      .get(`http://localhost:9999/api/exercise/creator/${userId}`)
+      .get(`http://localhost:9999/api/exercise/`) // Admin lấy tất cả exercise
       .then((response) => setExercises(response.data))
       .catch((error) => console.error('Failed to load exercise list:', error));
-  }, []);
+  };
+
+  const approveExercise = (id) => {
+    Swal.fire({
+      title: 'Approve this exercise?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, approve it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios
+          .put(`http://localhost:9999/api/exercise/${id}/approve`) // API duyệt
+          .then(() => {
+            Swal.fire('Approved!', 'Exercise has been approved.', 'success');
+            loadExercises();
+          })
+          .catch((error) => {
+            console.error('Error approving exercise:', error);
+            Swal.fire('Error', 'Could not approve exercise.', 'error');
+          });
+      }
+    });
+  };
 
   const filteredExercises = exercises.filter((exercise) =>
     exercise.title?.toLowerCase().includes(searchText.toLowerCase())
@@ -43,7 +50,11 @@ const ExerciseListForCreator = () => {
       name: 'Image',
       cell: (row) => (
         <img
-          src={row.photo?.startsWith('http') ? row.photo : '/assets/img/default-exercise.webp'}
+          src={
+            row.photo?.startsWith('http')
+              ? row.photo
+              : '/assets/img/default-exercise.webp'
+          }
           alt={row.title}
           style={{
             width: 80,
@@ -60,20 +71,19 @@ const ExerciseListForCreator = () => {
       selector: (row) => row.title,
       sortable: true,
       cell: (row) => (
-        <div style={{
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          maxWidth: 250,
-        }}>
+        <div
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 250,
+          }}
+        >
           {row.title}
         </div>
       ),
     },
-    {
-      name: 'Type',
-      selector: (row) => row.mediaType || 'Unknown',
-    },
+    { name: 'Type', selector: (row) => row.mediaType || 'Unknown' },
     {
       name: 'Duration',
       selector: (row) =>
@@ -83,63 +93,57 @@ const ExerciseListForCreator = () => {
     },
     {
       name: 'Status',
-      selector: (row) =>
-        row.status === 'true' || row.status === true ? 'Active' : 'Inactive',
       cell: (row) => (
         <span
-          className={`badge ${row.status === 'true' || row.status === true
-            ? 'bg-success'
-            : 'bg-secondary'
-            }`}
+          className={`badge ${
+            row.status === 'true' || row.status === true
+              ? 'bg-success'
+              : 'bg-secondary'
+          }`}
         >
-          {row.status === 'true' || row.status === true ? 'Active' : 'Inactive'}
+          {row.status === 'true' || row.status === true
+            ? 'Active'
+            : 'Inactive'}
         </span>
       ),
     },
     {
       name: 'Created At',
-      selector: (row) => row.createdAt,
       cell: (row) =>
-        row.createdAt
-          ? format(new Date(row.createdAt), 'dd/MM/yyyy HH:mm')
-          : '',
+        row.createdAt ? format(new Date(row.createdAt), 'dd/MM/yyyy HH:mm') : '',
       sortable: true,
     },
     {
       name: 'Actions',
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
-          <Link
-            to={`/auth/exercise/${row.id}`}
+          <button
+            onClick={() => (window.location.href = `/TrackMentalHealth/auth/exercise/${row.id}`)}
             className="btn btn-sm btn-outline-primary"
-            style={{ whiteSpace: 'nowrap' }}
           >
             View
-          </Link>
-    
-          {/* Chỉ hiện Edit nếu chưa public */}
-          {row.status !== 'true' && (
-            <Link
-              to={`/auth/exercise/edit/${row.id}`}
-              state={{ exercise: row }}
-              className="btn btn-sm btn-outline-secondary"
-              style={{ whiteSpace: 'nowrap' }}
+          </button>
+
+          {/* Chỉ hiện Approve nếu chưa public */}
+          {row.status !== 'true' && row.status !== true && (
+            <button
+              onClick={() => approveExercise(row.id)}
+              className="btn btn-sm btn-outline-success"
             >
-              Edit
-            </Link>
+              Approve
+            </button>
           )}
         </div>
       ),
       ignoreRowClick: true,
       button: true,
-    },    
+    },
   ];
 
   return (
     <div className="container mt-5">
-      <h2 className="mb-3">List of Exercises You Have Created</h2>
+      <h2 className="mb-3">🏋️ Exercise Approval</h2>
 
-      {/* Search box */}
       <div className="mb-3">
         <input
           type="text"
@@ -164,4 +168,4 @@ const ExerciseListForCreator = () => {
   );
 };
 
-export default ExerciseListForCreator;
+export default ExerciseApprovalForAdmin;
