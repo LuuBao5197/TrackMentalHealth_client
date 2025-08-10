@@ -12,13 +12,14 @@ const questionTypes = [
     { value: 'TEXT_INPUT', label: 'Text Input (user must type answer)' },
     { value: 'SCORE_BASED', label: 'Score Based (each option has a point)' },
     { value: 'MATCHING', label: 'MATCHING (no option but have left and right item)' },
+    { value: 'ORDERING', label: 'ORDERING (arrange items in correct orderm' },
+
 ];
 
 const difficulty = [
     { value: 'EASY', label: 'EASY QUESTION' },
     { value: 'MEDIUM', label: 'MEDIUM QUESTION' },
     { value: 'HARD', label: 'HARD QUESTION' }
-
 ]
 
 const CreateQuestionForm = () => {
@@ -30,6 +31,13 @@ const CreateQuestionForm = () => {
         type: Yup.string().required('Please select question type'),
         topicID: Yup.string().required('Please select question topic'),
         difficulty: Yup.string().required("Please select question difficulity"),
+        score: Yup.number()
+        .when('type', {
+            is:  (val) => val !== 'SCORE_BASED',
+            then: (schema) => 
+                schema.min(1, "At least one score")
+            .required("Score of question must be input")
+        }),
         matchingItems: Yup.array()
             .when('type', {
                 is: 'MATCHING',
@@ -127,7 +135,24 @@ const CreateQuestionForm = () => {
                             )
                         }
                         ),
-            })
+            }),
+        orderingItems: Yup.array().when('type', {
+            is: 'ORDERING',
+            then: schema => schema
+                .min(2, 'At least two ordering items required')
+                .of(
+                    Yup.object({
+                        content: Yup.string().required('Item content is required'),
+                        // id optional
+                    })
+                )
+                .test('unique-content', 'Items must be unique', items => {
+                    if (!Array.isArray(items)) return false;
+                    const contents = items.map(i => (i.content || '').trim().toLowerCase());
+                    return new Set(contents).size === contents.length;
+                })
+        })
+
 
     });
 
@@ -150,20 +175,30 @@ const CreateQuestionForm = () => {
                     type: '',
                     difficulty: '',
                     topicID: '',
+                    score: '',
                     options: [],
                     matchingItems: [],
+                    orderingItems: []
 
                 }}
                 validationSchema={validationSchema}
                 onSubmit={async (values, { resetForm }) => {
-                    console.log(values);
+                    const payload = {
+                        ...values,
+                        orderingItems: (values.orderingItems || []).map((it, idx) => ({
+                            id: it.id ?? null,
+                            content: it.content,
+                            correctOrder: idx + 1
+                        }))
+                    };
+                    console.log(payload);
                     try {
-                        await axios.post('http://localhost:9999/api/questions', values);
+                        await axios.post('http://localhost:9999/api/questions', payload);
                         showAlert('Question created successfully');
                         resetForm();
                         setPreview(null);
                     } catch (err) {
-                        alert('Error creating question');
+                        showAlert('Error creating question', 'error');
                     }
                 }}
             >
@@ -277,7 +312,7 @@ const CreateQuestionForm = () => {
                             </div>}
 
 
-                        {values.type !== 'MATCHING' &&
+                        {values.type !== 'MATCHING' && values.type !== 'ORDERING' &&
                             <FieldArray name="options">
                                 {({ push, remove }) => (
                                     <div className="mb-3">
@@ -453,6 +488,70 @@ const CreateQuestionForm = () => {
                             </FieldArray>
                         )}
 
+                        {values.type === 'ORDERING' && (
+                            <FieldArray name="orderingItems">
+                                {({ push, remove, move }) => (
+                                    <div className="mb-3">
+                                        <Button
+                                            type="button"
+                                            className="mb-2"
+                                            onClick={() => push({ id: null, content: '' })}
+                                        >
+                                            Add Item
+                                        </Button>
+
+                                        {values.orderingItems?.map((item, index) => (
+                                            <Card key={index} className="mb-2 p-3">
+                                                <div className="mb-2">
+                                                    <label>Item Content</label>
+                                                    <Field
+                                                        name={`orderingItems[${index}].content`}
+                                                        className="form-control"
+                                                    />
+                                                    <ErrorMessage
+                                                        name={`orderingItems[${index}].content`}
+                                                        component="div"
+                                                        className="text-danger"
+                                                    />
+                                                </div>
+
+                                                <div className="d-flex gap-2">
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        disabled={index === 0}
+                                                        onClick={() => move(index, index - 1)}
+                                                    >
+                                                        ↑
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        disabled={index === values.orderingItems.length - 1}
+                                                        onClick={() => move(index, index + 1)}
+                                                    >
+                                                        ↓
+                                                    </Button>
+
+                                                    <Button
+                                                        type="button"
+                                                        variant="danger"
+                                                        size="sm"
+                                                        onClick={() => remove(index)}
+                                                    >
+                                                        Remove
+                                                    </Button>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                         {touched.orderingItems && typeof errors.orderingItems === 'string' && (
+                                            <div className="text-danger">{errors.orderingItems}</div>
+                                        )}
+                                    </div>
+                                )}
+                            </FieldArray>
+                        )}
+
 
 
                         <div className="d-flex gap-2">
@@ -466,7 +565,7 @@ const CreateQuestionForm = () => {
                             </Button>
                         </div>
 
-                        {preview && values.type !== "MATCHING" && (
+                        {preview && values.type !== "MATCHING" && values.type !== 'ORDERING' && (
 
                             <Card className="mt-4 p-3">
                                 <h5>Preview</h5>
@@ -505,6 +604,19 @@ const CreateQuestionForm = () => {
                             </Card>
 
                         )}
+
+                        {preview && values.type === 'ORDERING' && (
+                            <Card className="mt-4 p-3">
+                                <h5>Preview</h5>
+                                <p><strong>Question:</strong> <CkeditorPreview htmlContent={preview.content} /></p>
+                                <ol>
+                                    {(preview.orderingItems ?? []).map((it, idx) => (
+                                        <li key={idx}>{it.content}</li>
+                                    ))}
+                                </ol>
+                            </Card>
+                        )}
+
 
                     </Form>
                 )}
