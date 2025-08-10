@@ -43,6 +43,7 @@ import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreat
 import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
 import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
 import QuizForm from '../components/QuizPage/QuizForm.jsx';
+import VideoCall from '../components/chatPage/chatvideo/VideoCall.jsx';
 import QuizResultForm from '../components/QuizPage/CreateResultForQuiz.jsx';
 import DoQuizForm from '../components/QuizPage/DoQuizForm.jsx';
 import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
@@ -74,6 +75,11 @@ const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/News
 const Router = [
 
   {
+    path: 'user/video-call/:sessionId',
+    element: <VideoCall />,
+  },
+
+  {
     path: '/auth',
     element: <BlankLayout />,
     children: [
@@ -92,7 +98,6 @@ const Router = [
       { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
       { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
-
     ],
   },
 
@@ -174,6 +179,7 @@ const Router = [
           { path: 'chat/ai', element: <ChatWithAI /> },
           { path: 'chat/:sessionId', element: <ChatWithUser /> },
           { path: 'chat/group/:groupId', element: <ChatGroup /> },
+          // { path: 'video-call/:sessionId', element: <VideoCall /> },
         ],
       },
     ],
