@@ -1,12 +1,12 @@
-// CallSignalListener.jsx
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
+import { connectWebSocket, sendCallSignal } from '../../../services/stompClient';
 
 const CallSignalListener = ({ sessionId }) => {
   const navigate = useNavigate();
-  const currentUserId = getCurrentUserId(); 
+  const currentUserId = getCurrentUserId();
 
   useEffect(() => {
     if (!sessionId || !currentUserId) return;
@@ -16,6 +16,7 @@ const CallSignalListener = ({ sessionId }) => {
       callId: sessionId,
       onCallSignal: (signal) => {
         console.log("📞 Nhận tín hiệu call:", signal);
+
         switch (signal.type) {
           case "CALL_REQUEST":
             if (signal.callerId !== currentUserId) {
@@ -64,15 +65,18 @@ const CallSignalListener = ({ sessionId }) => {
             break;
 
           case "CALL_REJECTED":
-            toast.warning("📵 Cuộc gọi đã bị từ chối");
+            toast.warning("📵 Call was rejected");
+            break;
+
+          case "CALL_ENDED":
+            toast.info("Call ended");
+            navigate(`/user/chat/${sessionId}`);
             break;
         }
       }
     });
 
-    return () => {
-      if (disconnect) disconnect();
-    };
+    return () => disconnect && disconnect();
   }, [sessionId, currentUserId]);
 
   return null;

@@ -8,7 +8,6 @@ import {
     MessageList,
     MinChatUiProvider
 } from "@minchat/react-chat-ui";
-
 import {
     connectWebSocket,
     sendWebSocketMessage,
@@ -17,23 +16,21 @@ import {
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
 import CallManager from "./CallManager";
-import { ToastContainer } from "react-toastify";
-import { toast } from 'react-toastify';
-
+import { ToastContainer, toast } from "react-toastify";
+import ToastTypes, { showToast } from "../../utils/showToast";
 
 function ChatWithUser() {
     const currentUserId = parseInt(getCurrentUserId());
+    const [currentUserName, setCurrentUserName] = useState("USER");
     const { sessionId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+
     const preloadedReceiver = location.state?.receiver;
 
     const [messages, setMessages] = useState([]);
     const [receiverName, setReceiverName] = useState(preloadedReceiver?.fullname || "Đối phương");
     const [receiverId, setReceiverId] = useState(preloadedReceiver?.id || null);
-
-    // Trạng thái gọi đến
-    const [incomingCall, setIncomingCall] = useState(null); // { callerId, callerName }
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -55,6 +52,12 @@ function ChatWithUser() {
 
                     setMessages(formatted);
 
+                    // Lấy tên currentUserName
+                    const currentUserMsg = res.find(msg => msg.sender.id === currentUserId);
+                    if (currentUserMsg) {
+                        setCurrentUserName(currentUserMsg.sender.fullname || "Tôi");
+                    }
+
                     if (!receiverId) {
                         const { sender, receiver } = res[0].session;
                         const isCurrentUserSender = sender.id === currentUserId;
@@ -64,17 +67,16 @@ function ChatWithUser() {
                         setReceiverId(otherUser.id);
                     }
                 }
-            } catch (err) {
-                console.error("❌ Lỗi lấy tin nhắn:", err);
+            } catch (error) {
+                console.error("❌ Lỗi lấy tin nhắn:", error);
             }
         };
 
         fetchMessages();
 
-        // Kết nối WebSocket
         const disconnect = connectWebSocket({
             sessionId,
-            callId: sessionId, // subscribe topic call
+            callId: sessionId,
             onPrivateMessage: (msg) => {
                 if (!msg?.message || !msg?.senderId) return;
 
@@ -91,58 +93,46 @@ function ChatWithUser() {
             },
             onCallSignal: (signal) => {
                 console.log("📞 Nhận tín hiệu call:", signal);
+
                 switch (signal.type) {
                     case "CALL_REQUEST":
                         if (signal.callerId !== currentUserId) {
-                            toast.info(({ closeToast }) => (
-                                <div>
-                                    <strong>{signal.callerName}</strong> đang gọi...
-                                    <div style={{ marginTop: 10, display: "flex", gap: "8px" }}>
-                                        <button
-                                            onClick={() => {
-                                                sendCallSignal(sessionId, {
-                                                    type: "CALL_ACCEPTED",
-                                                    calleeId: currentUserId,
-                                                    sessionId
-                                                });
-                                                closeToast();
-                                                navigate(`/user/video-call/${sessionId}`);
-                                            }}
-                                            style={{ backgroundColor: "#4CAF50", color: "white", padding: "4px 10px", border: "none", borderRadius: "4px" }}
-                                        >
-                                            Chấp nhận
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                sendCallSignal(sessionId, {
-                                                    type: "CALL_REJECTED",
-                                                    calleeId: currentUserId,
-                                                    sessionId
-                                                });
-                                                closeToast();
-                                            }}
-                                            style={{ backgroundColor: "#f44336", color: "white", padding: "4px 10px", border: "none", borderRadius: "4px" }}
-                                        >
-                                            Từ chối
-                                        </button>
-                                    </div>
-                                </div>
-                            ), {
-                                position: "top-center",
-                                autoClose: false,
-                                closeOnClick: false,
-                                draggable: false,
-                                closeButton: false
+                            showToast({
+                                message: `Cuộc gọi từ ${signal.callerName} đang đến...`,
+                                type: ToastTypes.INFO,
+                                time: 15000,
+                                showCallButtons: true,
+                                onAccept: () => {
+                                    // Xử lý khi nhấn Accept, ví dụ gọi API đồng ý, chuyển trang...
+                                    console.log("Đã chấp nhận cuộc gọi");
+                                    navigate(`/user/video-call/${sessionId}`);
+                                },
+                                onCancel: () => {
+                                    // Xử lý khi nhấn Cancel
+                                    console.log("Đã từ chối cuộc gọi");
+                                    // gửi tín hiệu hủy cuộc gọi hoặc thông báo server...
+                                }
                             });
+
                         }
                         break;
 
                     case "CALL_ACCEPTED":
-                        navigate(`/user/video-call/${sessionId}`);
+                        navigate(`/user/video-call/${sessionId}`, {
+                            state: {
+                                callId: sessionId,
+                                callerId: currentUserId,
+                                receiverId
+                            }
+                        });
                         break;
 
                     case "CALL_REJECTED":
-                        toast.warning("📵 Cuộc gọi đã bị từ chối");
+                        showToast({
+                            message: "Cuộc gọi đã bị từ chối",
+                            type: ToastTypes.WARNING,
+                            autoClose: 3000
+                        });
                         break;
 
                     default:
@@ -170,39 +160,22 @@ function ChatWithUser() {
             message: text,
             session: { id: sessionId }
         };
-        console.log("📨 Sending message:", messageObj);
-
         sendWebSocketMessage(`/app/chat/${sessionId}`, messageObj);
     };
 
-    // Gọi đi
+    // 📹 Gọi đi
     const handleStartVideoCall = () => {
+        if (!sessionId) {
+            console.error("🚫 callId/sessionId is missing");
+            return;
+        }
+        navigate(`/user/video-call/${sessionId}`)
         sendCallSignal(sessionId, {
             type: "CALL_REQUEST",
             callerId: currentUserId,
-            callerName: receiverName,
+            callerName: currentUserName, // ✅ tên của mình
             sessionId
         });
-    };
-
-    // Chấp nhận cuộc gọi đến
-    const handleAcceptCall = () => {
-        sendCallSignal(sessionId, {
-            type: "CALL_ACCEPTED",
-            calleeId: currentUserId,
-            sessionId
-        });
-        navigate(`/user/video-call/${sessionId}`);
-    };
-
-    // Từ chối cuộc gọi đến
-    const handleRejectCall = () => {
-        sendCallSignal(sessionId, {
-            type: "CALL_REJECTED",
-            calleeId: currentUserId,
-            sessionId
-        });
-        setIncomingCall(null);
     };
 
     return (
@@ -264,18 +237,8 @@ function ChatWithUser() {
                 </MainContainer>
             </MinChatUiProvider>
 
-            {/* Popup báo cuộc gọi đến */}
-            {/* {incomingCall && (
-                <div className="incoming-call-popup">
-                    <p>{incomingCall.callerName} đang gọi...</p>
-                    <button onClick={handleAcceptCall}>Chấp nhận</button>
-                    <button onClick={handleRejectCall}>Từ chối</button>
-                </div>
-            )} */}
-
             <ToastContainer />
         </div>
-
     );
 }
 
