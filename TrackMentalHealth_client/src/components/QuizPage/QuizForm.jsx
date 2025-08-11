@@ -4,6 +4,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CKEditorComponent from '../../utils/ckeditor/CkEditorComponent'
+import CkeditorPreview from '../../utils/ckeditor/CkEditorPreview';
 const questionTypes = [
     { value: '', label: 'All Types' },
     { value: 'MULTI_CHOICE', label: 'Multiple Choice' },
@@ -18,7 +19,7 @@ const QuizForm = () => {
     const [topics, setTopics] = useState([]);
     const [searchParams, setSearchParams] = useState({
         keyword: '',
-        topicId: '',
+        topicId: 0,
         type: '',
         page: 0
     });
@@ -182,18 +183,36 @@ const QuizForm = () => {
                         <div className="mb-3">
                             <h5>Select Questions</h5>
                             {questions.map((q) => (
-                                <div className="form-check" key={q.id}>
-                                    <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        checked={selectedQuestions.includes(q.id)}
-                                        onChange={() => toggleQuestion(q.id, setFieldValue)}
-                                    />
-                                    <label className="form-check-label">
-                                        {q.content} ({q.topicName}) - {q.type}
-                                    </label>
+
+
+                                <div className="row align-items-start my-2" key={q.id}>
+                                    {/* Cột checkbox */}
+                                    <div className="col-auto">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input mt-1"
+                                            checked={selectedQuestions.includes(q.id)}
+                                            onChange={() => toggleQuestion(q.id, setFieldValue)}
+                                        />
+                                    </div>
+
+                                    {/* Cột nội dung */}
+                                    <div className="col">
+                                        <div>
+                                            <CkeditorPreview htmlContent={q.content} />
+                                        </div>
+                                        <div className="text-muted small">
+                                            ({q.topicName} - {q.type})
+                                        </div>
+                                    </div>
                                 </div>
+
+
+
                             ))}
+
+
+
                             {/* PAGINATION */}
                             <nav>
                                 <ul className="pagination mt-3">

@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
-    "@ckeditor/ckeditor5-react": "^11.0.0",
-    "@zegocloud/zego-uikit-prebuilt": "^2.15.1",
-    "react-loader-spinner": "^6.1.6"
-  }
-}

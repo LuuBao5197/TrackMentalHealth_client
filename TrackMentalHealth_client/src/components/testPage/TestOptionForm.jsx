@@ -1,11 +1,12 @@
 import React, { lazy, useEffect, useState } from 'react';
-import { useFormik, FormikProvider, FieldArray } from 'formik';
+import { useFormik, FormikProvider, FieldArray, Field } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import Loadable from '../../layouts/full/shared/loadable/Loadable';
 import { showAlert } from '../../utils/showAlert';
 import { showConfirm } from '../../utils/showConfirm';
+import CKEditorComponent from '../../utils/ckeditor/CkEditorComponent';
 // const OptionPage = Loadable(lazy(() => import('../testPage/ImportTestExcel')))
 
 const FullTestFormWithPreview = () => {
@@ -187,24 +188,44 @@ const FullTestFormWithPreview = () => {
           ))}
         </div>
       ) : (
-        <form onSubmit={formik.handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Tiêu đề</label>
-            <input type="text" className="form-control" name="title" value={formik.values.title} onChange={formik.handleChange} />
-            {formik.touched.title && formik.errors.title && <div className="text-danger">{formik.errors.title}</div>}
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Mô tả</label>
-            <textarea className="form-control" name="description" value={formik.values.description} onChange={formik.handleChange}></textarea>
-            {formik.touched.description && formik.errors.description && <div className="text-danger">{formik.errors.description}</div>}
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Hướng dẫn</label>
-            <textarea className="form-control" name="instructions" value={formik.values.instructions} onChange={formik.handleChange}></textarea>
-            {formik.touched.instructions && formik.errors.instructions && <div className="text-danger">{formik.errors.instructions}</div>}
-          </div>
+        <FormikProvider value={formik}>
+          <form onSubmit={formik.handleSubmit}>
+            <Field
+              name="title"
+              component={CKEditorComponent}
+              label="Title"
+              placeholder="Enter the title"
+              className="h-100"
+            />
+            {/* <div className="mb-3">
+              <label className="form-label">Tiêu đề</label>
+              <input type="text" className="form-control" name="title" value={formik.values.title} onChange={formik.handleChange} />
+              {formik.touched.title && formik.errors.title && <div className="text-danger">{formik.errors.title}</div>}
+            </div> */}
+            <Field
+              name="description"
+              component={CKEditorComponent}
+              label="Description"
+              placeholder="Enter the description"
+            />
+            {/* <div className="mb-3">
+              <label className="form-label">Mô tả</label>
+              <textarea className="form-control" name="description" value={formik.values.description} onChange={formik.handleChange}></textarea>
+              {formik.touched.description && formik.errors.description && <div className="text-danger">{formik.errors.description}</div>}
+            </div> */}
+            {/* <div className="mb-3">
+              <label className="form-label">Hướng dẫn</label>
+              <textarea className="form-control" name="instructions" value={formik.values.instructions} onChange={formik.handleChange}></textarea>
+              {formik.touched.instructions && formik.errors.instructions && <div className="text-danger">{formik.errors.instructions}</div>}
+            </div> */}
+            <Field
+              name="instructions"
+              component={CKEditorComponent}
+              label="Instructions"
+              placeholder="Enter the instructions"
+            />
 
-          <FormikProvider value={formik}>
+
             <FieldArray name="questions" render={({ push, remove }) => (
               <div>
                 {typeof formik.errors.questions === 'string' && formik.touched.questions && (
@@ -317,12 +338,13 @@ const FullTestFormWithPreview = () => {
                 </button>
               </div>
             )} />
-          </FormikProvider>
 
-          <div className="mt-4">
-            <button type="submit" className="btn btn-success">Lưu bài thi</button>
-          </div>
-        </form>
+
+            <div className="mt-4">
+              <button type="submit" className="btn btn-success">Lưu bài thi</button>
+            </div>
+          </form>
+        </FormikProvider>
       )}
     </div>
   );

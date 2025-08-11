@@ -3,7 +3,7 @@ import React from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-const CKEditorComponent = ({ field, form, label, placeholder }) => {
+const CKEditorComponent = ({ field, form, label, placeholder}) => {
   const { name, value } = field;
   const { setFieldValue, errors, touched } = form;
 
