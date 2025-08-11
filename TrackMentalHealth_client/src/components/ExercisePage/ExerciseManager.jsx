@@ -50,7 +50,7 @@ const ExerciseManager = () => {
                       />
                       <div className="portfolio-overlay">
                         <div className="portfolio-actions">
-                          <Link to={`/auth/exercise/${ex.id}`} className="details-link">
+                          <Link to={`/user/exercise/${ex.id}`} className="details-link">
                             <i className="bi bi-arrow-right"></i>
                           </Link>
                         </div>

@@ -116,7 +116,7 @@ const LessonManager = () => {
                     <div className="portfolio-overlay">
                       <div className="portfolio-actions">
                         {userId ? (
-                          <Link to={`/auth/lesson/${lesson.id}`} className="details-link">
+                          <Link to={`/user/lesson/${lesson.id}`} className="details-link">
                             <div className="arrow-circle">
                               <i className="bi bi-arrow-right"></i>
                             </div>
