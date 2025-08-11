@@ -50,6 +50,8 @@ import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
 import LessonApprovalForAdmin from '../components/LessonPage/LessonApprovalForAdmin.jsx';
 import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalForAdmin.jsx';
 import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
+
+
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
@@ -91,12 +93,6 @@ const Router = [
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'unauthorized', element: <Unauthorized /> },
-      { path: 'lesson/:id', element: <LessonDetail /> },
-      { path: 'exercise/:id', element: <ExerciseDetail /> },
-      { path: 'article/:id', element: <ArticleDetail /> },
-      { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
-      { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
-      { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
     ],
   },
@@ -142,7 +138,12 @@ const Router = [
       { path: 'lesson', element: <LessonManager /> },
       { path: 'artical', element: <ArticleManager /> },
       { path: 'exercise', element: <ExerciseManager /> },
+      { path: 'lesson/:id', element: <LessonDetail /> },
+      { path: 'exercise/:id', element: <ExerciseDetail /> },
+      { path: 'article/:id', element: <ArticleDetail /> },
 
+
+      
       // USER ONLY
       {
         element: <ProtectedRoute allowedRoles={['USER']} />,

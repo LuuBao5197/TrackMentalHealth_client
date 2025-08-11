@@ -81,7 +81,7 @@ const ArticleManager = () => {
                       <div className="portfolio-overlay">
                         <div className="portfolio-actions">
                           <Link
-                            to={`/auth/article/${article.id}`}
+                            to={`/user/article/${article.id}`}
                             className="details-link"
                           >
                             <i className="bi bi-arrow-right"></i>

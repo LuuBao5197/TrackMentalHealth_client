@@ -86,7 +86,7 @@ const LessonListForCreator = () => {
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
           <Link
-            to={`/auth/lesson/${row.id}`}
+            to={`/user/lesson/${row.id}`}
             className="btn btn-sm btn-outline-primary"
           >
             View
@@ -95,7 +95,7 @@ const LessonListForCreator = () => {
           {/* Chỉ hiển thị nút Edit nếu status !== 'true' */}
           {row.status !== 'true' && (
             <Link
-              to={`/auth/lesson/edit/${row.id}`}
+              to={`/contentCreator/lesson/edit/${row.id}`}
               state={{ lesson: row }}
               className="btn btn-sm btn-outline-secondary"
             >
