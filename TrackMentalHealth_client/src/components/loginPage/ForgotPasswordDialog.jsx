@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, Typography, Alert, Stack, Box
+    TextField, Button, Typography, Alert, Stack, Box,
+    IconButton, InputAdornment
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -16,7 +18,10 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
     const [error, setError] = useState('');
     const [successReset, setSuccessReset] = useState(false);
     const [countdown, setCountdown] = useState(300);
-    React.useEffect(() => {
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Countdown timer for OTP
+    useEffect(() => {
         if (step === 2) {
             setCountdown(300);
             const timer = setInterval(() => {
@@ -38,9 +43,11 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
         setMessage('');
         setError('');
         setSuccessReset(false);
+        setShowPassword(false);
         onClose();
     };
 
+    // Step 1: Send OTP
     const sendOtpForm = useFormik({
         initialValues: { email: '' },
         validationSchema: Yup.object({
@@ -62,6 +69,7 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
         }
     });
 
+    // Step 2: Verify OTP
     const verifyOtpForm = useFormik({
         initialValues: { otp: '' },
         validationSchema: Yup.object({
@@ -82,6 +90,7 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
         }
     });
 
+    // Step 3: Reset Password
     const resetPasswordForm = useFormik({
         initialValues: { newPassword: '' },
         validationSchema: Yup.object({
@@ -154,12 +163,21 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
                         <form onSubmit={resetPasswordForm.handleSubmit}>
                             <Stack spacing={2}>
                                 <TextField
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     label="New Password"
                                     fullWidth
                                     {...resetPasswordForm.getFieldProps('newPassword')}
                                     error={resetPasswordForm.touched.newPassword && Boolean(resetPasswordForm.errors.newPassword)}
                                     helperText={resetPasswordForm.touched.newPassword && resetPasswordForm.errors.newPassword}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={() => setShowPassword(prev => !prev)} edge="end">
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
                                 />
                                 <Button type="submit" variant="contained" fullWidth>
                                     Reset Password
