@@ -40,7 +40,7 @@ const QuizListForUser = () => {
   };
 
   const handleDoQuiz = (id) => {
-    navigate(`/user/doQuiz/${id}`);x
+    navigate(`/user/doQuiz/${id}`);
   };
 
   const handlePageChange = (newPage) => {

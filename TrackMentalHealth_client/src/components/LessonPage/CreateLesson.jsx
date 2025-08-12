@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 
 const CreateLesson = () => {
   const [uploading, setUploading] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [steps, setSteps] = useState([{ title: '', content: '', mediaType: '', mediaUrl: '' }]);
   const navigate = useNavigate();
 
@@ -21,6 +22,51 @@ const CreateLesson = () => {
       console.error('❌ Invalid token:', error);
     }
   }
+
+  // Hàm parse nội dung nhiều bước từ API thành array step
+  const parseStepsFromContent = (fullContent) => {
+    const stepRegex = /(\d+)\.\s*([^:\n]+):([\s\S]*?)(?=\n\d+\.|$)/g;
+    const parsedSteps = [];
+    let match;
+    while ((match = stepRegex.exec(fullContent)) !== null) {
+      parsedSteps.push({
+        title: match[2].trim(),
+        content: match[3].trim(),
+        mediaType: '',
+        mediaUrl: '',
+      });
+    }
+    if (parsedSteps.length === 0) {
+      // Nếu không parse được, trả về 1 bước duy nhất
+      return [{
+        title: 'Introduction',
+        content: fullContent.trim(),
+        mediaType: '',
+        mediaUrl: '',
+      }];
+    }
+    return parsedSteps;
+  };
+
+  const fetchSuggestedContent = async (title) => {
+    if (!title.trim()) {
+      Swal.fire('⚠️ Warning', 'Please enter a lesson title first.', 'warning');
+      return;
+    }
+    try {
+      setSuggesting(true);
+      const response = await axios.get(`http://localhost:9999/api/lesson/generate-content?title=${encodeURIComponent(title)}`);
+      const suggestedContent = response.data.content || response.data || '';
+
+      const parsedSteps = parseStepsFromContent(suggestedContent);
+      setSteps(parsedSteps);
+    } catch (error) {
+      console.error('❌ Error fetching suggested content:', error);
+      Swal.fire('❌ Error', 'Failed to fetch suggested content', 'error');
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   const validate = (values) => {
     const errors = {};
@@ -44,7 +90,7 @@ const CreateLesson = () => {
       description: '',
       status: false,
       photo: '',
-      category: '', // ✅ category field
+      category: '',
     },
     validate,
     onSubmit: async (values) => {
@@ -74,7 +120,7 @@ const CreateLesson = () => {
         createdBy: userId,
         createdAt: now,
         updatedAt: now,
-        category: values.category, // ✅ include category
+        category: values.category,
         lessonSteps: steps.map((step, index) => ({
           stepNumber: index + 1,
           title: step.title,
@@ -178,6 +224,15 @@ const CreateLesson = () => {
                 value={formik.values.title}
               />
               {formik.errors.title && <div className="invalid-feedback">{formik.errors.title}</div>}
+
+              <button
+                type="button"
+                className="btn btn-outline-info mt-2"
+                onClick={() => fetchSuggestedContent(formik.values.title)}
+                disabled={suggesting || !formik.values.title.trim()}
+              >
+                {suggesting ? '⏳ Suggesting...' : '💡 Suggest Content'}
+              </button>
             </div>
 
             {/* Description */}
@@ -215,7 +270,9 @@ const CreateLesson = () => {
 
             {/* Photo */}
             <div className="mb-3">
-              <label htmlFor="lessonPhoto" className="form-label">Thumbnail Image <span className="text-danger">*</span></label>
+              <label htmlFor="lessonPhoto" className="form-label">
+                Thumbnail Image <span className="text-danger">*</span>
+              </label>
               <input
                 type="file"
                 className={`form-control ${formik.errors.photo ? 'is-invalid' : ''}`}
@@ -272,8 +329,7 @@ const CreateLesson = () => {
 
                 <div className="mb-2">
                   <label className="form-label">
-                    Media File {step.mediaType && `(${step.mediaType.toUpperCase()})`}
-                    {!step.mediaType && ' (Not selected)'}
+                    Media File {step.mediaType ? `(${step.mediaType.toUpperCase()})` : '(Not selected)'}
                   </label>
                   <input
                     type="file"
@@ -298,7 +354,11 @@ const CreateLesson = () => {
                         <audio controls src={step.mediaUrl} style={{ width: '100%' }} />
                       )}
                       {step.mediaType === 'photo' && (
-                        <img src={step.mediaUrl} alt="Step Media" style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }} />
+                        <img
+                          src={step.mediaUrl}
+                          alt="Step Media"
+                          style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }}
+                        />
                       )}
                     </div>
                   )}
