@@ -38,7 +38,7 @@ export default function VideoCall() {
     setCamEnabled(!camEnabled);
   };
 
-  const createPeerConnection = (isCaller) => {
+  const createPeerConnection = (isCaller, hasLocalMedia) => {
     if (peerConnection.current) {
       peerConnection.current.close();
       peerConnection.current = null;
@@ -58,6 +58,16 @@ export default function VideoCall() {
       }
     };
 
+    // Nếu có media => addTrack, nếu không => addTransceiver để nhận
+    if (hasLocalMedia && localStream.current) {
+      localStream.current.getTracks().forEach((track) => {
+        peerConnection.current.addTrack(track, localStream.current);
+      });
+    } else {
+      peerConnection.current.addTransceiver("video", { direction: "recvonly" });
+      peerConnection.current.addTransceiver("audio", { direction: "recvonly" });
+    }
+
     if (isCaller) {
       peerConnection.current.onnegotiationneeded = async () => {
         try {
@@ -71,27 +81,22 @@ export default function VideoCall() {
       };
     }
   };
-
   const startLocalStream = async () => {
     try {
       localStream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    } catch (err) {
-      console.warn("Cannot get camera, trying audio only", err);
-      try {
-        localStream.current = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-      } catch (err2) {
-        console.error("Cannot get local audio stream", err2);
-        showToast("Cannot access microphone or camera", ToastTypes.ERROR, 3000);
-        navigate(`/user/chat/${sessionId}`);
-        return false;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current;
       }
+      return true; // Có media
+    } catch (err) {
+      console.warn("Không thể lấy camera/mic, tham gia chỉ xem", err);
+      localStream.current = null;
+      return false; // Không có media
     }
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = localStream.current;
-    }
-    return true;
   };
+
+
+
 
   const endCall = (sendSignal = true) => {
     if (sendSignal) {
@@ -111,20 +116,15 @@ export default function VideoCall() {
     navigate(`/user/chat/${sessionId}`);
   };
 
+  // Callee
   const acceptCall = async () => {
     setCallAccepted(true);
     setWaiting(false);
     setIncomingCall(false);
     setCountdown(0);
 
-    const started = await startLocalStream();
-    if (!started) return endCall();
-
-    createPeerConnection(false);
-
-    localStream.current.getTracks().forEach((track) => {
-      peerConnection.current.addTrack(track, localStream.current);
-    });
+    const hasMedia = await startLocalStream();
+    createPeerConnection(false, hasMedia);
 
     try {
       if (peerConnection.currentOffer) {
@@ -140,7 +140,6 @@ export default function VideoCall() {
       endCall();
     }
   };
-
   const rejectCall = () => {
     sendCallSignal(sessionId, { type: "CALL_REJECTED", senderId: currentUserId });
     endCall(false);
@@ -233,9 +232,15 @@ export default function VideoCall() {
 
       createPeerConnection(true);
 
-      localStream.current.getTracks().forEach((track) => {
-        peerConnection.current.addTrack(track, localStream.current);
-      });
+      if (localStream.current) {
+        localStream.current.getTracks().forEach((track) => {
+          peerConnection.current.addTrack(track, localStream.current);
+        });
+      } else {
+        // Vẫn tạo transceiver để nhận video/audio từ bên kia
+        peerConnection.current.addTransceiver("video", { direction: "recvonly" });
+        peerConnection.current.addTransceiver("audio", { direction: "recvonly" });
+      }
 
       setCallAccepted(true);
       setWaiting(false);
