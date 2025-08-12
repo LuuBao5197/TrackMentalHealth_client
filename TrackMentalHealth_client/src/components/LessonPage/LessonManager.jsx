@@ -17,12 +17,9 @@ const LessonManager = () => {
   useEffect(() => {
     axios.get('http://localhost:9999/api/lesson')
       .then(res => {
-        console.log('All lessons:', res.data);
-        // Lọc bài học có status === true hoặc 'true'
         const activeLessons = res.data.filter(
           lesson => lesson.status === true || lesson.status === 'true'
         );
-        console.log('Filtered active lessons:', activeLessons);
         setLessons(activeLessons);
 
         activeLessons.forEach(lesson => {
@@ -135,8 +132,24 @@ const LessonManager = () => {
                     </div>
                   </div>
                   <div className="portfolio-content" style={{ paddingRight: 90 }}>
-                    <h3>{lesson.title?.length > 40 ? lesson.title.slice(0, 40) + '...' : lesson.title}</h3>
-                    <p>{lesson.description?.length > 50 ? lesson.description.slice(0, 50) + '...' : lesson.description}</p>
+                    {/* Category hiển thị giống mediaType của Exercise */}
+                    {lesson.category && (
+                      <span className="category">
+                        {lesson.category.name || lesson.category}
+                      </span>
+                    )}
+
+                    <h3>
+                      {lesson.title?.length > 40
+                        ? lesson.title.slice(0, 40) + '...'
+                        : lesson.title}
+                    </h3>
+
+                    <p>
+                      {lesson.description?.length > 50
+                        ? lesson.description.slice(0, 50) + '...'
+                        : lesson.description}
+                    </p>
                     <div className="progress-container position-absolute bottom-0 end-0 m-3">
                       <CircularProgress percentage={progress} />
                     </div>
@@ -170,6 +183,7 @@ const LessonManager = () => {
       </div>
 
       <style>{`
+      
         .circular-progress {
           position: relative;
           width: 80px;
@@ -178,28 +192,23 @@ const LessonManager = () => {
           justify-content: center;
           align-items: center;
         }
-
         .circular-progress svg {
           transform: rotate(-90deg);
           width: 100%;
           height: 100%;
         }
-
         .circular-progress circle {
           fill: transparent;
           stroke-width: 6;
           stroke-linecap: round;
         }
-
         .bg-circle {
           stroke: #e0e0e0;
         }
-
         .progress-circle {
           stroke: #007bff;
           transition: stroke-dashoffset 0.3s;
         }
-
         .percentage {
           position: absolute;
           top: 50%;
@@ -209,7 +218,6 @@ const LessonManager = () => {
           font-weight: bold;
           color: #333;
         }
-
         .arrow-circle {
           background-color: white;
           border-radius: 50%;
@@ -220,17 +228,14 @@ const LessonManager = () => {
           justify-content: center;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         .arrow-circle i {
           color: #6c63ff;
           font-size: 20px;
         }
-
         .arrow-circle:hover {
           transform: scale(1.1);
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-
         .details-link {
           text-decoration: none;
         }
