@@ -9,18 +9,24 @@ export default function VideoCall() {
   const navigate = useNavigate();
   const currentUserId = parseInt(getCurrentUserId());
 
+  // Lấy isCaller từ query param ?caller=true
+  const searchParams = new URLSearchParams(window.location.search);
+  const isCaller = searchParams.get("caller") === "true";
+
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerConnection = useRef(null);
   const localStream = useRef(null);
 
-  const [waiting, setWaiting] = useState(true);
-  const [incomingCall, setIncomingCall] = useState(false);
-  const [callAccepted, setCallAccepted] = useState(false);
+  const [waiting, setWaiting] = useState(true); // trạng thái chờ
+  const [incomingCall, setIncomingCall] = useState(false); // bên nhận call có cuộc gọi đến
+  const [callAccepted, setCallAccepted] = useState(false); // call đã được accept
   const [countdown, setCountdown] = useState(15);
 
   const [micEnabled, setMicEnabled] = useState(true);
   const [camEnabled, setCamEnabled] = useState(true);
+
+  const waitingTimeoutRef = useRef(null); // để lưu timeout hủy call
 
   const toggleMic = () => {
     if (!localStream.current) return;
@@ -38,13 +44,17 @@ export default function VideoCall() {
     setCamEnabled(!camEnabled);
   };
 
-  const createPeerConnection = (isCaller) => {
+  const createPeerConnection = (isCallerFlag) => {
     if (peerConnection.current) {
       peerConnection.current.close();
       peerConnection.current = null;
     }
 
-    peerConnection.current = new RTCPeerConnection();
+    peerConnection.current = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+      ],
+    });
 
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate) {
@@ -54,16 +64,27 @@ export default function VideoCall() {
 
     peerConnection.current.ontrack = (event) => {
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
+        if (event.streams && event.streams[0]) {
+          remoteVideoRef.current.srcObject = event.streams[0];
+        } else {
+          const inboundStream = new MediaStream();
+          inboundStream.addTrack(event.track);
+          remoteVideoRef.current.srcObject = inboundStream;
+        }
       }
     };
 
-    if (isCaller) {
+    peerConnection.current.oniceconnectionstatechange = () => {
+      console.log("ICE connection state:", peerConnection.current.iceConnectionState);
+    };
+
+    if (isCallerFlag) {
       peerConnection.current.onnegotiationneeded = async () => {
         try {
           const offer = await peerConnection.current.createOffer();
           await peerConnection.current.setLocalDescription(offer);
           sendCallSignal(sessionId, { type: "offer", data: offer });
+          console.log("Offer sent");
         } catch (err) {
           console.error("Error creating offer:", err);
           showToast("Error creating offer", ToastTypes.ERROR, 3000);
@@ -108,14 +129,22 @@ export default function VideoCall() {
       peerConnection.current = null;
     }
 
+    if(waitingTimeoutRef.current) {
+      clearTimeout(waitingTimeoutRef.current);
+      waitingTimeoutRef.current = null;
+    }
+
     navigate(`/user/chat/${sessionId}`);
   };
 
+  // Người nhận bấm Accept cuộc gọi
   const acceptCall = async () => {
     setCallAccepted(true);
     setWaiting(false);
     setIncomingCall(false);
     setCountdown(0);
+
+    sendCallSignal(sessionId, { type: "CALL_ACCEPTED", senderId: currentUserId });
 
     const started = await startLocalStream();
     if (!started) return endCall();
@@ -141,30 +170,36 @@ export default function VideoCall() {
     }
   };
 
+  // Người nhận bấm Reject cuộc gọi
   const rejectCall = () => {
     sendCallSignal(sessionId, { type: "CALL_REJECTED", senderId: currentUserId });
     endCall(false);
   };
 
-  useEffect(() => {
-    if (!waiting || incomingCall) {
-      setCountdown(10);
-      return;
-    }
+  // Đếm ngược timeout 15s khi đang chờ
+ useEffect(() => {
+  // Chỉ chạy countdown khi đang chờ bên kia trả lời (caller side) và chưa accept
+  if (!waiting || callAccepted) {
+    // Dừng countdown
+    setCountdown(0);
+    return;
+  }
 
-    if (countdown === 0) {
-      showToast("No response, call automatically cancelled.", ToastTypes.WARNING, 3000);
-      endCall(true);
-      return;
-    }
+  if (countdown === 0) {
+    showToast("No response, call automatically cancelled.", ToastTypes.WARNING, 3000);
+    endCall(true);
+    return;
+  }
 
-    const timer = setTimeout(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
+  const timer = setTimeout(() => {
+    setCountdown((prev) => prev - 1);
+  }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [countdown, waiting, incomingCall]);
+  return () => clearTimeout(timer);
+}, [countdown, waiting, callAccepted]);
 
+
+  // Kết nối WebSocket và xử lý tín hiệu call
   useEffect(() => {
     if (!sessionId || !currentUserId) return;
 
@@ -176,14 +211,34 @@ export default function VideoCall() {
             showToast("Call ended.", ToastTypes.INFO, 3000);
             endCall(false);
             break;
+
           case "CALL_REQUEST":
-            setWaiting(true);
-            setIncomingCall(true);
+            if (!isCaller) {
+              setWaiting(true);
+              setIncomingCall(true);
+            }
             break;
+
+          case "CALL_ACCEPTED":
+            if (isCaller) {
+              setCallAccepted(true);
+              setWaiting(false);
+              setIncomingCall(false);
+              setCountdown(0);
+              if(waitingTimeoutRef.current) {
+                clearTimeout(waitingTimeoutRef.current);
+                waitingTimeoutRef.current = null;
+              }
+            }
+            break;
+
           case "CALL_REJECTED":
-            showToast("Call rejected.", ToastTypes.INFO, 3000);
-            endCall(false);
+            if (isCaller) {
+              showToast("Call rejected.", ToastTypes.INFO, 3000);
+              endCall(false);
+            }
             break;
+
           case "offer":
             if (!callAccepted) {
               setIncomingCall(true);
@@ -191,6 +246,7 @@ export default function VideoCall() {
               peerConnection.currentOffer = signal.data;
             }
             break;
+
           case "answer":
             try {
               if (peerConnection.current) {
@@ -202,6 +258,7 @@ export default function VideoCall() {
               showToast("Error processing call answer", ToastTypes.ERROR, 3000);
             }
             break;
+
           case "candidate":
             if (peerConnection.current && signal.data) {
               try {
@@ -211,6 +268,7 @@ export default function VideoCall() {
               }
             }
             break;
+
           default:
             break;
         }
@@ -221,31 +279,52 @@ export default function VideoCall() {
       if (disconnect) disconnect();
       endCall(false);
     };
-  }, [sessionId, currentUserId]);
+  }, [sessionId, currentUserId, isCaller, callAccepted]);
 
+  // Khi caller vào component thì gửi CALL_REQUEST, bắt đầu đếm ngược 15s chờ
   useEffect(() => {
-    const startCallAsCaller = async () => {
-      if (callAccepted) return;
-      if (peerConnection.currentOffer) return;
+    if (!isCaller) return;
+
+    sendCallSignal(sessionId, { type: "CALL_REQUEST", senderId: currentUserId });
+    setWaiting(true);
+    setIncomingCall(false);
+    setCallAccepted(false);
+    setCountdown(15);
+
+    // Timeout 15s auto hủy cuộc gọi
+    waitingTimeoutRef.current = setTimeout(() => {
+      showToast("No response, call automatically cancelled.", ToastTypes.WARNING, 3000);
+      endCall(true);
+    }, 15000);
+
+    // cleanup khi unmount hoặc call ended
+    return () => {
+      if (waitingTimeoutRef.current) {
+        clearTimeout(waitingTimeoutRef.current);
+        waitingTimeoutRef.current = null;
+      }
+    };
+  }, [isCaller, sessionId, currentUserId]);
+
+  // Khi call được accept (caller hoặc callee) thì khởi tạo localStream + peer connection và bắt đầu call thật
+  useEffect(() => {
+    const startCall = async () => {
+      if (!callAccepted) return;
 
       const started = await startLocalStream();
       if (!started) return endCall();
 
-      createPeerConnection(true);
+      createPeerConnection(isCaller);
 
       localStream.current.getTracks().forEach((track) => {
         peerConnection.current.addTrack(track, localStream.current);
       });
-
-      setCallAccepted(true);
-      setWaiting(false);
-      setIncomingCall(false);
     };
 
-    startCallAsCaller();
-  }, [callAccepted]);
+    startCall();
+  }, [callAccepted, isCaller]);
 
-  // Fullscreen styles:
+  // Styles (giữ nguyên như của bạn)
   const styles = {
     container: {
       position: "fixed",
@@ -273,7 +352,7 @@ export default function VideoCall() {
     localVideoWrapper: {
       position: "absolute",
       width: "160px",
-      height: "213px", // 4:3 aspect ratio
+      height: "213px",
       bottom: "20px",
       right: "20px",
       borderRadius: "12px",
@@ -288,7 +367,7 @@ export default function VideoCall() {
       width: "100%",
       height: "100%",
       objectFit: "cover",
-      transform: camEnabled ? "none" : "scaleX(-1)", // mirror local video only if cam on
+      transform: camEnabled ? "none" : "scaleX(-1)",
       filter: camEnabled ? "none" : "grayscale(80%)",
     },
     controls: {
@@ -366,12 +445,7 @@ export default function VideoCall() {
   return (
     <div style={styles.container}>
       {/* Remote video fullscreen */}
-      <video
-        ref={remoteVideoRef}
-        autoPlay
-        playsInline
-        style={styles.remoteVideo}
-      />
+      <video ref={remoteVideoRef} autoPlay playsInline style={styles.remoteVideo} />
 
       {/* Local video small overlay */}
       <div style={styles.localVideoWrapper}>

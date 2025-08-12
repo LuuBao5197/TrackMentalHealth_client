@@ -236,8 +236,6 @@ function ChatWithUser() {
                     </MessageContainer>
                 </MainContainer>
             </MinChatUiProvider>
-
-            <ToastContainer />
         </div>
     );
 }

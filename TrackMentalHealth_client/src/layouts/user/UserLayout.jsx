@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 import Header from '@components/userPage/Header';
 import Footer from '@components/userPage/Footer';
@@ -9,30 +9,37 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../../assets/css/main.css';
 
-// Custom hooks
 import useBodyScrolled from '../../hooks/useBodyScrolled';
 import useMobileNavToggle from '../../hooks/useMobileNavToggle';
 import useScrollTopButton from '../../hooks/useScrollTopButton';
 import useAOS from '../../hooks/useAOS';
 import usePreloader from '../../hooks/usePreloader';
 
-// WebSocket
 import { connectWebSocket } from '../../services/stompClient';
+import ToastTypes, { showToast } from '../../utils/showToast';
+
+// Tạo context để truyền WebSocket dữ liệu xuống con (ví dụ ChatWithUser)
+export const WebSocketContext = createContext();
 
 const UserLayout = () => {
-  const userRole = useSelector((state) => state.auth.user);
+  const userRole = useSelector(state => state.auth.user);
+  const navigate = useNavigate();
+
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  // Set userId vào localStorage khi login
+  // Giữ trạng thái tin nhắn, thông báo, cuộc gọi để truyền xuống con nếu cần
+  const [privateMessages, setPrivateMessages] = useState([]);
+  const [groupMessages, setGroupMessages] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [incomingCallSignal, setIncomingCallSignal] = useState(null);
+
   useEffect(() => {
     if (userRole) {
       localStorage.setItem('currentUserId', userRole.userId);
       console.log(userRole);
-      
     }
   }, [userRole]);
 
-  // Thêm class vào body
   useEffect(() => {
     document.body.classList.add('index-page');
     const header = document.querySelector('header');
@@ -44,40 +51,50 @@ const UserLayout = () => {
     };
   }, []);
 
-  // Init effects
   useBodyScrolled();
   useMobileNavToggle();
   useScrollTopButton();
   useAOS();
   usePreloader();
 
-  // WebSocket connect
+  // WebSocket connect và lắng nghe các sự kiện
   useEffect(() => {
     if (!userRole) return;
 
     const onPrivateMessage = (msg) => {
       console.log("[WebSocket] Tin nhắn riêng:", msg);
-      // TODO: Xử lý hiển thị hoặc cập nhật state nếu cần
+      setPrivateMessages(prev => [...prev, msg]);
+      // Bạn có thể show toast nếu muốn
     };
 
     const onGroupMessage = (msg) => {
       console.log("[WebSocket] Tin nhắn nhóm:", msg);
-      // TODO: Xử lý hiển thị hoặc cập nhật state nếu cần
+      setGroupMessages(prev => [...prev, msg]);
     };
 
     const onNotification = (noti) => {
       console.log("[WebSocket] Thông báo:", noti);
+      setNotifications(prev => [...prev, noti]);
       toast.info(`Notification: ${noti.title || noti.message || ''}`);
     };
 
     const onCallSignal = (signal) => {
       console.log("[WebSocket] Tín hiệu cuộc gọi:", signal);
       if (signal.type === "CALL_REQUEST" && signal.calleeId === userRole.userId) {
-        toast.info(`${signal.callerName} is calling you...`, {
-          autoClose: false,
-          closeOnClick: false,
-          draggable: false,
-          // bạn có thể thêm nút chấp nhận/từ chối trong toast nếu muốn
+        setIncomingCallSignal(signal);
+        showToast({
+          message: `${signal.callerName} is calling you...`,
+          type: ToastTypes.INFO,
+          time: 15000,
+          showCallButtons: true,
+          onAccept: () => {
+            setIncomingCallSignal(null);
+            navigate(`/user/video-call/${signal.sessionId || signal.callId}`);
+          },
+          onCancel: () => {
+            setIncomingCallSignal(null);
+            // Gửi signal hủy call nếu cần
+          }
         });
       }
     };
@@ -98,33 +115,58 @@ const UserLayout = () => {
         disconnect();
       }
     };
-  }, [userRole]);
+  }, [userRole, navigate]);
 
   return (
-    <div>
-      <Header />
+    <WebSocketContext.Provider value={{
+      privateMessages,
+      groupMessages,
+      notifications,
+      incomingCallSignal,
+      setIncomingCallSignal,
+    }}>
+      <div>
+        <Header />
+        <main style={{ paddingTop: headerHeight }} className="container">
+          <Outlet />
+            <button
+                onClick={() => navigate('/user/chat/ai')}
+                className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
+                style={{
+                    position: "fixed",
+                    bottom: "24px",
+                    right: "24px",
+                    width: "64px",
+                    height: "64px",
+                    fontSize: "28px",
+                    zIndex: 1050,
+                    transition: "all 0.2s ease-in-out",
+                        backgroundColor: "#119658ff", // màu cyan
 
-      <main style={{ paddingTop: headerHeight }} className="container">
-        <Outlet />
-        <button onClick={() => toast.success("Test toast")}>Test Toast</button>
-      </main>
-
-      <Footer />
-
-      {/* 🔔 Global toast notification */}
-       <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
-    </div>
+                }}
+                title="Trò chuyện với AI"
+                aria-label="Trò chuyện với AI"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 24 24">
+                    <path d="M20 2H4a2 2 0 0 0-2 2v20l4-4h14a2 2 0 0 0 2-2V4c0-1.1-.9-2-2-2z" />
+                </svg>
+            </button>
+        </main>
+        <Footer />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
+      </div>
+    </WebSocketContext.Provider>
   );
 };
 
