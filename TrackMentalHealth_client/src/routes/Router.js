@@ -110,6 +110,9 @@ const Router = [
           { path: 'lesson', element: <LessonApprovalForAdmin /> },
           { path: 'article', element: <ArticleApprovalForAdmin /> },
           { path: 'exercise', element: <ExerciseApprovalForAdmin /> },
+          { path: 'lesson/:id', element: <LessonDetail /> },
+          { path: 'exercise/:id', element: <ExerciseDetail /> },
+          { path: 'article/:id', element: <ArticleDetail /> },
 
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },

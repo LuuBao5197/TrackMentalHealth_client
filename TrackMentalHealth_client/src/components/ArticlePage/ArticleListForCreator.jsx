@@ -82,7 +82,7 @@ const ArticleListForCreator = () => {
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
           <Link
-            to={`/user/article/${row.id}`}
+            to={`/contentCreator/article/${row.id}`}
             className="btn btn-sm btn-outline-primary"
             style={{ whiteSpace: 'nowrap' }}
           >
