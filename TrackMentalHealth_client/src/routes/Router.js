@@ -50,6 +50,8 @@ import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
 import LessonApprovalForAdmin from '../components/LessonPage/LessonApprovalForAdmin.jsx';
 import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalForAdmin.jsx';
 import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
+import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
+import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
 
 
 /* ***Layouts**** */
@@ -146,7 +148,7 @@ const Router = [
       { path: 'article/:id', element: <ArticleDetail /> },
 
 
-      
+
       // USER ONLY
       {
         element: <ProtectedRoute allowedRoles={['USER']} />,
@@ -155,14 +157,14 @@ const Router = [
           { path: 'history', element: <DiaryHistoryPage /> },
           { path: 'mood-history', element: <MoodHistoryPage /> },
           { path: 'doTest/:testId', element: <DoTestForm /> },
-          { path: 'doQuiz/:quizId', element: <DoQuizForm/>},
-          
-
+          { path: 'doQuiz/:quizId', element: <DoQuizForm /> },
+          { path: 'quiz/history', element: <QuizAttemptList /> },
+          { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
-          
+
 
         ],
       },
@@ -177,7 +179,7 @@ const Router = [
 
       // CHAT for USER and PSYCHO
       {
-        element: <ProtectedRoute allowedRoles={['USER', 'PSYCHO']} />,
+        element: <ProtectedRoute allowedRoles={['USER', 'PSYCHOLOGIST']} />,
         children: [
           { path: 'chat/list', element: <ChatList /> },
           { path: 'chat/ai', element: <ChatWithAI /> },
@@ -203,10 +205,10 @@ const Router = [
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
           { path: 'test/doTest', element: <DoTestForm /> },
-          { path: 'question/create', element: <CreateQuestionForm />},
-          { path: 'quiz/create', element: <QuizForm />},
-          { path: 'quiz/quizResult/create', element: <QuizResultForm/>},
-          
+          { path: 'question/create', element: <CreateQuestionForm /> },
+          { path: 'quiz/create', element: <QuizForm /> },
+          { path: 'quiz/quizResult/create', element: <QuizResultForm /> },
+
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

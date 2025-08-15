@@ -12,8 +12,11 @@ import {
     DialogTitle,
     Box,
     Typography,
-    Stack
+    Stack,
+    IconButton,
+    InputAdornment
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
 
@@ -22,10 +25,16 @@ const ResetPasswordForm = ({ email }) => {
     const [error, setError] = React.useState('');
     const [successDialogOpen, setSuccessDialogOpen] = React.useState(false);
 
+    // Tách state show/ẩn riêng cho form và dialog
+    const [showFormPassword, setShowFormPassword] = React.useState(false);
+    const [showDialogPassword, setShowDialogPassword] = React.useState(false);
+
     const formik = useFormik({
         initialValues: { newPassword: '' },
         validationSchema: Yup.object({
-            newPassword: Yup.string().min(6, 'At least 6 characters').required('New password is required'),
+            newPassword: Yup.string()
+                .min(6, 'At least 6 characters')
+                .required('New password is required'),
         }),
         onSubmit: async (values) => {
             try {
@@ -50,30 +59,65 @@ const ResetPasswordForm = ({ email }) => {
             <Typography variant="h5" fontWeight="bold" mb={2}>
                 Reset Password
             </Typography>
+
             <form onSubmit={formik.handleSubmit}>
                 <Stack spacing={2}>
+                    {/* Input trong form */}
                     <TextField
                         fullWidth
-                        type="password"
+                        type={showFormPassword ? 'text' : 'password'}
                         label="New Password"
                         name="newPassword"
                         {...formik.getFieldProps('newPassword')}
                         error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
                         helperText={formik.touched.newPassword && formik.errors.newPassword}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        onClick={() => setShowFormPassword(prev => !prev)}
+                                        edge="end"
+                                    >
+                                        {showFormPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                     />
+
                     {error && <Alert severity="error">{error}</Alert>}
+
                     <Button type="submit" variant="contained" fullWidth>
                         Reset Password
                     </Button>
                 </Stack>
             </form>
-
             <Dialog open={successDialogOpen} onClose={handleDialogClose}>
                 <DialogTitle>Success</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Your password has been reset successfully. Click OK to go back to login.
+                        Your password has been reset successfully. You can view it below:
                     </DialogContentText>
+                    <TextField
+                        fullWidth
+                        type={showDialogPassword ? 'text' : 'password'}
+                        label="New Password"
+                        value={formik.values.newPassword}
+                        InputProps={{
+                            readOnly: true,
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        onClick={() => setShowDialogPassword(prev => !prev)}
+                                        edge="end"
+                                    >
+                                        {showDialogPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
+                        sx={{ mt: 2 }}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleDialogClose} autoFocus>
