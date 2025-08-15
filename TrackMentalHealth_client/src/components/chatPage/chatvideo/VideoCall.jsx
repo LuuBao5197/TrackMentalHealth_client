@@ -44,6 +44,7 @@ export default function VideoCall() {
     setCamEnabled(!camEnabled);
   };
 
+  const createPeerConnection = (isCaller, hasLocalMedia) => {
   const createPeerConnection = (isCallerFlag) => {
     if (peerConnection.current) {
       peerConnection.current.close();
@@ -92,27 +93,22 @@ export default function VideoCall() {
       };
     }
   };
-
   const startLocalStream = async () => {
     try {
       localStream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    } catch (err) {
-      console.warn("Cannot get camera, trying audio only", err);
-      try {
-        localStream.current = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-      } catch (err2) {
-        console.error("Cannot get local audio stream", err2);
-        showToast("Cannot access microphone or camera", ToastTypes.ERROR, 3000);
-        navigate(`/user/chat/${sessionId}`);
-        return false;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current;
       }
+      return true; // Có media
+    } catch (err) {
+      console.warn("Không thể lấy camera/mic, tham gia chỉ xem", err);
+      localStream.current = null;
+      return false; // Không có media
     }
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = localStream.current;
-    }
-    return true;
   };
+
+
+
 
   const endCall = (sendSignal = true) => {
     if (sendSignal) {
