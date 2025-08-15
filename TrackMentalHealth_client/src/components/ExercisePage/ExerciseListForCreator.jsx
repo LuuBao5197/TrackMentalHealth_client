@@ -76,10 +76,16 @@ const ExerciseListForCreator = () => {
     },
     {
       name: 'Duration',
-      selector: (row) =>
-        row.estimatedDuration
-          ? `${Math.round(row.estimatedDuration / 60)} min`
-          : 'Unknown',
+      selector: (row) => row.estimatedDuration || 0,
+      cell: (row) => (
+        <span>
+          {row.estimatedDuration
+            ? row.estimatedDuration > 60
+              ? `${Math.round(row.estimatedDuration / 60)} min`
+              : `${row.estimatedDuration}s`
+            : 'Unknown'}
+        </span>
+      ),
     },
     {
       name: 'Status',
@@ -116,7 +122,6 @@ const ExerciseListForCreator = () => {
           >
             View
           </Link>
-    
           {/* Chỉ hiện Edit nếu chưa public */}
           {row.status !== 'true' && (
             <Link
@@ -132,7 +137,7 @@ const ExerciseListForCreator = () => {
       ),
       ignoreRowClick: true,
       button: true,
-    },    
+    },
   ];
 
   return (
