@@ -80,6 +80,7 @@ function ChatWithAI() {
                         placeholder="Nhập tin nhắn..."
                         onSendMessage={handleSendMessage}
                         showSendButton
+                        showAttachButton={false}
                     />
                 </MessageContainer>
             </MainContainer>

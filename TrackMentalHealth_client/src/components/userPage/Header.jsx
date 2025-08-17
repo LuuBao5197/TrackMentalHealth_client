@@ -150,7 +150,7 @@ const Header = () => {
             <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
             <li><Link to="/user/write-diary" className={currentPath === "/user/write-diary" ? "active" : ""}>Diary</Link></li>
             <li><Link to="/user/lesson" className={currentPath === "/user/lesson" ? "active" : ""}>Lesson</Link></li>
-            <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Blog</Link></li>
+            <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Article</Link></li>
             <li><Link to="/user/exercise" className={currentPath === "/user/exercise" ? "active" : ""}>Exercise</Link></li>
             <li><Link to="/user/social" className={currentPath === "/user/social" ? "active" : ""}>Community Social</Link></li>
             <li><Link to="/user/tests" className={currentPath === "/user/tests" ? "active" : ""}>Mental Tests</Link></li>
@@ -241,7 +241,6 @@ const Header = () => {
           </Link>
         )}
       </div>
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
       <NotificationDetailModal
         show={showDetailModal}
         onClose={() => setShowDetailModal(false)}

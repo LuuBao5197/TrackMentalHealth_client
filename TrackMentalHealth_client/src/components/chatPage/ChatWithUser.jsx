@@ -16,12 +16,13 @@ import {
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
 import CallManager from "./CallManager";
-import { ToastContainer, toast } from "react-toastify";
 import ToastTypes, { showToast } from "../../utils/showToast";
 
 function ChatWithUser() {
     const currentUserId = parseInt(getCurrentUserId());
     const [currentUserName, setCurrentUserName] = useState("USER");
+    const [currentUserAvatar, setCurrentUserAvatar] = useState("");
+
     const { sessionId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -31,6 +32,11 @@ function ChatWithUser() {
     const [messages, setMessages] = useState([]);
     const [receiverName, setReceiverName] = useState(preloadedReceiver?.fullname || "Đối phương");
     const [receiverId, setReceiverId] = useState(preloadedReceiver?.id || null);
+    const [receiverAvatar, setReceiverAvatar] = useState(
+        preloadedReceiver?.avatar?.trim()
+            ? preloadedReceiver.avatar
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(preloadedReceiver?.fullname || "U")}`
+    );
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -43,21 +49,25 @@ function ChatWithUser() {
                         user: {
                             id: msg.sender.id.toString(),
                             name: msg.sender.id === currentUserId ? "Tôi" : (msg.sender.fullname || "Đối phương"),
-                            avatar:
-                                msg.sender?.avatar && msg.sender.avatar.trim() !== ""
-                                    ? msg.sender.avatar
-                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender?.fullname || "U")}`
+                            avatar: msg.sender?.avatar?.trim()
+                                ? msg.sender.avatar
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender?.fullname || "U")}`
                         }
                     }));
-
                     setMessages(formatted);
 
-                    // Lấy tên currentUserName
+                    // Lưu avatar & tên của mình
                     const currentUserMsg = res.find(msg => msg.sender.id === currentUserId);
                     if (currentUserMsg) {
                         setCurrentUserName(currentUserMsg.sender.fullname || "Tôi");
+                        setCurrentUserAvatar(
+                            currentUserMsg.sender.avatar?.trim()
+                                ? currentUserMsg.sender.avatar
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserMsg.sender.fullname || "U")}`
+                        );
                     }
 
+                    // Nếu chưa có receiver từ state thì lấy từ session
                     if (!receiverId) {
                         const { sender, receiver } = res[0].session;
                         const isCurrentUserSender = sender.id === currentUserId;
@@ -65,6 +75,11 @@ function ChatWithUser() {
 
                         setReceiverName(otherUser.fullname || "Đối phương");
                         setReceiverId(otherUser.id);
+                        setReceiverAvatar(
+                            otherUser.avatar?.trim()
+                                ? otherUser.avatar
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.fullname || "U")}`
+                        );
                     }
                 }
             } catch (error) {
@@ -80,13 +95,26 @@ function ChatWithUser() {
             onPrivateMessage: (msg) => {
                 if (!msg?.message || !msg?.senderId) return;
 
+                let avatarUrl;
+
+                if (msg.senderAvatar?.trim()) {
+                    avatarUrl = msg.senderAvatar;
+                } else if (msg.senderId === currentUserId) {
+                    avatarUrl = currentUserAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserName || "U")}`;
+                } else if (msg.senderId === receiverId) {
+                    avatarUrl = receiverAvatar;
+                } else {
+                    avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "U")}`;
+                }
+
                 setMessages(prev => [
                     ...prev,
                     {
                         text: msg.message,
                         user: {
                             id: msg.senderId.toString(),
-                            name: msg.senderId === currentUserId ? "Tôi" : (msg.senderName || "Đối phương")
+                            name: msg.senderId === currentUserId ? "Tôi" : (msg.senderName || "Đối phương"),
+                            avatar: avatarUrl
                         }
                     }
                 ]);
@@ -102,18 +130,9 @@ function ChatWithUser() {
                                 type: ToastTypes.INFO,
                                 time: 15000,
                                 showCallButtons: true,
-                                onAccept: () => {
-                                    // Xử lý khi nhấn Accept, ví dụ gọi API đồng ý, chuyển trang...
-                                    console.log("Đã chấp nhận cuộc gọi");
-                                    navigate(`/user/video-call/${sessionId}`);
-                                },
-                                onCancel: () => {
-                                    // Xử lý khi nhấn Cancel
-                                    console.log("Đã từ chối cuộc gọi");
-                                    // gửi tín hiệu hủy cuộc gọi hoặc thông báo server...
-                                }
+                                onAccept: () => navigate(`/user/video-call/${sessionId}`),
+                                onCancel: () => console.log("Đã từ chối cuộc gọi")
                             });
-
                         }
                         break;
 
@@ -144,7 +163,7 @@ function ChatWithUser() {
         return () => {
             if (disconnect) disconnect();
         };
-    }, [sessionId, currentUserId, receiverId]);
+    }, [sessionId, currentUserId, receiverId, currentUserAvatar, currentUserName, receiverAvatar]);
 
     const handleSendMessage = (text) => {
         if (!text.trim()) return;
@@ -154,26 +173,24 @@ function ChatWithUser() {
             return;
         }
 
-        const messageObj = {
+        sendWebSocketMessage(`/app/chat/${sessionId}`, {
             sender: { id: currentUserId },
             receiver: { id: receiverId },
             message: text,
             session: { id: sessionId }
-        };
-        sendWebSocketMessage(`/app/chat/${sessionId}`, messageObj);
+        });
     };
 
-    // 📹 Gọi đi
     const handleStartVideoCall = () => {
         if (!sessionId) {
             console.error("🚫 callId/sessionId is missing");
             return;
         }
-        navigate(`/user/video-call/${sessionId}`)
+        navigate(`/user/video-call/${sessionId}`);
         sendCallSignal(sessionId, {
             type: "CALL_REQUEST",
             callerId: currentUserId,
-            callerName: currentUserName, // ✅ tên của mình
+            callerName: currentUserName,
             sessionId
         });
     };
@@ -185,11 +202,7 @@ function ChatWithUser() {
                     <MessageContainer>
                         <MessageHeader
                             onBack={() => navigate("/user/chat/list")}
-                            avatar={
-                                preloadedReceiver?.avatar && preloadedReceiver.avatar.trim() !== ""
-                                    ? preloadedReceiver.avatar
-                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(receiverName)}`
-                            }
+                            avatar={receiverAvatar}
                         >
                             <div style={{
                                 display: "flex",
@@ -236,8 +249,6 @@ function ChatWithUser() {
                     </MessageContainer>
                 </MainContainer>
             </MinChatUiProvider>
-
-            <ToastContainer />
         </div>
     );
 }

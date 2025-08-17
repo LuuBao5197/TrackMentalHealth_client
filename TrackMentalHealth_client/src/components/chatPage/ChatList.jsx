@@ -624,27 +624,7 @@ function ChatList() {
             )}
 
             {/* Nút Chat AI */}
-            <button
-                // onClick={() => setIsOpen(true)}
-                onClick={() => navigate('/user/chat/ai')}
-                className="chat-ai-button glow btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center"
-                style={{
-                    position: "fixed",
-                    bottom: "24px",
-                    right: "24px",
-                    width: "64px",
-                    height: "64px",
-                    fontSize: "28px",
-                    zIndex: 1050,
-                    transition: "all 0.2s ease-in-out"
-                }}
-                title="Trò chuyện với AI"
-                aria-label="Trò chuyện với AI"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 24 24">
-                    <path d="M20 2H4a2 2 0 0 0-2 2v20l4-4h14a2 2 0 0 0 2-2V4c0-1.1-.9-2-2-2z" />
-                </svg>
-            </button>
+        
 
             {isOpen && (
                 <div

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
 
 const EditArticle = () => {
   const { articleId } = useParams();
+  const navigate = useNavigate();
   const [createdAt, setCreatedAt] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -41,10 +43,17 @@ const EditArticle = () => {
       try {
         console.log('📦 Article data to update:', articleData);
         await axios.put(`http://localhost:9999/api/article/${articleId}`, articleData);
-        alert('✅ Article updated successfully!');
+
+        Swal.fire({
+          icon: 'success',
+          title: '✅ Updated',
+          text: 'Article updated successfully!',
+        }).then(() => {
+          navigate('/contentCreator/article'); // chuyển về trang article
+        });
       } catch (error) {
         console.error('❌ Failed to update article:', error.response?.data || error.message);
-        alert('❌ An error occurred while updating the article.');
+        Swal.fire('❌ Error', 'An error occurred while updating the article.', 'error');
       }
     },
   });
@@ -66,7 +75,7 @@ const EditArticle = () => {
         setCreatedAt(fetchedArticle.createdAt);
       } catch (err) {
         console.error('❌ Failed to load article:', err);
-        alert('❌ Failed to load article.');
+        Swal.fire('❌ Error', 'Failed to load article.', 'error');
       }
     };
 
@@ -87,7 +96,7 @@ const EditArticle = () => {
       formik.setFieldValue('photo', url);
     } catch (err) {
       console.error('❌ Failed to upload image:', err.response?.data || err.message);
-      alert('❌ Image upload failed!');
+      Swal.fire('❌ Error', 'Image upload failed!', 'error');
     } finally {
       setUploading(false);
     }
@@ -147,20 +156,6 @@ const EditArticle = () => {
                   />
                 </div>
               )}
-            </div>
-
-            <div className="form-check mb-4">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                name="status"
-                onChange={formik.handleChange}
-                checked={formik.values.status}
-                id="statusCheck"
-              />
-              <label className="form-check-label" htmlFor="statusCheck">
-                Activate Article
-              </label>
             </div>
 
             <button type="submit" className="btn btn-primary w-100" disabled={uploading}>

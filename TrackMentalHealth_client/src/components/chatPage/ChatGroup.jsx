@@ -48,7 +48,6 @@ function ChatGroup() {
                                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender.fullname || "U")}`
 
                         },
-
                         timestamp: new Date(m.sendAt).getTime(),
                     }))
                 );

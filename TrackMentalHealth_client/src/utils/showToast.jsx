@@ -24,8 +24,8 @@ export function showToast({
 }) {
   const content = (
     <div>
-      <strong style={{ display: "block", marginBottom: 4 }}>Notification</strong>
-      <div>{message}</div>
+      <strong style={{ display: "block", marginBottom: 4 }}>{message}</strong>
+      {/* <div>{message}</div> */}
       {showCallButtons && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
           <button

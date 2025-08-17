@@ -76,10 +76,16 @@ const ExerciseListForCreator = () => {
     },
     {
       name: 'Duration',
-      selector: (row) =>
-        row.estimatedDuration
-          ? `${Math.round(row.estimatedDuration / 60)} min`
-          : 'Unknown',
+      selector: (row) => row.estimatedDuration || 0,
+      cell: (row) => (
+        <span>
+          {row.estimatedDuration
+            ? row.estimatedDuration > 60
+              ? `${Math.round(row.estimatedDuration / 60)} min`
+              : `${row.estimatedDuration}s`
+            : 'Unknown'}
+        </span>
+      ),
     },
     {
       name: 'Status',
@@ -110,13 +116,12 @@ const ExerciseListForCreator = () => {
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
           <Link
-            to={`/user/exercise/${row.id}`}
+            to={`/contentCreator/exercise/${row.id}`}
             className="btn btn-sm btn-outline-primary"
             style={{ whiteSpace: 'nowrap' }}
           >
             View
           </Link>
-    
           {/* Chỉ hiện Edit nếu chưa public */}
           {row.status !== 'true' && (
             <Link
@@ -132,7 +137,7 @@ const ExerciseListForCreator = () => {
       ),
       ignoreRowClick: true,
       button: true,
-    },    
+    },
   ];
 
   return (
