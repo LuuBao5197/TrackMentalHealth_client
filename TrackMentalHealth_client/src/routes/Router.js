@@ -54,6 +54,8 @@ import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
 import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
 import PublicCall from '../components/chatPage/chatvideo/PublicCall.jsx';
 import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
+import TestHistory from '../components/testPage/TestHistory.jsx';
+import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
 
 
 /* ***Layouts**** */
@@ -109,6 +111,9 @@ const Router = [
           { path: 'lesson', element: <LessonApprovalForAdmin /> },
           { path: 'article', element: <ArticleApprovalForAdmin /> },
           { path: 'exercise', element: <ExerciseApprovalForAdmin /> },
+          { path: 'lesson/:id', element: <LessonDetail /> },
+          { path: 'exercise/:id', element: <ExerciseDetail /> },
+          { path: 'article/:id', element: <ArticleDetail /> },
 
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
@@ -154,6 +159,11 @@ const Router = [
           { path: 'doQuiz/:quizId', element: <DoQuizForm /> },
           { path: 'quiz/history', element: <QuizAttemptList /> },
           { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
+          { path: 'test/history', element: <TestHistory /> },
+          { path: 'test-attempt-detail/:id', element: <TestAttemptDetail /> },
+
+
+          
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },

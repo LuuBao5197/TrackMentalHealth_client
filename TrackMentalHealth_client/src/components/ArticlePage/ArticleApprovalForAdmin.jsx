@@ -87,7 +87,7 @@ const ArticleApprovalForAdmin = () => {
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
           <button
-            onClick={() => (window.location.href = `/TrackMentalHealth/auth/article/${row.id}`)}
+            onClick={() => (window.location.href = `/TrackMentalHealth/article/${row.id}`)}
             className="btn btn-sm btn-outline-primary"
           >
             View

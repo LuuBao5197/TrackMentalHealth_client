@@ -93,6 +93,8 @@ const CreateLesson = () => {
       category: '',
     },
     validate,
+    validateOnChange: false, // ❌ Không validate khi thay đổi
+    validateOnBlur: false,   // ❌ Không validate khi blur
     onSubmit: async (values) => {
       if (!userId) {
         Swal.fire({
