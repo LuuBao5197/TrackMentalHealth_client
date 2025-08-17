@@ -85,7 +85,7 @@ const EditLesson = () => {
             try {
                 await axios.post('http://localhost:9999/api/lesson/save', lessonToSubmit);
                 Swal.fire('✅ Success', 'Lesson has been updated!', 'success');
-                navigate('/lessons');
+                navigate('/contentCreator/lesson');
             } catch (error) {
                 console.error('❌ Error during update:', error.response?.data || error.message);
                 Swal.fire('❌ Error', 'An error occurred while updating the lesson.', 'error');
@@ -284,21 +284,6 @@ const EditLesson = () => {
                                 }}
                             />
                             {formik.errors.photo && <div className="invalid-feedback">{formik.errors.photo}</div>}
-                        </div>
-
-                        {/* Status */}
-                        <div className="form-check mb-4">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                id="statusCheck"
-                                name="status"
-                                onChange={formik.handleChange}
-                                checked={formik.values.status}
-                            />
-                            <label className="form-check-label" htmlFor="statusCheck">
-                                Activate Lesson
-                            </label>
                         </div>
 
                         <hr />
