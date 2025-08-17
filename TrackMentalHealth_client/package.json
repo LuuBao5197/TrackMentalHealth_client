@@ -35,6 +35,7 @@
     "@tabler/icons-react": "^2.35.0",
     "@tensorflow-models/pose-detection": "^2.1.3",
     "@tensorflow/tfjs": "^4.22.0",
+    "@zegocloud/zego-uikit-prebuilt": "^2.15.1",
     "aos": "^2.3.4",
     "axios": "^1.10.0",
     "bootstrap": "^5.3.7",

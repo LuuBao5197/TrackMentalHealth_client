@@ -25,7 +25,7 @@ import '../../assets/css/chat.css';
 import { showConfirm } from '../../utils/showConfirm';
 import GroupModal from '../../utils/Modals/GroupModal';
 import NotificationDetailModal from '../../utils/Modals/NotificationDetailModal';
-import { connectWebSocket } from '../../services/stompClient';
+import { connectWebSocket } from '../../services/StompClient';
 import { MainContainer, MessageContainer, MessageHeader, MessageInput, MessageList, MinChatUiProvider } from '@minchat/react-chat-ui';
 import { useSelector } from 'react-redux';
 import NotificationDropdown from '../notification/NotificationDropdown';
@@ -370,7 +370,6 @@ function ChatList() {
                                 My Appointments
                             </button>
 
-                            {/* Dropdown Chat */}
                             <div className="dropdown">
                                 <button
                                     className="btn btn-outline-primary dropdown-toggle"
@@ -400,6 +399,14 @@ function ChatList() {
                                     )}
                                 </ul>
                             </div>
+
+                            {/* ✅ Nút Video Chat Public */}
+                            <button
+                                onClick={() => navigate(`/user/chat/public-call`)}
+                                className="btn btn-outline-warning"
+                            >
+                                Video Chat Public
+                            </button>
                         </>
                     )}
 
@@ -415,6 +422,8 @@ function ChatList() {
                         </>
                     )}
                 </div>
+
+
             </div>
 
             {/* Loading */}
@@ -624,7 +633,7 @@ function ChatList() {
             )}
 
             {/* Nút Chat AI */}
-        
+
 
             {isOpen && (
                 <div

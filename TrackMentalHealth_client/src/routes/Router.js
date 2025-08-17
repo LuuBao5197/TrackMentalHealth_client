@@ -52,6 +52,8 @@ import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalFo
 import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
 import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
 import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
+import PublicCall from '../components/chatPage/chatvideo/PublicCall.jsx';
+import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
 
 
 /* ***Layouts**** */
@@ -77,11 +79,6 @@ const DoTestForm = Loadable(lazy(() => import('../components/testPage/DoTestForm
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 
 const Router = [
-
-  {
-    path: 'user/video-call/:sessionId',
-    element: <VideoCall />,
-  },
 
   {
     path: '/auth',
@@ -182,7 +179,11 @@ const Router = [
           { path: 'chat/ai', element: <ChatWithAI /> },
           { path: 'chat/:sessionId', element: <ChatWithUser /> },
           { path: 'chat/group/:groupId', element: <ChatGroup /> },
-          // { path: 'video-call/:sessionId', element: <VideoCall /> },
+          { path: 'chat/public-call', element: <PublicCall /> },
+          {
+            path: 'chat/video-call/:sessionId',
+            element: <VideoCallZego />
+          },
         ],
       },
     ],

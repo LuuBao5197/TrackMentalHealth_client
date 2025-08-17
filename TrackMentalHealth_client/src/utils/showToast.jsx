@@ -10,7 +10,7 @@ const ToastTypes = {
 
 // Hàm showToast giờ có thể nhận thêm callbacks cho nút Accept/Cancel
 export function showToast({
-  message = "",
+  message = message,
   type = ToastTypes.INFO,
   time = 3000,
   position = "bottom-right",

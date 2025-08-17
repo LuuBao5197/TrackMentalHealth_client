@@ -25,10 +25,21 @@ export function connectWebSocket({
             console.log("✅ Kết nối WebSocket thành công");
             isConnected = true;
 
-            // 1-1 Chat
+            // 🔹 Global subscription cho tất cả tin nhắn private gửi tới user này
+            client.subscribe(`/user/${currentUserId}/queue/messages`, (message) => {
+                if (message.body) {
+                    console.log("💌 Global private message:", message.body);
+                    onPrivateMessage?.(JSON.parse(message.body));
+                }
+            });
+
+            // 1-1 Chat theo session
             if (sessionId) {
                 client.subscribe(`/topic/chat/${sessionId}`, (message) => {
-                    if (message.body) onPrivateMessage?.(JSON.parse(message.body));
+                    if (message.body) {
+                        console.log("💬 Session message:", message.body);
+                        onPrivateMessage?.(JSON.parse(message.body));
+                    }
                 });
             }
 
@@ -54,7 +65,8 @@ export function connectWebSocket({
             client.subscribe(`/topic/notifications/${currentUserId}`, (message) => {
                 if (message.body) onNotification?.(JSON.parse(message.body));
             });
-        },
+        }
+        ,
 
         onStompError: (frame) => {
             console.error("💥 STOMP lỗi:", frame.headers['message']);

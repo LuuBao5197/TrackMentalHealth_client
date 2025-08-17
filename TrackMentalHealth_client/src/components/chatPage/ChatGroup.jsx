@@ -15,7 +15,7 @@ import {
     initiateChatSession,
     findUsersByGroupId,
 } from "../../api/api";
-import { connectWebSocket, sendWebSocketMessage } from "../../services/stompClient";
+import { connectWebSocket, sendWebSocketMessage } from "../../services/StompClient";
 
 
 function ChatGroup() {

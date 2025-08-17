@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCurrentUserId } from "../../../utils/getCurrentUserID";
-import { connectWebSocket, sendCallSignal } from "../../../services/stompClient";
+import { connectWebSocket, sendCallSignal } from "../../../services/StompClient";
 import ToastTypes, { showToast } from "../../../utils/showToast";
 
 export default function VideoCall() {
@@ -9,7 +9,7 @@ export default function VideoCall() {
   const navigate = useNavigate();
   const currentUserId = parseInt(getCurrentUserId());
 
-  // Lấy isCaller từ query param ?caller=true
+  // Query param xác định caller hay callee
   const searchParams = new URLSearchParams(window.location.search);
   const isCaller = searchParams.get("caller") === "true";
 
@@ -17,34 +17,35 @@ export default function VideoCall() {
   const remoteVideoRef = useRef(null);
   const peerConnection = useRef(null);
   const localStream = useRef(null);
+  const waitingTimeoutRef = useRef(null);
 
-  const [waiting, setWaiting] = useState(true); // trạng thái chờ
-  const [incomingCall, setIncomingCall] = useState(false); // bên nhận call có cuộc gọi đến
-  const [callAccepted, setCallAccepted] = useState(false); // call đã được accept
-  const [countdown, setCountdown] = useState(15);
+  const [waiting, setWaiting] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(false);
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   const [micEnabled, setMicEnabled] = useState(true);
   const [camEnabled, setCamEnabled] = useState(true);
 
-  const waitingTimeoutRef = useRef(null); // để lưu timeout hủy call
-
+  // Toggle mic
   const toggleMic = () => {
     if (!localStream.current) return;
-    localStream.current.getAudioTracks().forEach((track) => {
+    localStream.current.getAudioTracks().forEach(track => {
       track.enabled = !micEnabled;
     });
-    setMicEnabled(!micEnabled);
+    setMicEnabled(prev => !prev);
   };
 
+  // Toggle camera
   const toggleCam = () => {
     if (!localStream.current) return;
-    localStream.current.getVideoTracks().forEach((track) => {
+    localStream.current.getVideoTracks().forEach(track => {
       track.enabled = !camEnabled;
     });
-    setCamEnabled(!camEnabled);
+    setCamEnabled(prev => !prev);
   };
 
-  const createPeerConnection = (isCaller, hasLocalMedia) => {
+  // Khởi tạo peer connection
   const createPeerConnection = (isCallerFlag) => {
     if (peerConnection.current) {
       peerConnection.current.close();
@@ -52,9 +53,7 @@ export default function VideoCall() {
     }
 
     peerConnection.current = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-      ],
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
     peerConnection.current.onicecandidate = (event) => {
@@ -75,17 +74,12 @@ export default function VideoCall() {
       }
     };
 
-    peerConnection.current.oniceconnectionstatechange = () => {
-      console.log("ICE connection state:", peerConnection.current.iceConnectionState);
-    };
-
     if (isCallerFlag) {
       peerConnection.current.onnegotiationneeded = async () => {
         try {
           const offer = await peerConnection.current.createOffer();
           await peerConnection.current.setLocalDescription(offer);
           sendCallSignal(sessionId, { type: "offer", data: offer });
-          console.log("Offer sent");
         } catch (err) {
           console.error("Error creating offer:", err);
           showToast("Error creating offer", ToastTypes.ERROR, 3000);
@@ -93,47 +87,30 @@ export default function VideoCall() {
       };
     }
   };
-  const startLocalStream = async () => {
-    try {
-      localStream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localStream.current;
-      }
-      return true; // Có media
-    } catch (err) {
-      console.warn("Không thể lấy camera/mic, tham gia chỉ xem", err);
-      localStream.current = null;
-      return false; // Không có media
-    }
-  };
 
+  // Lấy stream local
 
-
-
+  // Kết thúc call
   const endCall = (sendSignal = true) => {
     if (sendSignal) {
       sendCallSignal(sessionId, { type: "CALL_ENDED", senderId: currentUserId });
     }
-
     if (localStream.current) {
-      localStream.current.getTracks().forEach((track) => track.stop());
+      localStream.current.getTracks().forEach(track => track.stop());
       localStream.current = null;
     }
-
     if (peerConnection.current) {
       peerConnection.current.close();
       peerConnection.current = null;
     }
-
-    if(waitingTimeoutRef.current) {
+    if (waitingTimeoutRef.current) {
       clearTimeout(waitingTimeoutRef.current);
       waitingTimeoutRef.current = null;
     }
-
     navigate(`/user/chat/${sessionId}`);
   };
 
-  // Người nhận bấm Accept cuộc gọi
+  // Accept call
   const acceptCall = async () => {
     setCallAccepted(true);
     setWaiting(false);
@@ -147,7 +124,7 @@ export default function VideoCall() {
 
     createPeerConnection(false);
 
-    localStream.current.getTracks().forEach((track) => {
+    localStream.current.getTracks().forEach(track => {
       peerConnection.current.addTrack(track, localStream.current);
     });
 
@@ -160,42 +137,33 @@ export default function VideoCall() {
         peerConnection.currentOffer = null;
       }
     } catch (err) {
-      console.error("Error handling offer in acceptCall", err);
+      console.error("Error handling offer", err);
       showToast("Error accepting call", ToastTypes.ERROR, 3000);
       endCall();
     }
   };
 
-  // Người nhận bấm Reject cuộc gọi
+  // Reject call
   const rejectCall = () => {
     sendCallSignal(sessionId, { type: "CALL_REJECTED", senderId: currentUserId });
     endCall(false);
   };
 
-  // Đếm ngược timeout 15s khi đang chờ
- useEffect(() => {
-  // Chỉ chạy countdown khi đang chờ bên kia trả lời (caller side) và chưa accept
-  if (!waiting || callAccepted) {
-    // Dừng countdown
-    setCountdown(0);
-    return;
-  }
+  // Countdown chỉ cho caller
+  useEffect(() => {
+    if (!isCaller || !waiting || callAccepted) return;
+    if (countdown <= 0) {
+      showToast("No response, call cancelled.", ToastTypes.WARNING, 3000);
+      endCall(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown(prev => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, waiting, callAccepted, isCaller]);
 
-  if (countdown === 0) {
-    showToast("No response, call automatically cancelled.", ToastTypes.WARNING, 3000);
-    endCall(true);
-    return;
-  }
-
-  const timer = setTimeout(() => {
-    setCountdown((prev) => prev - 1);
-  }, 1000);
-
-  return () => clearTimeout(timer);
-}, [countdown, waiting, callAccepted]);
-
-
-  // Kết nối WebSocket và xử lý tín hiệu call
+  // Kết nối WS
   useEffect(() => {
     if (!sessionId || !currentUserId) return;
 
@@ -207,34 +175,28 @@ export default function VideoCall() {
             showToast("Call ended.", ToastTypes.INFO, 3000);
             endCall(false);
             break;
-
           case "CALL_REQUEST":
             if (!isCaller) {
               setWaiting(true);
               setIncomingCall(true);
             }
             break;
-
           case "CALL_ACCEPTED":
-            if (isCaller) {
-              setCallAccepted(true);
-              setWaiting(false);
-              setIncomingCall(false);
-              setCountdown(0);
-              if(waitingTimeoutRef.current) {
-                clearTimeout(waitingTimeoutRef.current);
-                waitingTimeoutRef.current = null;
-              }
+            setCallAccepted(true);
+            setWaiting(false);
+            setIncomingCall(false);
+            setCountdown(0);
+            if (waitingTimeoutRef.current) {
+              clearTimeout(waitingTimeoutRef.current);
+              waitingTimeoutRef.current = null;
             }
             break;
-
           case "CALL_REJECTED":
             if (isCaller) {
               showToast("Call rejected.", ToastTypes.INFO, 3000);
               endCall(false);
             }
             break;
-
           case "offer":
             if (!callAccepted) {
               setIncomingCall(true);
@@ -242,7 +204,6 @@ export default function VideoCall() {
               peerConnection.currentOffer = signal.data;
             }
             break;
-
           case "answer":
             try {
               if (peerConnection.current) {
@@ -250,21 +211,18 @@ export default function VideoCall() {
               }
               setWaiting(false);
             } catch (err) {
-              console.error("Error setting remote answer", err);
-              showToast("Error processing call answer", ToastTypes.ERROR, 3000);
+              console.error("Error setting answer", err);
             }
             break;
-
           case "candidate":
             if (peerConnection.current && signal.data) {
               try {
                 await peerConnection.current.addIceCandidate(new RTCIceCandidate(signal.data));
               } catch (err) {
-                console.error("Error adding ICE candidate", err);
+                console.error("Error adding candidate", err);
               }
             }
             break;
-
           default:
             break;
         }
@@ -277,23 +235,20 @@ export default function VideoCall() {
     };
   }, [sessionId, currentUserId, isCaller, callAccepted]);
 
-  // Khi caller vào component thì gửi CALL_REQUEST, bắt đầu đếm ngược 15s chờ
+  // Caller gửi request ngay khi vào
   useEffect(() => {
     if (!isCaller) return;
-
     sendCallSignal(sessionId, { type: "CALL_REQUEST", senderId: currentUserId });
     setWaiting(true);
     setIncomingCall(false);
     setCallAccepted(false);
     setCountdown(15);
 
-    // Timeout 15s auto hủy cuộc gọi
     waitingTimeoutRef.current = setTimeout(() => {
-      showToast("No response, call automatically cancelled.", ToastTypes.WARNING, 3000);
+      showToast("No response, call cancelled.", ToastTypes.WARNING, 3000);
       endCall(true);
     }, 15000);
 
-    // cleanup khi unmount hoặc call ended
     return () => {
       if (waitingTimeoutRef.current) {
         clearTimeout(waitingTimeoutRef.current);
@@ -302,25 +257,39 @@ export default function VideoCall() {
     };
   }, [isCaller, sessionId, currentUserId]);
 
-  // Khi call được accept (caller hoặc callee) thì khởi tạo localStream + peer connection và bắt đầu call thật
+
+   const startLocalStream = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      localStream.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      return true;
+    } catch (err) {
+      console.error("Không lấy được camera/mic:", err);
+      showToast("Không thể truy cập camera/mic", ToastTypes.ERROR, 3000);
+      return false;
+    }
+  };
+  // Khi được accept -> bắt đầu stream
   useEffect(() => {
     const startCall = async () => {
       if (!callAccepted) return;
-
       const started = await startLocalStream();
       if (!started) return endCall();
-
       createPeerConnection(isCaller);
-
-      localStream.current.getTracks().forEach((track) => {
+      localStream.current.getTracks().forEach(track => {
         peerConnection.current.addTrack(track, localStream.current);
       });
     };
-
     startCall();
   }, [callAccepted, isCaller]);
 
-  // Styles (giữ nguyên như của bạn)
+  // Styles (bỏ qua, giữ nguyên như cũ của bạn)
   const styles = {
     container: {
       position: "fixed",
@@ -437,123 +406,39 @@ export default function VideoCall() {
       textAlign: "center",
     },
   };
-
   return (
     <div style={styles.container}>
-      {/* Remote video fullscreen */}
       <video ref={remoteVideoRef} autoPlay playsInline style={styles.remoteVideo} />
-
-      {/* Local video small overlay */}
       <div style={styles.localVideoWrapper}>
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-          style={styles.localVideo}
-        />
+        <video ref={localVideoRef} autoPlay playsInline muted style={styles.localVideo} />
       </div>
 
-      {/* Controls */}
       {!waiting && callAccepted && (
         <div style={styles.controls}>
-          <button
-            onClick={toggleMic}
-            style={{
-              ...styles.controlButton,
-              ...(micEnabled ? styles.controlButtonActive : styles.controlButtonDisabled),
-            }}
-            title={micEnabled ? "Mute microphone" : "Unmute microphone"}
-          >
+          <button onClick={toggleMic} style={{ ...styles.controlButton, ...(micEnabled ? styles.controlButtonActive : styles.controlButtonDisabled) }}>
             {micEnabled ? "🎤" : "🔇"}
           </button>
-          <button
-            onClick={toggleCam}
-            style={{
-              ...styles.controlButton,
-              ...(camEnabled ? styles.controlButtonActive : styles.controlButtonDisabled),
-            }}
-            title={camEnabled ? "Turn off camera" : "Turn on camera"}
-          >
+          <button onClick={toggleCam} style={{ ...styles.controlButton, ...(camEnabled ? styles.controlButtonActive : styles.controlButtonDisabled) }}>
             {camEnabled ? "📷" : "🚫"}
           </button>
-          <button
-            onClick={() => endCall(true)}
-            style={{
-              ...styles.controlButton,
-              backgroundColor: "#f44336",
-              color: "#fff",
-            }}
-            title="End call"
-          >
-            ✖️
-          </button>
+          <button onClick={() => endCall(true)} style={{ ...styles.controlButton, backgroundColor: "#f44336" }}>✖️</button>
         </div>
       )}
 
-      {/* Incoming call overlay */}
       {waiting && incomingCall && (
         <div style={styles.incomingCallOverlay}>
-          <p style={styles.incomingText}>Incoming call, do you want to accept?</p>
+          <p style={styles.incomingText}>Incoming call, accept?</p>
           <div>
-            <button
-              onClick={acceptCall}
-              style={{
-                marginRight: "20px",
-                padding: "14px 30px",
-                background: "green",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontWeight: "700",
-                fontSize: "18px",
-              }}
-            >
-              Accept
-            </button>
-            <button
-              onClick={rejectCall}
-              style={{
-                padding: "14px 30px",
-                background: "red",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontWeight: "700",
-                fontSize: "18px",
-              }}
-            >
-              Reject
-            </button>
+            <button onClick={acceptCall} style={{ marginRight: "20px", padding: "14px 30px", background: "green", color: "white" }}>Accept</button>
+            <button onClick={rejectCall} style={{ padding: "14px 30px", background: "red", color: "white" }}>Reject</button>
           </div>
         </div>
       )}
 
-      {/* Waiting overlay */}
       {waiting && !incomingCall && (
         <div style={styles.waitingOverlay}>
-          <p>
-            Waiting for the other party to answer... <br />
-            (Auto cancel in <b>{countdown}</b> seconds)
-          </p>
-          <button
-            onClick={() => endCall(true)}
-            style={{
-              padding: "14px 40px",
-              background: "red",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "700",
-              fontSize: "18px",
-              marginTop: "15px",
-            }}
-          >
-            Cancel Call
-          </button>
+          <p>Waiting... (Cancel in <b>{countdown}</b>s)</p>
+          <button onClick={() => endCall(true)} style={{ padding: "14px 40px", background: "red", color: "white" }}>Cancel</button>
         </div>
       )}
     </div>

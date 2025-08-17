@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
     MainContainer,
@@ -12,11 +12,12 @@ import {
     connectWebSocket,
     sendWebSocketMessage,
     sendCallSignal
-} from "../../services/stompClient";
+} from "../../services/StompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
 import CallManager from "./CallManager";
 import ToastTypes, { showToast } from "../../utils/showToast";
+import { joinRoom, leaveRoom, destroyRoom } from "../../services/ZegoService";   // 🔹 Import Zego
 
 function ChatWithUser() {
     const currentUserId = parseInt(getCurrentUserId());
@@ -37,6 +38,8 @@ function ChatWithUser() {
             ? preloadedReceiver.avatar
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(preloadedReceiver?.fullname || "U")}`
     );
+
+    const zegoCallContainer = useRef(null); // 🔹 Container để mount video call
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -120,48 +123,65 @@ function ChatWithUser() {
                 ]);
             },
             onCallSignal: (signal) => {
-                console.log("📞 Nhận tín hiệu call:", signal);
-
                 switch (signal.type) {
                     case "CALL_REQUEST":
                         if (signal.callerId !== currentUserId) {
                             showToast({
-                                message: `Cuộc gọi từ ${signal.callerName} đang đến...`,
+                                message: `Cuộc gọi từ ${signal.callerName}...`,
                                 type: ToastTypes.INFO,
                                 time: 15000,
                                 showCallButtons: true,
-                                onAccept: () => navigate(`/user/video-call/${sessionId}`),
-                                onCancel: () => console.log("Đã từ chối cuộc gọi")
+                                onAccept: () => {
+                                    // Người nhận bấm Accept → join luôn
+                                    navigate(`/user/chat/video-call/${signal.sessionId}`, {
+                                        state: { currentUserId, currentUserName, isCaller: false }
+                                    });
+
+                                    // Gửi tín hiệu cho caller biết callee đã chấp nhận
+                                    sendCallSignal(signal.sessionId, {
+                                        type: "CALL_ACCEPTED",
+                                        receiverId: currentUserId,
+                                        receiverName: currentUserName,
+                                        sessionId: signal.sessionId
+                                    });
+                                },
+                                onCancel: () => sendCallSignal(signal.sessionId, {
+                                    type: "CALL_REJECTED",
+                                    receiverId: currentUserId,
+                                    receiverName: currentUserName,
+                                    sessionId: signal.sessionId
+                                })
                             });
                         }
                         break;
 
                     case "CALL_ACCEPTED":
-                        navigate(`/user/video-call/${sessionId}`, {
-                            state: {
-                                callId: sessionId,
-                                callerId: currentUserId,
-                                receiverId
-                            }
-                        });
+                        // Caller chỉ update UI thôi (caller đã vào room từ trước rồi)
+                        if (signal.receiverId !== currentUserId) {
+                            showToast({
+                                message: `${signal.receiverName} đã chấp nhận cuộc gọi`,
+                                type: ToastTypes.SUCCESS
+                            });
+                        }
                         break;
 
                     case "CALL_REJECTED":
                         showToast({
-                            message: "Cuộc gọi đã bị từ chối",
-                            type: ToastTypes.WARNING,
-                            autoClose: 3000
+                            message: `${signal.receiverName || "Người nhận"} đã từ chối cuộc gọi`,
+                            type: ToastTypes.WARNING
                         });
-                        break;
-
-                    default:
                         break;
                 }
             }
+
+
+
         });
 
         return () => {
             if (disconnect) disconnect();
+            leaveRoom();
+            destroyRoom();
         };
     }, [sessionId, currentUserId, receiverId, currentUserAvatar, currentUserName, receiverAvatar]);
 
@@ -186,14 +206,26 @@ function ChatWithUser() {
             console.error("🚫 callId/sessionId is missing");
             return;
         }
-        navigate(`/user/video-call/${sessionId}`);
+
+        // Gửi tín hiệu mời gọi
         sendCallSignal(sessionId, {
             type: "CALL_REQUEST",
             callerId: currentUserId,
             callerName: currentUserName,
             sessionId
         });
+
+        // ✅ Điều hướng sang trang VideoCallZego kèm state
+        navigate(`/user/chat/video-call/${sessionId}`, {
+            state: {
+                currentUserId,
+                currentUserName,
+                isCaller: true,   // 👈 BẮT BUỘC
+            },
+        });
     };
+
+
 
     return (
         <div className="container mt-3 mb-3">
@@ -249,6 +281,8 @@ function ChatWithUser() {
                     </MessageContainer>
                 </MainContainer>
             </MinChatUiProvider>
+
+
         </div>
     );
 }
