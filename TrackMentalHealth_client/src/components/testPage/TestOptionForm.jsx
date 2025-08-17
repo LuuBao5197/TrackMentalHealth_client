@@ -135,6 +135,7 @@ const FullTestFormWithPreview = () => {
           navigate(-1);
 
         } else {
+          console.log(payload);
           await axios.post('http://localhost:9999/api/test/full', payload);
           showAlert('Tạo thành công!');
           navigate(-1);
