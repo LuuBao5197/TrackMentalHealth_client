@@ -52,6 +52,8 @@ import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalFo
 import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
 import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
 import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
+import TestHistory from '../components/testPage/TestHistory.jsx';
+import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
 
 
 /* ***Layouts**** */
@@ -160,6 +162,11 @@ const Router = [
           { path: 'doQuiz/:quizId', element: <DoQuizForm /> },
           { path: 'quiz/history', element: <QuizAttemptList /> },
           { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
+          { path: 'test/history', element: <TestHistory /> },
+          { path: 'test-attempt-detail/:id', element: <TestAttemptDetail /> },
+
+
+          
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
