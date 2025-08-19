@@ -5,10 +5,11 @@ import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { showAlert } from '../../utils/showAlert';
 
 const DoTestForm = () => {
     const userId = useSelector((state) => state.auth.user.userId);
-    const [test, setTest] = useState(null); // chứa toàn bộ object từ API
+    const [test, setTest] = useState(null); 
     const [answers, setAnswers] = useState({});
     const [markedForReview, setMarkedForReview] = useState([]);
     const [timer, setTimer] = useState(0);
@@ -28,7 +29,7 @@ const DoTestForm = () => {
             const res = await axios.get(`http://localhost:9999/api/test/${id}`);
             setTest(res.data);
         } catch (err) {
-            alert('Không tìm thấy bài test');
+            alert('Test not found');
         }
     };
 
@@ -56,14 +57,14 @@ const DoTestForm = () => {
             setTimeout(() => setFocusedQuestion(null), 1500);
         }
     };
+
     const handleSubmit = async () => {
         const unanswered = test.questions.filter(q => !answers[q.id]);
         if (unanswered.length > 0) {
-            alert(`Bạn còn ${unanswered.length} câu chưa làm. Vui lòng hoàn thành tất cả câu hỏi trước khi nộp bài.`);
+            alert(`You have ${unanswered.length} unanswered questions. Please complete all questions before submitting.`);
             return;
         }
 
-        // Tính tổng điểm dựa trên các câu trả lời
         let totalScore = 0;
         test.questions.forEach(q => {
             const selectedOptionId = answers[q.id];
@@ -73,8 +74,7 @@ const DoTestForm = () => {
             }
         });
 
-        // Tìm kết quả phù hợp theo thang điểm
-        let resultText = "Không xác định";
+        let resultText = "Not determined";
         if (test.results && test.results.length > 0) {
             const found = test.results.find(r =>
                 totalScore >= r.minScore && totalScore <= r.maxScore
@@ -82,15 +82,13 @@ const DoTestForm = () => {
             if (found) resultText = found.resultText;
         }
 
-        // Tạo danh sách câu trả lời theo format API yêu cầu
         const formattedAnswers = Object.entries(answers).map(([questionId, selectedOptionId]) => ({
             questionId: parseInt(questionId),
             selectedOptionId
         }));
 
-        // Giả sử userId đang hardcode tạm (có thể thay bằng lấy từ session/localStorage/context)
         const payload = {
-            userId: userId, // cần thay bằng id thực tế từ user đăng nhập
+            userId: userId,
             testId: test.id,
             answers: formattedAnswers,
             result: resultText
@@ -98,13 +96,12 @@ const DoTestForm = () => {
 
         try {
             const res = await axios.post('http://localhost:9999/api/test/submitUserTestResult', payload);
-            alert(`Đã nộp bài thành công. Tổng điểm của bạn là ${totalScore}. Kết quả: ${resultText}`);
-            console.log('Response từ server:', res.data);
-
+            // console.log(res);
+            showAlert(`${res.data}`);
             setTimeout(() => navigate('/'), 1500);
         } catch (error) {
-            console.error('Lỗi khi gửi kết quả:', error);
-            alert('Gửi kết quả thất bại. Vui lòng thử lại.');
+            console.error('Error submitting result:', error);
+            showAlert('Submission failed. Please try again.',"Error");
         }
 
         console.log("Answers:", answers);
@@ -112,8 +109,7 @@ const DoTestForm = () => {
         console.log("Result:", resultText);
     };
 
-
-    if (!test) return <div className="text-center mt-5">Đang tải bài test...</div>;
+    if (!test) return <div className="text-center mt-5">Loading test...</div>;
 
     return (
         <Container fluid className="mt-3">
@@ -129,13 +125,13 @@ const DoTestForm = () => {
                             ref={el => (questionRefs.current[idx] = el)}
                         >
                             <div className="d-flex justify-content-between align-items-start">
-                                <h6 className="fw-bold">Câu {q.questionOrder}</h6>
+                                <h6 className="fw-bold">Question {q.questionOrder}</h6>
                                 <div>
                                     <span
                                         className="mark-review"
                                         onClick={() => toggleMarkReview(q.id)}
                                     >
-                                        Lát kiểm tra lại
+                                        Mark for review
                                         <span className={markedForReview.includes(q.id) ? 'mark-dot active' : 'mark-dot'}></span>
                                     </span>
                                 </div>
@@ -161,11 +157,11 @@ const DoTestForm = () => {
                     <Card className="p-3 mbti-sidebar">
                         <div className="d-flex justify-content-between">
                             <div>
-                                <h6>Số câu đã làm</h6>
+                                <h6>Questions Answered</h6>
                                 <h5 className="fw-bold">{Object.keys(answers).length}/{test.questions.length}</h5>
                             </div>
                             <div>
-                                <h6>Thời gian đã làm</h6>
+                                <h6>Time Elapsed</h6>
                                 <h5 className="text-primary">{formatTime(timer)}</h5>
                             </div>
                         </div>
@@ -188,13 +184,13 @@ const DoTestForm = () => {
                         </div>
 
                         <Button className="w-100 mt-4 bg-warning border-0 text-white fw-bold" onClick={handleSubmit}>
-                            NỘP BÀI
+                            SUBMIT
                         </Button>
 
                         <div className="mt-3">
-                            <div><span className="dot done"></span> Câu đã làm</div>
-                            <div><span className="dot blank"></span> Câu chưa làm</div>
-                            <div><span className="dot review"></span> Câu cần kiểm tra lại</div>
+                            <div><span className="dot done"></span> Answered</div>
+                            <div><span className="dot blank"></span> Unanswered</div>
+                            <div><span className="dot review"></span> Marked for Review</div>
                         </div>
                     </Card>
                 </Col>
