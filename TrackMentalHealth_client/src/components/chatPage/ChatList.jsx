@@ -3,19 +3,16 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
     changeStatusIsRead,
-    changeStatusNotification,
-    createNewGroup,
-    deleteGroupById,
-    deleteNotificationById,
+    getMessagesBySessionId,
+    getChatSessionsByUserId,
     getAIHistory,
     getAllChatGroup,
     getChatGroupByCreatorId,
-    getChatSessionsByUserId,
-    getMessagesBySessionId,
-    getNotificationsByUserId,
     getPsychologists,
     initiateChatSession,
     updateGroupById,
+    createNewGroup,
+    deleteGroupById,
     uploadFile,
 } from "../../api/api";
 import { useNavigate } from "react-router-dom";
@@ -26,21 +23,19 @@ import { showConfirm } from '../../utils/showConfirm';
 import GroupModal from '../../utils/Modals/GroupModal';
 import NotificationDetailModal from '../../utils/Modals/NotificationDetailModal';
 import { connectWebSocket } from '../../services/StompClient';
-import { MainContainer, MessageContainer, MessageHeader, MessageInput, MessageList, MinChatUiProvider } from '@minchat/react-chat-ui';
 import { useSelector } from 'react-redux';
 import NotificationDropdown from '../notification/NotificationDropdown';
+import ChatWidget from './ChatWidget';
 
 const getOtherUser = (session, currentUserId) =>
     session.sender.id === currentUserId ? session.receiver : session.sender;
 
-
 function ChatList() {
-    const user = useSelector((state) => state.auth); // lấy role
+    const user = useSelector((state) => state.auth);
     const currentUserId = parseInt(getCurrentUserId());
-    // const currentUserId = String(getCurrentUserId());
     const [sessions, setSessions] = useState([]);
     const [group, setGroup] = useState([]);
-    const [myGroup, setmyGroup] = useState([]);
+    const [myGroup, setMyGroup] = useState([]);
     const [psychologists, setPsychologists] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [unreadNotifications, setUnreadNotifications] = useState([]);
@@ -52,59 +47,11 @@ function ChatList() {
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    //AI
+    // Trạng thái cho ChatWidget
+    const [showChatWidget, setShowChatWidget] = useState(false);
+    const [currentSessionMessages, setCurrentSessionMessages] = useState([]);
+    const [currentSession, setCurrentSession] = useState(null);
 
-    const [messages, setMessages] = useState([
-        {
-            text: "Xin chào! Tôi là AI, ngày hôm nay bạn ổn chứ?",
-            user: { id: "ai", name: "AI Doctor" },
-        }
-    ]);
-
-
-    const fetchHistory = async () => {
-        try {
-            const history = await getAIHistory(currentUserId);
-
-            const formattedHistory = history.map(h => {
-                const role = String(h.role || "user").toLowerCase();
-                return {
-                    text: h.message,
-                    user: {
-                        id: role === "ai" ? "ai" : currentUserId,
-                        name: role === "ai" ? "AI Doctor" : "You"
-                    }
-                };
-            });
-            setMessages(prev => [...prev, ...formattedHistory]);
-        } catch (err) {
-            console.error("Lỗi load history:", err);
-        }
-    };
-
-    const handleSendMessage = async (text) => {
-        if (!text.trim()) return;
-
-        const userMessage = { text, user: { id: currentUserId, name: "You" } };
-        setMessages(prev => [...prev, userMessage]);
-
-        try {
-            const payload = { message: text, userId: currentUserId };
-            const aiReply = await chatAI(payload);
-
-            const aiMessage = {
-                text: String(aiReply),
-                user: { id: "ai", name: "AI Doctor" }
-            };
-            setMessages(prev => [...prev, aiMessage]);
-        } catch (err) {
-            console.error("Lỗi xử lý AI:", err);
-            setMessages(prev => [...prev, {
-                text: "Không thể phản hồi ngay bây giờ.",
-                user: { id: "ai", name: "AI Doctor" }
-            }]);
-        }
-    };
 
     useEffect(() => {
         if (!currentUserId) return;
@@ -112,7 +59,6 @@ function ChatList() {
         const fetchSessions = async () => {
             try {
                 const res = await getChatSessionsByUserId(currentUserId);
-
                 const sessionsWithLastMessage = await Promise.all(
                     res.map(async (session) => {
                         try {
@@ -126,11 +72,9 @@ function ChatList() {
                                 const lastMsg = messages[messages.length - 1];
                                 latestMessage = lastMsg.message;
                                 timestamp = lastMsg.timestamp || lastMsg.createdAt || null;
-
                                 unreadCount = messages.filter(
                                     msg => !msg.isRead && msg.receiver?.id === currentUserId
                                 ).length;
-
                                 isLastMessageUnread = (
                                     !lastMsg.isRead &&
                                     lastMsg.receiver?.id === currentUserId
@@ -156,7 +100,6 @@ function ChatList() {
                         }
                     })
                 );
-
                 setSessions(sessionsWithLastMessage);
             } catch (err) {
                 console.error("❌ Lỗi tải danh sách session:", err);
@@ -187,20 +130,17 @@ function ChatList() {
         const fetchChatGroupByCreatorId = async () => {
             try {
                 const data = await getChatGroupByCreatorId(currentUserId);
-                setmyGroup(data);
+                setMyGroup(data);
             } catch (err) {
                 console.error("❌ Lỗi khi lấy group của tôi:", err);
             }
         };
 
-        // Gọi các fetch ban đầu
         fetchSessions();
         fetchPsychologists();
         fetchChatGroup();
         fetchChatGroupByCreatorId();
-        fetchHistory();
 
-        // WebSocket
         const disconnect = connectWebSocket({
             sessionId: null,
             groupId: null,
@@ -208,35 +148,20 @@ function ChatList() {
                 if (!msg || !msg.message || !msg.senderName) return;
 
                 toast.info(`New message from ${msg.senderName.toUpperCase()}`);
-
-                // 👇 Kiểm tra nếu tin nhắn thuộc phiên hiện tại
-                if (msg.session?.id === currentSessionId) {
-                    setMessages(prev => [...prev, msg]);
+                if (msg.session?.id === currentSession?.id) {
+                    setCurrentSessionMessages(prev => [...prev, {
+                        senderId: msg.senderId,
+                        message: msg.message
+                    }]);
                 }
-
-                if (msg.session?.id !== currentSessionId && msg.receiverId === currentUserId) {
-                    // Nếu không phải session đang xem + là người nhận tin → cập nhật trạng thái unread
-                    setUnreadMessages(prev => {
-                        const sessionId = msg.session?.id;
-                        const updated = { ...prev };
-                        updated[sessionId] = (updated[sessionId] || 0) + 1;
-                        return updated;
-                    });
-                }
-
-
-                fetchSessions(); // Cập nhật danh sách session (ví dụ để update unread count)
-            }
-            ,
+                fetchSessions();
+            },
             onNotification: (notification) => {
                 console.log("🔔 Nhận noti từ WebSocket:", notification);
-
                 setNotifications(prev => [notification, ...prev]);
-
                 if (!notification.read) {
                     setUnreadNotifications(prev => [notification, ...prev]);
                 }
-
                 toast.info(`🔔 ${notification.title}: ${notification.message}`, {
                     position: "top-right",
                     autoClose: 4000,
@@ -247,8 +172,7 @@ function ChatList() {
         return () => {
             if (disconnect) disconnect();
         };
-    }, [currentUserId]);
-
+    }, [currentUserId, currentSession]);
 
     const chatWithPsychologist = async (psychologistId) => {
         try {
@@ -270,7 +194,7 @@ function ChatList() {
             if (!confirmed) return;
             await deleteGroupById(id);
             toast.success('Group deleted successfully');
-            setmyGroup(prev => prev.filter(grp => grp.id !== id));
+            setMyGroup(prev => prev.filter(grp => grp.id !== id));
             setGroup(prev => prev.filter(grp => grp.id !== id));
         } catch (err) {
             console.error("Delete failed:", err);
@@ -290,24 +214,20 @@ function ChatList() {
 
     const handleModalSubmit = async (data) => {
         try {
-            setLoading(true); // Bắt đầu loading
-
+            setLoading(true);
             let avt = data.imageUrl || data.avt || null;
-
             if (data.file) {
                 avt = await uploadFile(data.file);
             }
-
             const payload = {
                 ...data,
                 avt,
                 createdBy: { id: currentUserId },
                 members: [{ id: currentUserId }],
             };
-
             if (editingGroup) {
                 const updatedGroup = await updateGroupById(editingGroup.id, payload);
-                setmyGroup((prev) =>
+                setMyGroup((prev) =>
                     prev.map((group) => (group.id === editingGroup.id ? updatedGroup : group))
                 );
                 setGroup((prev) =>
@@ -316,51 +236,59 @@ function ChatList() {
                 showAlert("Group updated!", "success");
             } else {
                 const newGroup = await createNewGroup(payload);
-                setmyGroup((prev) => [...prev, newGroup]);
+                setMyGroup((prev) => [...prev, newGroup]);
                 setGroup((prev) => [...prev, newGroup]);
                 showAlert("Group created!", "success");
             }
-
             setShowModal(false);
         } catch (error) {
             showAlert("Đã có lỗi khi tạo/sửa nhóm", "error");
             console.error(error);
         } finally {
-            setLoading(false); // Tắt loading dù thành công hay thất bại
+            setLoading(false);
         }
     };
 
     const handleClick = async (session) => {
         const otherUser = getOtherUser(session, currentUserId);
         try {
-            // Gọi API đánh dấu tin nhắn đã đọc
+            // Đánh dấu tin nhắn đã đọc
             await changeStatusIsRead(session.id, currentUserId);
-            setUnreadCounts((prev) => ({
-                ...prev,
-                [session.id]: 0,
+            // Tải tin nhắn của phiên
+            const messages = await getMessagesBySessionId(session.id);
+            const formattedMessages = messages.map(msg => ({
+                senderId: msg.sender?.id || msg.senderId,
+                message: msg.message
             }));
+            setCurrentSessionMessages(formattedMessages);
+            setCurrentSession(session);
+            setShowChatWidget(true); // Hiển thị ChatWidget
         } catch (err) {
-            console.warn("Không thể cập nhật trạng thái isRead");
+            console.warn("Không thể cập nhật trạng thái isRead hoặc tải tin nhắn:", err);
+            showAlert("Không thể tải tin nhắn.", "error");
         }
-
-        // Điều hướng sang khung chat, truyền receiver qua state
-        navigate(`/user/chat/${session.id}`, {
-            state: {
-                receiver: otherUser
-            }
-        });
     };
 
-
-
+    const handleSendChatMessage = async (message) => {
+        if (!currentSession) return;
+        try {
+            // Gửi tin nhắn qua API hoặc WebSocket (giả định có API gửi tin nhắn)
+            // Ví dụ: await sendMessageAPI(currentSession.id, currentUserId, message);
+            setCurrentSessionMessages(prev => [...prev, {
+                senderId: currentUserId,
+                message
+            }]);
+        } catch (err) {
+            console.error("Lỗi gửi tin nhắn:", err);
+            showAlert("Không thể gửi tin nhắn.", "error");
+        }
+    };
 
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-primary mb-0">Messenger</h2>
-
                 <div className="d-flex gap-2">
-                    {/* Nếu USER */}
                     {user != null && (
                         <>
                             <button
@@ -369,7 +297,6 @@ function ChatList() {
                             >
                                 My Appointments
                             </button>
-
                             <div className="dropdown">
                                 <button
                                     className="btn btn-outline-primary dropdown-toggle"
@@ -399,34 +326,25 @@ function ChatList() {
                                     )}
                                 </ul>
                             </div>
-
-                            {/* ✅ Nút Video Chat Public */}
                             <button
                                 onClick={() => navigate(`/user/chat/public-call`)}
-                                className="btn btn-outline-warning"
+                                className="btn btn-outline-primary"
                             >
                                 Video Chat Public
                             </button>
                         </>
                     )}
-
-                    {/* Nếu PSYCHO */}
                     {user?.role === 'PSYCHO' && (
-                        <>
-                            <button
-                                onClick={() => navigate('/user/appointment/psychologist')}
-                                className="btn btn-outline-success"
-                            >
-                                Manage Appointments
-                            </button>
-                        </>
+                        <button
+                            onClick={() => navigate('/user/appointment/psychologist')}
+                            className="btn btn-outline-success"
+                        >
+                            Manage Appointments
+                        </button>
                     )}
                 </div>
-
-
             </div>
 
-            {/* Loading */}
             {loading && (
                 <div className="d-flex justify-content-center align-items-center my-4">
                     <div className="spinner-border text-primary" role="status">
@@ -435,10 +353,8 @@ function ChatList() {
                 </div>
             )}
 
-            {/* Error */}
             {error && <div className="alert alert-danger">{error}</div>}
 
-            {/* Chat 1-1 */}
             {!loading && !error && (
                 <>
                     {sessions.length === 0 && (
@@ -457,7 +373,6 @@ function ChatList() {
                                     onClick={() => handleClick(session)}
                                     style={{ cursor: "pointer" }}
                                 >
-                                    {/* Avatar hình tròn */}
                                     <img
                                         src={otherUser.avatar || "/default-avatar.png"}
                                         alt="avatar"
@@ -465,12 +380,9 @@ function ChatList() {
                                         width="40"
                                         height="40"
                                     />
-
-                                    {/* Nội dung bên trái */}
                                     <div className="flex-grow-1">
                                         <div className="fw-bold d-flex justify-content-between align-items-center">
                                             {otherUser.fullname.toUpperCase()}
-
                                             {session.timestamp && (
                                                 <small className="text-muted ms-2">
                                                     {new Date(session.timestamp).toLocaleTimeString([], {
@@ -481,16 +393,12 @@ function ChatList() {
                                                 </small>
                                             )}
                                         </div>
-
                                         <div className="d-flex justify-content-between align-items-center">
                                             <p
-                                                className={`mb-0 small flex-grow-1 ${session.unreadCount > 0 ? 'fw-bold text-dark' : 'text-muted'
-                                                    }`}
+                                                className={`mb-0 small flex-grow-1 ${session.unreadCount > 0 ? 'fw-bold text-dark' : 'text-muted'}`}
                                             >
                                                 {session.latestMessage}
                                             </p>
-
-                                            {/* 📩 Hiển thị số tin chưa đọc bên cạnh message */}
                                             {session.unreadCount > 0 && (
                                                 <span className="badge bg-danger rounded-pill ms-2">
                                                     {session.unreadCount}
@@ -500,7 +408,6 @@ function ChatList() {
                                     </div>
                                 </div>
                             );
-
                         })}
                     </div>
 
@@ -521,7 +428,6 @@ function ChatList() {
                                     Add new group ?
                                 </button>
                             </div>
-
                             <div className="list-group mt-2">
                                 {myGroup.map((grp) => (
                                     <div
@@ -545,7 +451,6 @@ function ChatList() {
                                                     className="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
                                                     style={{ width: "40px", height: "40px" }}
                                                 >
-                                                    {/* SVG default avatar */}
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="white" width="20" height="20">
                                                         <path d="..." />
                                                     </svg>
@@ -558,7 +463,6 @@ function ChatList() {
                                                 </p>
                                             </div>
                                         </div>
-
                                         <div className="ms-3 d-flex gap-2">
                                             <button className="btn btn-sm btn-outline-secondary" onClick={() => handleEditGroup(grp)}>
                                                 Edit
@@ -586,9 +490,7 @@ function ChatList() {
                                         onClick={() => navigate(`/user/chat/group/${grp.id}`)}
                                         style={{ cursor: "pointer" }}
                                     >
-                                        <div className="d-flex align-items-center"
-
-                                        >
+                                        <div className="d-flex align-items-center">
                                             {grp.avt ? (
                                                 <img
                                                     src={grp.avt}
@@ -622,53 +524,12 @@ function ChatList() {
                                         <span className="badge bg-secondary">
                                             Creator: <span>{grp.createdBy?.fullname || "No data"}</span>
                                         </span>
-
                                     </div>
                                 ))}
-
                             </div>
                         </>
                     )}
                 </>
-            )}
-
-            {/* Nút Chat AI */}
-
-
-            {isOpen && (
-                <div
-                    style={{
-                        position: "fixed",
-                        bottom: "20px",
-                        right: "20px",
-                        width: "350px",
-                        height: "500px",
-                        border: "1px solid #ddd",
-                        borderRadius: "10px",
-                        overflow: "hidden",
-                        boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                        background: "#fff",
-                        zIndex: 9999
-                    }}
-                >
-                    <MinChatUiProvider theme="#6ea9d7">
-                        <MainContainer style={{ height: "100%" }}>
-                            <MessageContainer>
-                                <MessageHeader
-                                    onBack={() => setIsOpen(false)}
-                                >
-                                    AI Psychologist
-                                </MessageHeader>
-                                <MessageList currentUserId={currentUserId} messages={messages} />
-                                <MessageInput
-                                    placeholder="Nhập tin nhắn..."
-                                    onSendMessage={handleSendMessage}
-                                    showSendButton
-                                />
-                            </MessageContainer>
-                        </MainContainer>
-                    </MinChatUiProvider>
-                </div>
             )}
 
             <GroupModal
@@ -684,8 +545,17 @@ function ChatList() {
                 notification={selectedNotification}
             />
 
-            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
-
+            {/* Hiển thị ChatWidget khi nhấp vào phiên chat */}
+            {showChatWidget && currentSession && (
+                <ChatWidget
+                    title={getOtherUser(currentSession, currentUserId).fullname || "Chat"}
+                    subtitle="Online"
+                    userId={currentUserId}
+                    messages={currentSessionMessages}
+                    onSendMessage={handleSendChatMessage}
+                    greeting={`Start chat with ${getOtherUser(currentSession, currentUserId).fullname}`}
+                />
+            )}
         </div>
     );
 }

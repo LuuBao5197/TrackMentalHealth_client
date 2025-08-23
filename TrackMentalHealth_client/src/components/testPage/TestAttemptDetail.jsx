@@ -6,10 +6,9 @@ import { Spinner, Alert } from "react-bootstrap";
 
 const TestAttemptDetail = () => {
   const { id } = useParams(); // Lấy attemptId từ URL
-  const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [testDetail, setTestDetail] = useState({});
   useEffect(() => {
     const fetchTestDetail = async () => {
       try {
@@ -17,7 +16,8 @@ const TestAttemptDetail = () => {
         const res = await axios.get(
           `http://localhost:9999/api/test/getTestHistory/test_attempt/${id}`
         );
-        setQuestions(res.data);
+        // console.log(res)
+        setTestDetail(res.data);
       } catch (err) {
         console.error("Error fetching test detail:", err);
         setError("Failed to load test details.");
@@ -47,8 +47,14 @@ const TestAttemptDetail = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Test Attempt Details</h2>
-      {questions.map((q, idx) => (
+      {console.log(testDetail)}
+      <h2 className="mb-4"> {testDetail.testTitle}</h2>
+      <p className="mb-4"> <b>Start time:</b> {new Date(testDetail.startedAt).toLocaleString()}</p>
+      <p className="mb-4"> <b>Completed At:</b>{new Date(testDetail.completedAt).toLocaleString()}</p>
+      <p className="mb-4"> <b>Total score:</b> {testDetail.totalScore}</p>
+      <p className="mb-4"> <b>Result:</b> {testDetail.resultLabel}</p>
+
+      {testDetail.detailDTOList.map((q, idx) => (
         <div className="card mb-3" key={idx}>
           <div className="card-body">
             <h5 className="card-title">

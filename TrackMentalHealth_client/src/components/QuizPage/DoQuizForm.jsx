@@ -141,62 +141,6 @@ const DoQuizForm = () => {
         }
     };
 
-    // const handleSubmit = async () => {
-    //     if (!quiz || !Array.isArray(quiz.quizQuestions)) return;
-
-    //     const unanswered = quiz.quizQuestions.filter(q => {
-    //         const ans = answers[q.id];
-    //         return (
-    //             ans === undefined ||
-    //             ans === '' ||
-    //             (Array.isArray(ans) && ans.length === 0)
-    //         );
-    //     });
-
-    //     if (unanswered.length > 0) {
-    //         alert(`You still have ${unanswered.length} unanswered question(s).`);
-    //         return;
-    //     }
-
-    //     let totalScore = 0;
-    //     quiz.quizQuestions.forEach(q => {
-    //         const ans = answers[q.id];
-    //         if (q.type === 'SCORE_BASED' && !Array.isArray(ans)) {
-    //             const selectedOption = (q.options || []).find(opt => opt.id === ans);
-    //             if (selectedOption) {
-    //                 totalScore += selectedOption.scoreValue || 0;
-    //             }
-    //         }
-    //     });
-
-    //     let resultText = "Not determined";
-    //     if (Array.isArray(quiz.results) && quiz.results.length > 0) {
-    //         const found = quiz.results.find(r => totalScore >= r.minScore && totalScore <= r.maxScore);
-    //         if (found) resultText = found.resultText;
-    //     }
-
-    //     const formattedAnswers = Object.entries(answers).map(([questionId, value]) => ({
-    //         questionId: parseInt(questionId),
-    //         selectedOptionIds: Array.isArray(value) ? value : [value],
-    //         userTextAnswer: typeof value === 'string' ? value : null
-    //     }));
-
-    //     const payload = {
-    //         userId,
-    //         quizId: quiz.id,
-    //         answers: formattedAnswers,
-    //         result: resultText
-    //     };
-
-    //     try {
-    //         await axios.post('http://localhost:9999/api/quiz/submitUserQuizResult', payload);
-    //         alert(`Quiz submitted successfully. Score: ${totalScore}. Result: ${resultText}`);
-    //         setTimeout(() => navigate('/'), 1500);
-    //     } catch (error) {
-    //         console.error('Error submitting quiz:', error);
-    //         alert('Submission failed.');
-    //     }
-    // };
     const handleSubmit = async () => {
         if (!quiz || !Array.isArray(quiz.quizQuestions)) return;
 

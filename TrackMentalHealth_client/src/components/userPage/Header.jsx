@@ -41,43 +41,6 @@ const Header = () => {
     }
   }, [userID]);
 
-  // Fetch notifications
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const fetchNotifications = async () => {
-      try {
-        const data = await getNotificationsByUserId(currentUserId);
-        setNotifications(data);
-        const unread = Array.isArray(data) ? data.filter((n) => !n.read) : [];
-        setUnreadNotifications(unread);
-      } catch (err) {
-        console.error("❌ Lỗi khi lấy thông báo:", err);
-      }
-    };
-
-    fetchNotifications();
-
-    const disconnect = connectWebSocket({
-      sessionId: null,
-      groupId: null,
-      onNotification: (notification) => {
-        setNotifications((prev) => [notification, ...prev]);
-        if (!notification.read) {
-          setUnreadNotifications((prev) => [notification, ...prev]);
-        }
-        toast.info(`🔔 ${notification.title}: ${notification.message}`);
-      },
-      // Khi có tin nhắn realtime
-      onMessage: (message) => {
-        if (message.receiverId === currentUserId && !message.isRead) {
-          setHasUnreadChat(true);
-        }
-      },
-    });
-
-    return () => disconnect && disconnect();
-  }, [currentUserId]);
 
   // Check unread chat khi load trang
   useEffect(() => {

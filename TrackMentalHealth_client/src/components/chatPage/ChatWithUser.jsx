@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
     MainContainer,
@@ -8,22 +8,19 @@ import {
     MessageList,
     MinChatUiProvider
 } from "@minchat/react-chat-ui";
-import {
-    connectWebSocket,
-    sendWebSocketMessage,
-    sendCallSignal
-} from "../../services/StompClient";
+import { sendWebSocketMessage, sendCallSignal } from "../../services/StompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
 import CallManager from "./CallManager";
 import ToastTypes, { showToast } from "../../utils/showToast";
-import { joinRoom, leaveRoom, destroyRoom } from "../../services/ZegoService";   // 🔹 Import Zego
+import { leaveRoom, destroyRoom } from "../../services/ZegoService";
+import { WebSocketContext } from "../../layouts/user/UserLayout";
 
 function ChatWithUser() {
+    const { privateMessages, incomingCallSignal, setIncomingCallSignal } = useContext(WebSocketContext);
     const currentUserId = parseInt(getCurrentUserId());
     const [currentUserName, setCurrentUserName] = useState("USER");
     const [currentUserAvatar, setCurrentUserAvatar] = useState("");
-
     const { sessionId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -39,13 +36,11 @@ function ChatWithUser() {
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(preloadedReceiver?.fullname || "U")}`
     );
 
-    const zegoCallContainer = useRef(null); // 🔹 Container để mount video call
-
+    // Lấy tin nhắn và thông tin người dùng
     useEffect(() => {
         const fetchMessages = async () => {
             try {
                 const res = await getMessagesBySessionId(sessionId);
-
                 if (res.length > 0) {
                     const formatted = res.map(msg => ({
                         text: msg.message,
@@ -59,7 +54,7 @@ function ChatWithUser() {
                     }));
                     setMessages(formatted);
 
-                    // Lưu avatar & tên của mình
+                    // Lưu thông tin người dùng hiện tại
                     const currentUserMsg = res.find(msg => msg.sender.id === currentUserId);
                     if (currentUserMsg) {
                         setCurrentUserName(currentUserMsg.sender.fullname || "Tôi");
@@ -70,7 +65,7 @@ function ChatWithUser() {
                         );
                     }
 
-                    // Nếu chưa có receiver từ state thì lấy từ session
+                    // Lấy thông tin người nhận nếu chưa có
                     if (!receiverId) {
                         const { sender, receiver } = res[0].session;
                         const isCurrentUserSender = sender.id === currentUserId;
@@ -87,19 +82,22 @@ function ChatWithUser() {
                 }
             } catch (error) {
                 console.error("❌ Lỗi lấy tin nhắn:", error);
+                showToast({
+                    message: "Không thể tải tin nhắn. Vui lòng thử lại.",
+                    type: ToastTypes.ERROR
+                });
             }
         };
 
         fetchMessages();
+    }, [sessionId, currentUserId, receiverId]);
 
-        const disconnect = connectWebSocket({
-            sessionId,
-            callId: sessionId,
-            onPrivateMessage: (msg) => {
-                if (!msg?.message || !msg?.senderId) return;
-
+    // Xử lý tin nhắn mới từ WebSocketContext
+    useEffect(() => {
+        if (privateMessages.length > 0) {
+            const msg = privateMessages[privateMessages.length - 1];
+            if (msg.sessionId === sessionId) {
                 let avatarUrl;
-
                 if (msg.senderAvatar?.trim()) {
                     avatarUrl = msg.senderAvatar;
                 } else if (msg.senderId === currentUserId) {
@@ -121,75 +119,83 @@ function ChatWithUser() {
                         }
                     }
                 ]);
-            },
-            onCallSignal: (signal) => {
-                switch (signal.type) {
-                    case "CALL_REQUEST":
-                        if (signal.callerId !== currentUserId) {
-                            showToast({
-                                message: `Cuộc gọi từ ${signal.callerName}...`,
-                                type: ToastTypes.INFO,
-                                time: 15000,
-                                showCallButtons: true,
-                                onAccept: () => {
-                                    // Người nhận bấm Accept → join luôn
-                                    navigate(`/user/chat/video-call/${signal.sessionId}`, {
-                                        state: { currentUserId, currentUserName, isCaller: false }
-                                    });
+            }
+        }
+    }, [privateMessages, sessionId, currentUserId, receiverId, currentUserAvatar, currentUserName, receiverAvatar]);
 
-                                    // Gửi tín hiệu cho caller biết callee đã chấp nhận
-                                    sendCallSignal(signal.sessionId, {
-                                        type: "CALL_ACCEPTED",
-                                        receiverId: currentUserId,
-                                        receiverName: currentUserName,
-                                        sessionId: signal.sessionId
-                                    });
-                                },
-                                onCancel: () => sendCallSignal(signal.sessionId, {
+    // Xử lý tín hiệu cuộc gọi từ WebSocketContext
+    useEffect(() => {
+        if (incomingCallSignal && incomingCallSignal.sessionId === sessionId) {
+            switch (incomingCallSignal.type) {
+                case "CALL_REQUEST":
+                    if (incomingCallSignal.callerId !== currentUserId) {
+                        showToast({
+                            message: `Cuộc gọi từ ${incomingCallSignal.callerName}...`,
+                            type: ToastTypes.INFO,
+                            time: 15000,
+                            showCallButtons: true,
+                            position:'top-center',
+                            onAccept: () => {
+                                setIncomingCallSignal(null);
+                                navigate(`/user/chat/video-call/${incomingCallSignal.sessionId}`, {
+                                    state: { currentUserId, currentUserName, isCaller: false }
+                                });
+                                sendCallSignal(incomingCallSignal.sessionId, {
+                                    type: "CALL_ACCEPTED",
+                                    receiverId: currentUserId,
+                                    receiverName: currentUserName,
+                                    sessionId: incomingCallSignal.sessionId
+                                });
+                            },
+                            onCancel: () => {
+                                setIncomingCallSignal(null);
+                                sendCallSignal(incomingCallSignal.sessionId, {
                                     type: "CALL_REJECTED",
                                     receiverId: currentUserId,
                                     receiverName: currentUserName,
-                                    sessionId: signal.sessionId
-                                })
-                            });
-                        }
-                        break;
-
-                    case "CALL_ACCEPTED":
-                        // Caller chỉ update UI thôi (caller đã vào room từ trước rồi)
-                        if (signal.receiverId !== currentUserId) {
-                            showToast({
-                                message: `${signal.receiverName} đã chấp nhận cuộc gọi`,
-                                type: ToastTypes.SUCCESS
-                            });
-                        }
-                        break;
-
-                    case "CALL_REJECTED":
-                        showToast({
-                            message: `${signal.receiverName || "Người nhận"} đã từ chối cuộc gọi`,
-                            type: ToastTypes.WARNING
+                                    sessionId: incomingCallSignal.sessionId
+                                });
+                            }
                         });
-                        break;
-                }
+                    }
+                    break;
+                case "CALL_ACCEPTED":
+                    if (incomingCallSignal.receiverId !== currentUserId) {
+                        showToast({
+                            message: `${incomingCallSignal.receiverName} đã chấp nhận cuộc gọi`,
+                            type: ToastTypes.SUCCESS
+                        });
+                    }
+                    break;
+                case "CALL_REJECTED":
+                    showToast({
+                        message: `${incomingCallSignal.receiverName || "Người nhận"} đã từ chối cuộc gọi`,
+                        type: ToastTypes.WARNING
+                    });
+                    break;
+                default:
+                    console.log("Tín hiệu cuộc gọi không xác định:", incomingCallSignal);
             }
+        }
+    }, [incomingCallSignal, currentUserId, currentUserName, navigate, sessionId]);
 
-
-
-        });
-
+    // Cleanup khi component unmount
+    useEffect(() => {
         return () => {
-            if (disconnect) disconnect();
             leaveRoom();
             destroyRoom();
         };
-    }, [sessionId, currentUserId, receiverId, currentUserAvatar, currentUserName, receiverAvatar]);
+    }, []);
 
     const handleSendMessage = (text) => {
         if (!text.trim()) return;
 
         if (!receiverId) {
             console.warn("Không xác định được người nhận, không thể gửi tin nhắn");
+            showToast({
+                message: "Không thể gửi tin nhắn. Người nhận không xác định.",
+                type: ToastTypes.ERROR
+            });
             return;
         }
 
@@ -204,10 +210,13 @@ function ChatWithUser() {
     const handleStartVideoCall = () => {
         if (!sessionId) {
             console.error("🚫 callId/sessionId is missing");
+            showToast({
+                message: "Không thể bắt đầu cuộc gọi. Thiếu session ID.",
+                type: ToastTypes.ERROR
+            });
             return;
         }
 
-        // Gửi tín hiệu mời gọi
         sendCallSignal(sessionId, {
             type: "CALL_REQUEST",
             callerId: currentUserId,
@@ -215,17 +224,14 @@ function ChatWithUser() {
             sessionId
         });
 
-        // ✅ Điều hướng sang trang VideoCallZego kèm state
         navigate(`/user/chat/video-call/${sessionId}`, {
             state: {
                 currentUserId,
                 currentUserName,
-                isCaller: true,   // 👈 BẮT BUỘC
+                isCaller: true,
             },
         });
     };
-
-
 
     return (
         <div className="container mt-3 mb-3">
@@ -271,19 +277,19 @@ function ChatWithUser() {
                         />
 
                         <MessageInput
-                            placeholder="Nhập tin nhắn..."
+                            placeholder="Enter message..."
                             onSendMessage={handleSendMessage}
                             showSendButton
-                            showAttachButton={true}
+                            showAttachButton={false}
                             onAttachClick={false}
                             disabled={!receiverId}
                         />
-                    </MessageContainer>
-                </MainContainer>
-            </MinChatUiProvider>
+                        </MessageContainer>
+                    </MainContainer>
+                </MinChatUiProvider>
 
-
-        </div>
+                
+            </div>
     );
 }
 
