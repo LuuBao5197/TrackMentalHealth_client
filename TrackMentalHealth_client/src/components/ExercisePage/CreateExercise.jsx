@@ -12,8 +12,9 @@ const CONDITION_TYPES = [
   { value: 'TURN_HEAD_DOWN', label: 'Turn Head Down' },
   { value: 'TURN_HEAD_LEFT', label: 'Turn Head Left' },
   { value: 'TURN_HEAD_RIGHT', label: 'Turn Head Right' },
+  { value: 'LEFT_KNEE_UP', label: 'Left Knee Up' },
+  { value: 'RIGHT_KNEE_UP', label: 'Right Knee Up' },
 ];
-
 
 const token = localStorage.getItem('token');
 let contentCreatorId = null;
@@ -38,6 +39,8 @@ const CreateExercise = () => {
     if (!values.instruction) errors.instruction = 'Instruction is required';
     if (values.mediaType !== 'camera' && !values.mediaUrl) errors.mediaUrl = 'Media file is required';
     if (!values.photo) errors.photo = 'Thumbnail image is required';
+    if (!values.difficultyLevel) errors.difficultyLevel = 'Difficulty level is required';
+
     // Validate conditions if camera
     if (values.mediaType === 'camera') {
       conditions.forEach((condition, index) => {
@@ -59,6 +62,7 @@ const CreateExercise = () => {
       estimatedDuration: 0,
       status: false,
       photo: '',
+      difficultyLevel: '', // 👈 thêm field
     },
     validate,
     onSubmit: async (values) => {
@@ -107,7 +111,7 @@ const CreateExercise = () => {
         });
       }
     },
-    validateOnChange: false, // ✅ only validate on blur or submit
+    validateOnChange: false,
     validateOnBlur: false,
   });
 
@@ -223,6 +227,29 @@ const CreateExercise = () => {
                 <div className="invalid-feedback">{formik.errors.instruction}</div>
               )}
             </div>
+
+            {/* Difficulty Level (only for camera) */}
+            {formik.values.mediaType === 'camera' && (
+              <div className="mb-3">
+                <label className="form-label">Difficulty Level</label>
+                <select
+                  name="difficultyLevel"
+                  className={`form-control ${formik.errors.difficultyLevel && formik.touched.difficultyLevel ? 'is-invalid' : ''}`}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.difficultyLevel}
+                >
+                  <option value="">Select difficulty</option>
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+                {formik.touched.difficultyLevel && formik.errors.difficultyLevel && (
+                  <div className="invalid-feedback">{formik.errors.difficultyLevel}</div>
+                )}
+              </div>
+            )}
+
 
             {/* Media type */}
             <div className="mb-3">
@@ -340,7 +367,7 @@ const CreateExercise = () => {
                         <label className="form-label mb-0">Duration (s)</label>
                         <input
                           type="number"
-                          min={1} // Không cho nhập nhỏ hơn 1
+                          min={1}
                           className={`form-control ${formik.errors[`condition_${index}_duration`] ? 'is-invalid' : ''}`}
                           value={condition.duration}
                           onChange={(e) => updateCondition(index, 'duration', e.target.value)}
@@ -351,7 +378,6 @@ const CreateExercise = () => {
                           </div>
                         )}
                       </div>
-
 
                       {/* Step order */}
                       <div className="col-md-2">

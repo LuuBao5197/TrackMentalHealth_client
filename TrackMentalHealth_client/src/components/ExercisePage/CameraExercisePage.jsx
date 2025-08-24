@@ -6,6 +6,7 @@ import axios from "axios";
 
 // Import các hàm từ poseProcessor.js
 import { initHands, initFaceMesh, initPose, initPoseProcessing } from "./poseProcessor";
+import { title } from "process";
 
 const CameraExercisePage = ({ exercise }) => {
   const { id } = useParams();
@@ -32,6 +33,7 @@ const CameraExercisePage = ({ exercise }) => {
   // Global exercise countdown
   const [globalTimeLeft, setGlobalTimeLeft] = useState(() => {
     if (!exercise) return 0;
+    if (exercise.difficultyLevel === "Easy") return 360;
     if (exercise.difficultyLevel === "Medium") return 160;
     if (exercise.difficultyLevel === "Hard") return 100;
     return exercise.estimatedDuration || 120;
@@ -231,7 +233,7 @@ const CameraExercisePage = ({ exercise }) => {
           exerciseId: exercise.id,
           status: status,
           score: score,
-          feedback: "Auto feedback: keep practicing!",
+          title: title.difficultyLevel,
           difficultyLevel: exercise.difficultyLevel,
         })
         .then(() => {

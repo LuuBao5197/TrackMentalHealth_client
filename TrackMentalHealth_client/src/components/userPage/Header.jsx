@@ -210,6 +210,13 @@ const Header = () => {
                 </li>
 
                 <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/exercise/history`
+
+                  )}>
+                    View Exercise History
+                  </button>
+                </li>
+                <li>
                   <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`
 
                   )}>

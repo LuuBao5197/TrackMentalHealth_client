@@ -57,15 +57,33 @@ const ExerciseManager = () => {
                       </div>
                     </div>
                     <div className="portfolio-content">
-                      <span className="category">{ex.mediaType}</span>
+                      {/* Hàng đầu tiên: mediaType bên trái, difficulty bên phải */}
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="category text-uppercase">{ex.mediaType}</span>
+
+                        {ex.mediaType === "camera" && ex.difficultyLevel && (
+                          <span
+                            className={`badge ${
+                              ex.difficultyLevel.toLowerCase() === "easy"
+                                ? "bg-success"
+                                : ex.difficultyLevel.toLowerCase() === "medium"
+                                ? "bg-warning text-dark"
+                                : "bg-danger"
+                            }`}
+                          >
+                            {ex.difficultyLevel}
+                          </span>
+                        )}
+                      </div>
+
                       <h3>
                         {ex.title?.length > 40
-                          ? ex.title.substring(0, 40) + '...'
+                          ? ex.title.substring(0, 40) + "..."
                           : ex.title}
                       </h3>
                       <p>
                         {ex.instruction?.length > 50
-                          ? ex.instruction.substring(0, 50) + '...'
+                          ? ex.instruction.substring(0, 50) + "..."
                           : ex.instruction}
                       </p>
                     </div>
