@@ -11,6 +11,9 @@ import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
 import { useSelector } from 'react-redux';
+import ReactStars from "react-rating-stars-component";
+import { NotDTO } from '../../../utils/dto/NotDTO';
+
 
 function AppointmentManagement() {
 
@@ -34,20 +37,33 @@ function AppointmentManagement() {
         });
     };
 
-    const fetchAppointments = async () => {
-        try {
-            const res = await getAppointmentByPsyId(psychologistId);
-            const sorted = res.sort((a, b) => new Date(b.timeStart) - new Date(a.timeStart));
+   const fetchAppointments = async () => {
+    try {
+        const res = await getAppointmentByPsyId(psychologistId);
 
-            const pending = sorted.filter(a => a.status === 'PENDING');
-            const others = sorted.filter(a => a.status !== 'PENDING');
-            setAppointments([...pending, ...others]);
-        } catch (err) {
-            setError("Failed to load appointments.");
-        } finally {
-            setLoading(false);
-        }
-    };
+        console.log(res);
+        
+        // Đảm bảo res là mảng
+        const data = Array.isArray(res) ? res : [];
+
+        // Sắp xếp theo timeStart (mới nhất trước)
+        const sorted = [...data].sort(
+            (a, b) => new Date(b.timeStart) - new Date(a.timeStart)
+        );
+
+        // Ưu tiên Pending
+        const pending = sorted.filter(a => a.status === "PENDING");
+        const others = sorted.filter(a => a.status !== "PENDING");
+
+        setAppointments([...pending, ...others]);
+    } catch (err) {
+        setError("Failed to load appointments.");
+        console.error("fetchAppointments error:", err);
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     useEffect(() => {
         fetchAppointments();
@@ -68,10 +84,12 @@ function AppointmentManagement() {
             const notificationToUser = NotDTO(appt.user.id, 'The expert has accepted your invitation.');
             await saveNotification(notificationToUser);
 
-            showAlert("Appointment accepted!");
+            showAlert("Appointment accepted!",'success');
             fetchAppointments();
         } catch (err) {
             showAlert("Error accepting appointment!", "error");
+            console.log(err);
+            
         }
     };
 
@@ -88,7 +106,7 @@ function AppointmentManagement() {
             const notificationToUser = NotDTO(appt.user.id, 'The expert has declined your invitation.');
             await saveNotification(notificationToUser);
 
-            showAlert("Appointment declined.");
+            showAlert("Appointment declined.",'error');
             fetchAppointments();
         } catch (err) {
             showAlert("Error declining appointment!", "error");
@@ -121,6 +139,20 @@ function AppointmentManagement() {
 
     return (
         <div className="container mt-4 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol className="breadcrumb">
+                    <li
+                        className="breadcrumb-item"
+                        style={{ cursor: "pointer", color: "#038238ff" }}
+                        onClick={() => nav("/user/chat/list")}
+                    >
+                        Chat
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        Appointment Management
+                    </li>
+                </ol>
+            </nav>
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-success">My Appointments</h2>
             </div>
@@ -145,6 +177,7 @@ function AppointmentManagement() {
                                 <th>Time</th>
                                 <th>Note</th>
                                 <th>Status</th>
+                                <th>Rating</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -156,6 +189,14 @@ function AppointmentManagement() {
                                     <td>{formatDateTime(item.timeStart)}</td>
                                     <td>{item.note || 'None'}</td>
                                     <td>{renderStatusBadge(item.status)}</td>
+                                    <td>
+                                        <ReactStars
+                                            count={item.review?.rating}
+                                            edit={false}
+                                            size={24}
+                                            activeColor="#ffd700"
+                                        />
+                                    </td>
                                     <td>
                                         {item.status === "PENDING" ? (
                                             <>

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { joinRoom, leaveRoom, destroyRoom } from "../../../services/ZegoService";
-import { sendCallSignal } from "../../../services/StompClient";
-import ToastTypes, { showToast } from "../../../utils/showToast";
+import { sendCallSignal } from "../../../services/stompClient";
+import  { showToast } from "../../../utils/showToast";
 
 export default function VideoCallZego() {
   const { sessionId } = useParams();

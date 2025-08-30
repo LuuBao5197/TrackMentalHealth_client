@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCurrentUserId } from "../../../utils/getCurrentUserID";
-import { connectWebSocket, sendCallSignal } from "../../../services/StompClient";
-import ToastTypes, { showToast } from "../../../utils/showToast";
+import { connectWebSocket, sendCallSignal } from "../../../services/stompClient";
+import { showToast } from "../../../utils/showToast";
 
 export default function VideoCall() {
   const { sessionId } = useParams();

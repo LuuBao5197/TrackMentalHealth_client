@@ -5,84 +5,70 @@ import Header from "@components/userPage/Header";
 import Footer from "@components/userPage/Footer";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 import "../../assets/css/main.css";
 import useBodyScrolled from "../../hooks/useBodyScrolled";
 import useMobileNavToggle from "../../hooks/useMobileNavToggle";
 import useScrollTopButton from "../../hooks/useScrollTopButton";
 import useAOS from "../../hooks/useAOS";
 import usePreloader from "../../hooks/usePreloader";
-import { connectWebSocket } from "../../services/StompClient";
-import ToastTypes, { showToast } from "../../utils/showToast";
+
+import { connectWebSocket } from "../../services/stompClient";
+import { showToast } from "../../utils/showToast";
 import { chatAI, getAIHistory } from "../../api/api";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
-import ChatWidget from "../../components/chatPage/ChatWidget";
+import ChatWidgetWrapper from "../../components/chatPage/ChatWidgetWrapper";
 
 export const WebSocketContext = createContext();
-export const ChatContext = createContext(); // Context mới để quản lý chat
+export const ChatContext = createContext();
 
 const UserLayout = () => {
-  const userRole = useSelector((state) => state.auth.user);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const currentUserId = getCurrentUserId();
+  const user = useSelector((state) => state.auth.user);
 
-  // Trạng thái WebSocket
-  const [privateMessages, setPrivateMessages] = useState([]);
-  const [groupMessages, setGroupMessages] = useState([]);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [incomingCallSignal, setIncomingCallSignal] = useState(null);
 
-  // Trạng thái chat
-  const [chatType, setChatType] = useState(null); // "AI", "1-1", "group"
-  const [currentSession, setCurrentSession] = useState(null); // Session hoặc group
   const [chatMessages, setChatMessages] = useState([]);
-  const [showChatWidget, setShowChatWidget] = useState(false);
+  const [showChatWidget, setShowChatWidget] = useState(true);
+  const [aiHistoryLoaded, setAiHistoryLoaded] = useState(false);
 
-  // Set header height
+  // lưu user vào localStorage
   useEffect(() => {
-    document.body.classList.add("index-page");
-    const header = document.querySelector("header");
-    if (header) {
-      setHeaderHeight(header.offsetHeight);
+    if (user) {
+      localStorage.setItem("currentUserId", user.userId);
+      localStorage.setItem("currentUserRole", user.role);
     }
-    return () => {
-      document.body.classList.remove("index-page");
-    };
-  }, []);
+  }, [user]);
 
+  const currentUserId = getCurrentUserId();
+
+  // setup UI hooks
   useBodyScrolled();
   useMobileNavToggle();
   useScrollTopButton();
   useAOS();
   usePreloader();
 
-  // WebSocket
+  // lấy chiều cao header
   useEffect(() => {
-    if (!userRole) return;
+    const header = document.querySelector("header");
+    if (header) setHeaderHeight(header.offsetHeight);
+  }, []);
+
+  // kết nối WebSocket (chỉ giữ noti + call)
+  useEffect(() => {
+    if (!user) return;
 
     const disconnect = connectWebSocket({
-      sessionId: null,
-      groupId: null,
-      callId: `user_${userRole.userId}`,
-      onPrivateMessage: (msg) => {
-        setPrivateMessages((prev) => [...prev, msg]);
-        if (chatType === "1-1" && msg.session?.id === currentSession?.id) {
-          setChatMessages((prev) => [...prev, { senderId: msg.senderId, message: msg.message }]);
-        }
-      },
-      onGroupMessage: (msg) => {
-        setGroupMessages((prev) => [...prev, msg]);
-        if (chatType === "group" && msg.groupId === currentSession?.id) {
-          setChatMessages((prev) => [...prev, { senderId: msg.senderId, message: msg.message }]);
-        }
-        toast.info("Tin nhắn nhóm mới...", { position: "top-right" });
-      },
+      callId: `user_${user.userId}`,
       onNotification: (noti) => {
         setNotifications((prev) => [...prev, noti]);
-        toast.info(`Notification: ${noti.title || noti.message || ""}`);
+        showToast(`${noti.message}`);
       },
       onCallSignal: (signal) => {
         setIncomingCallSignal(signal);
-        if (signal.type === "CALL_REQUEST" && signal.calleeId === userRole.userId) {
+        if (signal.type === "CALL_REQUEST" && signal.calleeId === user.userId) {
           showToast({
             message: `${signal.callerName} is calling you...`,
             type: ToastTypes.INFO,
@@ -91,80 +77,77 @@ const UserLayout = () => {
             position: "top-center",
             onAccept: () => {
               setIncomingCallSignal(null);
-              window.location.href = `/user/video-call/${signal.sessionId || signal.callId}`;
+              window.location.href = `/user/video-call/${signal.sessionId || signal.callId
+                }`;
             },
-            onCancel: () => {
-              setIncomingCallSignal(null);
-            },
+            onCancel: () => setIncomingCallSignal(null),
           });
         }
       },
     });
 
-    return () => {
-      if (disconnect) disconnect();
-    };
-  }, [userRole, chatType, currentSession]);
+    return () => disconnect && disconnect();
+  }, [user]);
 
-  // Xử lý AI chat
+  // load lịch sử chat bot
   const loadAIHistory = async () => {
     try {
       const history = await getAIHistory(currentUserId);
-      const formattedHistory = history.map((h) => ({
-        senderId: String(h.role || "user").toLowerCase() === "ai" ? "ai" : currentUserId,
+      console.log(history);
+      
+      // Convert dữ liệu từ backend thành format chatMessages
+      const formatted = history.map((h) => ({
+        id: h.id,
+        senderId: String(h.role).toLowerCase() === "ai" ? "ai" : h.user?.id,
+        senderName: h.role === "ai" ? "AI" : h.user?.username,
         message: h.message,
+        timestamp: h.timestamp,
       }));
-      setChatMessages(formattedHistory);
-      setChatType("AI");
-      setCurrentSession(null);
-      setShowChatWidget(true);
+
+      setChatMessages(formatted);  
+      setAiHistoryLoaded(true);
     } catch (err) {
       console.error("Lỗi load history:", err);
     }
   };
 
-  // Gửi tin nhắn
+  // chỉ chạy 1 lần khi mount
+  useEffect(() => {
+    if (!aiHistoryLoaded) {
+      loadAIHistory();
+    }
+  }, []);
+
+
+
   const handleSendMessage = async (msg) => {
     if (!msg.trim()) return;
 
-    if (chatType === "AI") {
-      const userMessage = { senderId: currentUserId, message: msg };
-      setChatMessages((prev) => [...prev, userMessage]);
-      try {
-        const payload = { message: msg, userId: currentUserId.toString() };
-        const aiReply = await chatAI(payload);
-        setChatMessages((prev) => [...prev, { senderId: "ai", message: String(aiReply) }]);
-      } catch (err) {
-        setChatMessages((prev) => [...prev, { senderId: "ai", message: "Xin lỗi, hiện tại tôi chưa thể trả lời." }]);
-      }
-    } else if (chatType === "1-1" || chatType === "group") {
-      // Giả định có API gửi tin nhắn
-      try {
-        // await sendMessageAPI(currentSession.id, currentUserId, msg, chatType);
-        setChatMessages((prev) => [...prev, { senderId: currentUserId, message: msg }]);
-      } catch (err) {
-        console.error("Lỗi gửi tin nhắn:", err);
-        toast.error("Không thể gửi tin nhắn.");
-      }
+    const userMsg = { senderId: currentUserId, message: msg };
+    setChatMessages((prev) => [...prev, userMsg]);
+
+    try {
+      const aiReply = await chatAI({
+        message: msg,
+        userId: currentUserId.toString(),
+      });
+      setChatMessages((prev) => [
+        ...prev,
+        { senderId: "ai", message: String(aiReply) },
+      ]);
+    } catch {
+      setChatMessages((prev) => [
+        ...prev,
+        { senderId: "ai", message: "Xin lỗi, tôi chưa thể trả lời." },
+      ]);
     }
   };
 
+
   return (
-    <WebSocketContext.Provider
-      value={{
-        privateMessages,
-        groupMessages,
-        notifications,
-        incomingCallSignal,
-        setIncomingCallSignal,
-      }}
-    >
+    <WebSocketContext.Provider value={{ notifications, incomingCallSignal }}>
       <ChatContext.Provider
         value={{
-          chatType,
-          setChatType,
-          currentSession,
-          setCurrentSession,
           chatMessages,
           setChatMessages,
           showChatWidget,
@@ -176,20 +159,14 @@ const UserLayout = () => {
           <Header />
           <main style={{ paddingTop: headerHeight }} className="container">
             <Outlet />
-            {showChatWidget && (
-              <ChatWidget
-                title={chatType === "AI" ? "AI Psychologist" : currentSession?.name || getOtherUser(currentSession, currentUserId)?.fullname || "Chat"}
-                subtitle={chatType === "AI" ? "Hỗ trợ trò chuyện" : "Online"}
-                userId={currentUserId}
+            {showChatWidget && aiHistoryLoaded && (
+              <ChatWidgetWrapper
                 messages={chatMessages}
                 onSendMessage={handleSendMessage}
-                greeting={
-                  chatType === "AI"
-                    ? "Xin chào! Tôi là AI, hôm nay bạn ổn chứ?"
-                    : `Bắt đầu trò chuyện với ${currentSession?.name || getOtherUser(currentSession, currentUserId)?.fullname || "người dùng"}`
-                }
               />
             )}
+
+
           </main>
           <Footer />
           <ToastContainer

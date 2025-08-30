@@ -7,7 +7,7 @@ import { getUserInfo } from "../../api/userAPI";
 import { getNotificationsByUserId, deleteNotificationById, changeStatusNotification, hasUnreadMessages } from "../../api/api";
 import { logout } from "../../redux/slices/authSlice";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
-import { connectWebSocket } from "../../services/StompClient";
+import { connectWebSocket } from "../../services/stompClient";
 import { toast, ToastContainer } from "react-toastify";
 import NotificationDropdown from "../notification/NotificationDropdown";
 import imgLogo from "@assets/images/logos/logoTMH.png";
@@ -40,6 +40,25 @@ const Header = () => {
         .catch((err) => console.error("Error fetching user info:", err));
     }
   }, [userID]);
+
+  // Fetch notifications
+useEffect(() => {
+  if (!userID) return;
+  const fetchNotifications = async () => {
+    try {
+      const res = await getNotificationsByUserId(userID);
+      const data = res || [];
+      
+      setNotifications(data);
+      setUnreadNotifications(data.filter(n => !n.read));
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
+
+  fetchNotifications();
+}, [userID]);
+
 
 
   // Check unread chat khi load trang

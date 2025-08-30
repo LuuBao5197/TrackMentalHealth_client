@@ -11,7 +11,7 @@ import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 import MoodHistoryPage from '../components/userPage/MoodHistoryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
-import ChatList from '../components/chatPage/ChatList.jsx';
+import ChatList from '../components/chatPage/ChatPage.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetail from '../components/LessonPage/LessonDetail';
 import ArticleDetail from '../components/ArticlePage/ArticleDetail.jsx';
@@ -168,7 +168,6 @@ const Router = [
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
-
 
         ],
       },

@@ -8,11 +8,11 @@ import {
     MessageList,
     MinChatUiProvider
 } from "@minchat/react-chat-ui";
-import { sendWebSocketMessage, sendCallSignal } from "../../services/StompClient";
+import { sendWebSocketMessage, sendCallSignal } from "../../services/stompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
 import CallManager from "./CallManager";
-import ToastTypes, { showToast } from "../../utils/showToast";
+import { showToast } from "../../utils/showToast";
 import { leaveRoom, destroyRoom } from "../../services/ZegoService";
 import { WebSocketContext } from "../../layouts/user/UserLayout";
 
@@ -94,7 +94,7 @@ function ChatWithUser() {
 
     // Xử lý tin nhắn mới từ WebSocketContext
     useEffect(() => {
-        if (privateMessages.length > 0) {
+            if (privateMessages?.length > 0) {
             const msg = privateMessages[privateMessages.length - 1];
             if (msg.sessionId === sessionId) {
                 let avatarUrl;
@@ -235,8 +235,22 @@ function ChatWithUser() {
 
     return (
         <div className="container mt-3 mb-3">
-            <MinChatUiProvider theme="#6ea9d7">
-                <MainContainer style={{ height: '100vh' }}>
+             <nav aria-label="breadcrumb">
+                    <ol className="breadcrumb">
+                        <li
+                            className="breadcrumb-item"
+                            style={{ cursor: "pointer", color: "#038238ff" }}
+                            onClick={() => navigate("/user/chat/list")}
+                        >
+                            Chat
+                        </li>
+                        <li className="breadcrumb-item active" aria-current="page">
+                            Chat private
+                        </li>
+                    </ol>
+                </nav>
+            <MinChatUiProvider theme="#038238ff">
+                <MainContainer style={{ height: '80vh' }}>
                     <MessageContainer>
                         <MessageHeader
                             onBack={() => navigate("/user/chat/list")}
@@ -266,7 +280,7 @@ function ChatWithUser() {
                                     }}
                                     title="Video Call"
                                 >
-                                    <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#1a73e8" }}></i>
+                                    <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#038238ff" }}></i>
                                 </button>
                             </div>
                         </MessageHeader>

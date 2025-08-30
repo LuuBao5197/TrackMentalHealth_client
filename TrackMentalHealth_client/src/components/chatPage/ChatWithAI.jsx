@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { MessageBox, Input, Button } from "react-chat-elements";
-import "react-chat-elements/dist/main.css";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { chatAI, getAIHistory } from "../../api/api";

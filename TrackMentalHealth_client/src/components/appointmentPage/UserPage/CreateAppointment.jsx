@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getPsychologists, saveAppointment, saveNotification } from '../../../api/api';
 import { useNavigate } from "react-router-dom";
-import { showAlert } from '../../../utils/showAlert';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { NotDTO } from '../../../utils/dto/NotDTO';
 import { useSelector } from 'react-redux';
 
@@ -95,6 +94,26 @@ function CreateAppointment() {
 
     return (
         <div className="container mt-5">
+            <nav aria-label="breadcrumb">
+                <ol className="breadcrumb">
+                    <li
+                        className="breadcrumb-item"
+                        style={{ cursor: "pointer", color: "#038238ff" }}
+                        onClick={() => nav("/user/chat/list")}
+                    >
+                        Chat
+                    </li>
+                    <li className="breadcrumb-item "
+                        style={{ cursor: "pointer", color: "#038238ff" }}
+                        onClick={() => nav(`/user/appointment/${currentUserId}`)}
+                    >
+                        My Appointment
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        Create new appointment
+                    </li>
+                </ol>
+            </nav>
             <h2 className="mb-4">Create Appointment</h2>
             <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-light">
                 <div className="mb-3">
@@ -137,7 +156,7 @@ function CreateAppointment() {
                         {psychologists.map(p => (
                             <option value={p.id}>
                                 {p.usersID.fullname}
-                                 
+
                             </option>
                         ))}
                     </select>
@@ -147,8 +166,6 @@ function CreateAppointment() {
                     Create Appointment
                 </button>
             </form>
-            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
-
         </div>
     );
 }

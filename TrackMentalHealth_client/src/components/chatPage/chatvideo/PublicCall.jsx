@@ -38,25 +38,28 @@ export default function PublicCall() {
       className="container mt-3 mb-3"
     >
       {/* Nút Back */}
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          position: "absolute",
-          top: "10px",
-          left: "10px",
-          zIndex: 1000,
-          padding: "6px 12px",
-          borderRadius: "8px",
-          border: "none",
-          backgroundColor: "#068445ff",
-          color: "white",
-          cursor: "pointer",
-        }}
-      >
-        ← Back
-      </button>
+      <nav aria-label="breadcrumb">
+        <ol className="breadcrumb">
+          <li
+            className="breadcrumb-item"
+            style={{ cursor: "pointer", color: "#038238ff" }}
+            onClick={() => {
+              const confirmExit = window.confirm("Bạn có chắc chắn muốn thoát cuộc gọi?");
+              if (confirmExit) {
+                navigate("/user/chat/list");
+              }
+            }}
+          >
+            Chat
+          </li>
 
-      <div ref={ref} style={{ height: "100%", width: "100%" }} />
+          <li className="breadcrumb-item active" aria-current="page">
+            Public call
+          </li>
+        </ol>
+      </nav>
+
+      <div ref={ref} style={{ height: "95%", width: "100%" }} />
     </div>
   );
 }

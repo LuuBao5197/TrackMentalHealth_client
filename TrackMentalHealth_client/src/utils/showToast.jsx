@@ -1,31 +1,37 @@
-import React from "react";
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const ToastTypes = {
-  SUCCESS: "success",
-  ERROR: "error",
-  INFO: "info",
-  WARNING: "warning",
-};
-
-// Hàm showToast giờ có thể nhận thêm callbacks cho nút Accept/Cancel
-export function showToast({
-  message = message,
-  type = ToastTypes.INFO,
-  time = 3000,
-  position = "bottom-right",
-  closeButton = true,
-  pauseOnHover = true,
-  draggable = true,
-  // Thêm 2 props callback cho accept/cancel
-  onAccept = null,
-  onCancel = null,
-  showCallButtons = false, // nếu true thì hiện nút Accept/Cancel
-}) {
+export function showToast(
+  message = "",
+  type = "info",
+  {
+    time = 3000,
+    position = "bottom-right",
+    closeButton = true,
+    pauseOnHover = false,
+    draggable = true,
+    onAccept = null,
+    onCancel = null,
+    showCallButtons = false,
+  } = {}
+) {
   const content = (
     <div>
-      <strong style={{ display: "block", marginBottom: 4 }}>{message}</strong>
-      {/* <div>{message}</div> */}
+      {/* Title cố định */}
+      <div
+        style={{
+          fontWeight: "bold",
+          fontSize: 14,
+          marginBottom: 4,
+          color: "#ffffffff",
+        }}
+      >
+        New notification
+      </div>
+
+      {/* Message động */}
+      {message && <div style={{ fontSize: 13 }}>{message}</div>}
+
       {showCallButtons && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
           <button
@@ -39,7 +45,7 @@ export function showToast({
             }}
             onClick={() => {
               if (onAccept) onAccept();
-              toast.dismiss(); // đóng toast sau khi bấm
+              toast.dismiss();
             }}
           >
             Accept
@@ -74,19 +80,17 @@ export function showToast({
   };
 
   switch (type) {
-    case ToastTypes.SUCCESS:
+    case "success":
       toast.success(content, options);
       break;
-    case ToastTypes.ERROR:
+    case "error":
       toast.error(content, options);
       break;
-    case ToastTypes.WARNING:
+    case "warning":
       toast.warning(content, options);
       break;
-    case ToastTypes.INFO:
+    case "info":
     default:
       toast.info(content, options);
   }
 }
-
-export default ToastTypes;

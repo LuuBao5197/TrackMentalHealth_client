@@ -7,14 +7,14 @@ let isConnected = false;
 export function connectWebSocket({
     sessionId,
     groupId,
-    callId,           // ✅ đổi từ videoCallId -> callId
+    callId,              // giữ lại callId
     onPrivateMessage,
     onGroupMessage,
     onNotification,
-    onCallSignal      // ✅ đổi từ onVideoSignal -> onCallSignal
+    onCallSignal         // giữ lại callback signal
 }) {
     const currentUserId = getCurrentUserId();
-    console.log("🧪 connectWebSocket gọi với:", { sessionId, groupId, callId, currentUserId });
+    console.log("🧪 connectWebSocket:", { sessionId, groupId, callId, currentUserId });
 
     client = new Client({
         webSocketFactory: () => new WebSocket("/ws"),
@@ -22,59 +22,49 @@ export function connectWebSocket({
         debug: (str) => console.log('[STOMP DEBUG]', str),
 
         onConnect: () => {
-            console.log("✅ Kết nối WebSocket thành công");
+            console.log("✅ WebSocket connected");
             isConnected = true;
 
-            // 🔹 Global subscription cho tất cả tin nhắn private gửi tới user này
-            client.subscribe(`/user/${currentUserId}/queue/messages`, (message) => {
-                if (message.body) {
-                    console.log("💌 Global private message:", message.body);
-                    onPrivateMessage?.(JSON.parse(message.body));
-                }
+            // 🔹 Private chat
+            client.subscribe(`/user/${currentUserId}/queue/messages`, (msg) => {
+                if (msg.body) onPrivateMessage?.(JSON.parse(msg.body));
             });
 
-            // 1-1 Chat theo session
             if (sessionId) {
-                client.subscribe(`/topic/chat/${sessionId}`, (message) => {
-                    if (message.body) {
-                        console.log("💬 Session message:", message.body);
-                        onPrivateMessage?.(JSON.parse(message.body));
-                    }
+                client.subscribe(`/topic/chat/${sessionId}`, (msg) => {
+                    if (msg.body) onPrivateMessage?.(JSON.parse(msg.body));
                 });
             }
 
-            // Group Chat
+            // 🔹 Group chat
             if (groupId) {
-                client.subscribe(`/topic/group/${groupId}`, (message) => {
-                    if (message.body) onGroupMessage?.(JSON.parse(message.body));
+                client.subscribe(`/topic/group/${groupId}`, (msg) => {
+                    if (msg.body) onGroupMessage?.(JSON.parse(msg.body));
                 });
             }
 
-            // Video Call / Call Signal
+            // 🔹 Call signal (chỉ giữ tầng signal, bỏ UI/video)
             if (callId) {
-                client.subscribe(`/topic/call/${callId}`, (message) => {
-                    if (message.body) {
-                        const signal = JSON.parse(message.body);
-                        console.log("📞 Nhận tín hiệu call:", signal);
+                client.subscribe(`/topic/call/${callId}`, (msg) => {
+                    if (msg.body) {
+                        const signal = JSON.parse(msg.body);
+                        console.log("📞 Call signal:", signal);
                         onCallSignal?.(signal);
                     }
                 });
             }
 
-            // Notification
-            client.subscribe(`/topic/notifications/${currentUserId}`, (message) => {
-                if (message.body) onNotification?.(JSON.parse(message.body));
+            // 🔹 Notifications
+            client.subscribe(`/topic/notifications/${currentUserId}`, (msg) => {
+                if (msg.body) onNotification?.(JSON.parse(msg.body));
             });
-        }
-        ,
-
-        onStompError: (frame) => {
-            console.error("💥 STOMP lỗi:", frame.headers['message']);
-            console.error("🔍 Chi tiết:", frame.body);
         },
 
+        onStompError: (frame) => {
+            console.error("💥 STOMP error:", frame.headers['message'], frame.body);
+        },
         onWebSocketError: (err) => {
-            console.error("🛑 WebSocket lỗi:", err);
+            console.error("🛑 WebSocket error:", err);
         }
     });
 
@@ -82,47 +72,41 @@ export function connectWebSocket({
 
     return () => {
         isConnected = false;
-        console.warn("👋 Đóng WebSocket client...");
+        console.warn("👋 WebSocket disconnected");
         client.deactivate();
     };
 }
 
 export function sendWebSocketMessage(destination, messageObj) {
     if (client && client.connected) {
-        console.log(`📤 Gửi WebSocket đến [${destination}]:`, messageObj);
         client.publish({
             destination,
             body: JSON.stringify(messageObj)
         });
+        console.log(`📤 Sent WS message to [${destination}]`, messageObj);
     } else {
-        console.error("🚫 WebSocket chưa kết nối.");
+        console.error("🚫 WebSocket not connected.");
     }
 }
 
-// Hàm gửi tín hiệu call
+// ✅ Chỉ gửi signal, không dính UI video call
 export function sendCallSignal(callId, payload) {
     if (client && client.connected) {
-        console.log("📤 Gửi tín hiệu call:", {
-            destination: `/app/call/${callId}`,
-            payload
-        });
         client.publish({
             destination: `/app/call/${callId}`,
             body: JSON.stringify(payload)
         });
+        console.log("📤 Sent call signal:", { callId, payload });
     } else {
-        console.error("🚫 WebSocket chưa kết nối khi gửi tín hiệu call:", {
-            callId,
-            payload,
-            clientConnected: client?.connected
-        });
-        // Có thể retry sau 300ms
+        console.error("🚫 WebSocket chưa kết nối khi gửi call signal:", { callId, payload });
+        // Retry nhẹ sau 300ms
         setTimeout(() => {
             if (client?.connected) {
                 client.publish({
                     destination: `/app/call/${callId}`,
                     body: JSON.stringify(payload)
                 });
+                console.log("📤 Retry sent call signal:", { callId, payload });
             }
         }, 300);
     }
