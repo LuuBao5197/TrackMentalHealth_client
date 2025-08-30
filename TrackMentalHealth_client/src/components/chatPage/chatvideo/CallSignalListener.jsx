@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
-import { connectWebSocket, sendCallSignal } from '../../../services/StompClient';
+import { connectWebSocket, sendCallSignal } from '../../../services/stompClient';
 
 const CallSignalListener = ({ sessionId }) => {
   const navigate = useNavigate();
