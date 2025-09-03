@@ -233,7 +233,7 @@ const CameraExercisePage = ({ exercise }) => {
           exerciseId: exercise.id,
           status: status,
           score: score,
-          title: title.difficultyLevel,
+          title: exercise.title,
           difficultyLevel: exercise.difficultyLevel,
         })
         .then(() => {
