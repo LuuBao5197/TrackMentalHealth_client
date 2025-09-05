@@ -138,7 +138,6 @@ const CameraExercisePage = () => {
     const canvasElement = canvasRef.current;
     const canvasCtx = canvasElement.getContext("2d");
     handsRef.current.onResults((results) => {
-      // Chỉ vẽ nếu không phải động tác quay đầu
       if (
         condition.actionType === "LEFT_HAND_UP" ||
         condition.actionType === "RIGHT_HAND_UP"
@@ -161,7 +160,6 @@ const CameraExercisePage = () => {
             if (handedness === "Left") handedness = "Right";
             else if (handedness === "Right") handedness = "Left";
             const landmarks = results.multiHandLandmarks[i];
-            // Vẽ chấm
             canvasCtx.fillStyle = "red";
             landmarks.forEach((lm) => {
               canvasCtx.beginPath();
@@ -203,9 +201,7 @@ const CameraExercisePage = () => {
     const canvasCtx = canvasElement.getContext("2d");
   
     faceMeshRef.current.onResults((results) => {
-      if (
-        condition.actionType.startsWith("TURN_HEAD_")
-      ) {
+      if (condition.actionType.startsWith("TURN_HEAD_")) {
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
         canvasCtx.scale(-1, 1);
@@ -222,19 +218,17 @@ const CameraExercisePage = () => {
   
         if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
           const landmarks = results.multiFaceLandmarks[0];
-          const nose = landmarks[1];       // mũi
+          const nose = landmarks[1];
           const leftCheek = landmarks[234];
           const rightCheek = landmarks[454];
-          const forehead = landmarks[10];  // trán
-          const chin = landmarks[152];     // cằm
+          const forehead = landmarks[10];
+          const chin = landmarks[152];
   
-          // Xoay trái/phải
           const distLeft = Math.abs(nose.x - leftCheek.x);
           const distRight = Math.abs(nose.x - rightCheek.x);
           if (condition.actionType === "TURN_HEAD_LEFT" && distRight < distLeft * 0.8) detected = true;
           if (condition.actionType === "TURN_HEAD_RIGHT" && distLeft < distRight * 0.8) detected = true;
   
-          // Xoay lên/xuống
           const distUp = Math.abs(nose.y - forehead.y);
           const distDown = Math.abs(chin.y - nose.y);
           if (condition.actionType === "TURN_HEAD_UP" && distUp < distDown * 0.7) detected = true;
@@ -304,10 +298,39 @@ const CameraExercisePage = () => {
 
   return (
     <div style={{ textAlign: "center" }}>
+      {/* Step indicator */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+        {conditions.map((step, index) => {
+          const isCompleted = index < currentStepIndex;
+          const isCurrent = index === currentStepIndex;
+          return (
+            <div
+              key={step.id}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                backgroundColor: isCompleted ? "limegreen" : isCurrent ? "orange" : "#ccc",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                margin: "0 10px",
+                border: isCurrent ? "3px solid #333" : "2px solid transparent",
+                transition: "all 0.3s ease",
+              }}
+            >
+              {index + 1}
+            </div>
+          );
+        })}
+      </div>
+
       <h2>
-        Step {currentStepIndex + 1} / {conditions.length}:{" "}
-        {condition.description} ({condition.durationSeconds} seconds)
+        {condition.description}
       </h2>
+
       <div style={{ position: "relative", display: "inline-block" }}>
         <video
           ref={videoRef}
@@ -319,7 +342,7 @@ const CameraExercisePage = () => {
           ref={canvasRef}
           width={640}
           height={480}
-          style={{ border: "1px solid black" }}
+          style={{ border: "1px solid black", borderRadius: "8px" }}
         />
         <div
           style={{
@@ -330,6 +353,7 @@ const CameraExercisePage = () => {
             fontWeight: "bold",
             color: exerciseDone ? "green" : "yellow",
             userSelect: "none",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
           }}
         >
           {!exerciseDone ? `⏳ ${countdown}s` : "✔ Done!"}
