@@ -1,7 +1,11 @@
+// src/components/ExercisePage/ExerciseDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { BsHeadphones } from 'react-icons/bs';
+
+// ✅ Import trang camera
+import CameraExercisePage from './CameraExercisePage';
 
 const ExerciseDetail = () => {
   const { id } = useParams();
@@ -17,6 +21,11 @@ const ExerciseDetail = () => {
   }, [id]);
 
   if (!exercise) return <p className="text-center p-4">Loading exercise details...</p>;
+
+  // 📌 Nếu type là "camera" thì hiển thị luôn trang CameraExercisePage
+  if (exercise.mediaType === 'camera') {
+    return <CameraExercisePage />;
+  }
 
   return (
     <div className="container py-5" style={{ fontFamily: 'Georgia, serif' }}>
@@ -45,11 +54,7 @@ const ExerciseDetail = () => {
         <h2 className="mb-3 text-primary">🎧 Exercise Content</h2>
 
         {exercise.mediaType === 'audio' && (
-          <audio
-            controls
-            className="w-100 mb-3"
-            src={exercise.mediaUrl}
-          >
+          <audio controls className="w-100 mb-3" src={exercise.mediaUrl}>
             Your browser does not support audio.
           </audio>
         )}
@@ -65,7 +70,9 @@ const ExerciseDetail = () => {
         )}
 
         {exercise.estimatedDuration && (
-          <p className="text-muted">⏱️ Estimated Duration: {exercise.estimatedDuration} seconds</p>
+          <p className="text-muted">
+            ⏱️ Estimated Duration: {exercise.estimatedDuration} seconds
+          </p>
         )}
       </div>
     </div>

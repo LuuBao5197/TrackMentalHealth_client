@@ -43,6 +43,18 @@ import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreat
 import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
 import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
 import QuizForm from '../components/QuizPage/QuizForm.jsx';
+import VideoCall from '../components/chatPage/chatvideo/VideoCall.jsx';
+import QuizResultForm from '../components/QuizPage/CreateResultForQuiz.jsx';
+import DoQuizForm from '../components/QuizPage/DoQuizForm.jsx';
+import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
+import LessonApprovalForAdmin from '../components/LessonPage/LessonApprovalForAdmin.jsx';
+import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalForAdmin.jsx';
+import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
+import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
+import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
+import TestHistory from '../components/testPage/TestHistory.jsx';
+import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
+
 
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
@@ -59,7 +71,6 @@ const Register = Loadable(lazy(() => import('../views/authentication/Register'))
 const Login = Loadable(lazy(() => import('../views/authentication/Login')));
 const HomePage = Loadable(lazy(() => import('../components/userPage/HomePage.jsx')));
 const AboutUs = Loadable(lazy(() => import('../components/userPage/AboutSection.jsx')));
-const TestPage = Loadable(lazy(() => import('../components/testPage/TestForm')));
 const ImportTestPage = Loadable(lazy(() => import('../components/testPage/ImportTestExcel.jsx')))
 const OptionPage = Loadable(lazy(() => import('../components/testPage/TestOptionForm')))
 const TestListPage = Loadable(lazy(() => import('../components/testPage/TestList.jsx')))
@@ -68,6 +79,11 @@ const DoTestForm = Loadable(lazy(() => import('../components/testPage/DoTestForm
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 
 const Router = [
+
+  {
+    path: 'user/video-call/:sessionId',
+    element: <VideoCall />,
+  },
 
   {
     path: '/auth',
@@ -81,14 +97,7 @@ const Router = [
       { path: '404', element: <Error /> },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
       { path: 'unauthorized', element: <Unauthorized /> },
-      { path: 'lesson/:id', element: <LessonDetail /> },
-      { path: 'exercise/:id', element: <ExerciseDetail /> },
-      { path: 'article/:id', element: <ArticleDetail /> },
-      { path: 'lesson/edit/:lessonId', element: <EditLesson /> },
-      { path: 'exercise/edit/:exerciseId', element: <EditExercise /> },
-      { path: 'article/edit/:articleId', element: <EditArticle /> },
       { path: 'question/option/create', element: <OptionPage /> },
-
     ],
   },
 
@@ -102,6 +111,13 @@ const Router = [
       {
         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
         children: [
+          { path: 'lesson', element: <LessonApprovalForAdmin /> },
+          { path: 'article', element: <ArticleApprovalForAdmin /> },
+          { path: 'exercise', element: <ExerciseApprovalForAdmin /> },
+          { path: 'lesson/:id', element: <LessonDetail /> },
+          { path: 'exercise/:id', element: <ExerciseDetail /> },
+          { path: 'article/:id', element: <ArticleDetail /> },
+
           { path: 'dashboard', element: <Dashboard /> },
           { path: 'sample-page', element: <SamplePage /> },
           { path: 'icons', element: <Icons /> },
@@ -125,9 +141,15 @@ const Router = [
       { path: 'social', element: <SocialPage /> },
       { path: 'aboutUs', element: <AboutUs /> },
       { path: 'tests', element: <TestListForUser /> },
+      { path: 'quizs', element: <QuizListForUser /> },
       { path: 'lesson', element: <LessonManager /> },
       { path: 'artical', element: <ArticleManager /> },
       { path: 'exercise', element: <ExerciseManager /> },
+      { path: 'lesson/:id', element: <LessonDetail /> },
+      { path: 'exercise/:id', element: <ExerciseDetail /> },
+      { path: 'article/:id', element: <ArticleDetail /> },
+
+
 
       // USER ONLY
       {
@@ -137,12 +159,19 @@ const Router = [
           { path: 'history', element: <DiaryHistoryPage /> },
           { path: 'mood-history', element: <MoodHistoryPage /> },
           { path: 'doTest/:testId', element: <DoTestForm /> },
-          
+          { path: 'doQuiz/:quizId', element: <DoQuizForm /> },
+          { path: 'quiz/history', element: <QuizAttemptList /> },
+          { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
+          { path: 'test/history', element: <TestHistory /> },
+          { path: 'test-attempt-detail/:id', element: <TestAttemptDetail /> },
 
+
+          
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
+
 
         ],
       },
@@ -157,12 +186,13 @@ const Router = [
 
       // CHAT for USER and PSYCHO
       {
-        element: <ProtectedRoute allowedRoles={['USER', 'PSYCHO']} />,
+        element: <ProtectedRoute allowedRoles={['USER', 'PSYCHOLOGIST']} />,
         children: [
           { path: 'chat/list', element: <ChatList /> },
           { path: 'chat/ai', element: <ChatWithAI /> },
           { path: 'chat/:sessionId', element: <ChatWithUser /> },
           { path: 'chat/group/:groupId', element: <ChatGroup /> },
+          // { path: 'video-call/:sessionId', element: <VideoCall /> },
         ],
       },
     ],
@@ -182,8 +212,10 @@ const Router = [
           { path: 'test/importfile', element: <ImportTestPage /> },
           { path: 'test/testResult/create', element: <TestResultForm /> },
           { path: 'test/doTest', element: <DoTestForm /> },
-          { path: 'question/create', element: <CreateQuestionForm />},
-          { path: 'quiz/create', element: <QuizForm />}
+          { path: 'question/create', element: <CreateQuestionForm /> },
+          { path: 'quiz/create', element: <QuizForm /> },
+          { path: 'quiz/quizResult/create', element: <QuizResultForm /> },
+
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },

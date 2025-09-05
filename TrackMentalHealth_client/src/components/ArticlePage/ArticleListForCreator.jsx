@@ -82,26 +82,31 @@ const ArticleListForCreator = () => {
       cell: (row) => (
         <div className="d-flex gap-1" style={{ whiteSpace: 'nowrap' }}>
           <Link
-            to={`/auth/article/${row.id}`}
+            to={`/contentCreator/article/${row.id}`}
             className="btn btn-sm btn-outline-primary"
             style={{ whiteSpace: 'nowrap' }}
           >
             View
           </Link>
-          <Link
-            to={`/auth/article/edit/${row.id}`}
-            state={{ article: row }}
-            className="btn btn-sm btn-outline-secondary"
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            Edit
-          </Link>
+    
+          {/* Chỉ hiện Edit nếu status chưa phải true */}
+          {row.status !== 'true' && row.status !== true && (
+            <Link
+              to={`/contentCreator/article/edit/${row.id}`}
+              state={{ article: row }}
+              className="btn btn-sm btn-outline-secondary"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Edit
+            </Link>
+          )}
         </div>
       ),
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
     },
+    
   ];
 
   return (

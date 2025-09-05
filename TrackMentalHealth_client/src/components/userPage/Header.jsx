@@ -116,6 +116,7 @@ const Header = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
       setUnreadNotifications((prev) => prev.filter((n) => n.id !== id));
       toast.success("Notification deleted");
+
     } catch (err) {
       toast.error("Delete failed");
     }
@@ -149,10 +150,12 @@ const Header = () => {
             <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
             <li><Link to="/user/write-diary" className={currentPath === "/user/write-diary" ? "active" : ""}>Diary</Link></li>
             <li><Link to="/user/lesson" className={currentPath === "/user/lesson" ? "active" : ""}>Lesson</Link></li>
-            <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Blog</Link></li>
+            <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Article</Link></li>
             <li><Link to="/user/exercise" className={currentPath === "/user/exercise" ? "active" : ""}>Exercise</Link></li>
             <li><Link to="/user/social" className={currentPath === "/user/social" ? "active" : ""}>Community Social</Link></li>
             <li><Link to="/user/tests" className={currentPath === "/user/tests" ? "active" : ""}>Mental Tests</Link></li>
+            <li><Link to="/user/quizs" className={currentPath === "/user/quizs" ? "active" : ""}>Quiz</Link></li>
+
             <li>
               <Link
                 to="/user/chat/list"
@@ -162,7 +165,7 @@ const Header = () => {
                 {hasUnreadChat && <span className="red-dot"></span>}
               </Link>
             </li>
-            <li><Link to="/user/feedback" className={currentPath === "/user/feedback" ? "active" : ""}>Contact</Link></li>
+            {/* <li><Link to="/user/f" className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li> */}
           </ul>
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
@@ -205,6 +208,24 @@ const Header = () => {
                     Edit Profile
                   </button>
                 </li>
+
+                <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`
+
+                  )}>
+                    View Quiz History
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`
+
+                  )}>
+                    View Test History
+                  </button>
+                </li>
+
+
+
                 <li><hr className="dropdown-divider" /></li>
                 <li>
                   <button className="dropdown-item" onClick={handleLogout}>
@@ -220,9 +241,6 @@ const Header = () => {
           </Link>
         )}
       </div>
-
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
-
       <NotificationDetailModal
         show={showDetailModal}
         onClose={() => setShowDetailModal(false)}

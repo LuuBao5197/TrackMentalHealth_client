@@ -47,6 +47,24 @@ const getMenuItemsByRole = (role) => {
     },
     {
       id: uniqueId(),
+      title: 'Lesson Approval',
+      icon: IconPercentage,
+      href: '/lesson',
+    },
+    {
+      id: uniqueId(), 
+      title: 'Article Approval',
+      icon: IconPercentage,
+      href: '/article',
+    },
+    {
+      id: uniqueId(),
+      title: 'Exericse Approval',
+      icon: IconPercentage,
+      href: '/exercise',
+    },
+    {
+      id: uniqueId(),
       title: 'Approval Thresholds ',
       icon: IconPercentage,
       href: '/ui/typography',
@@ -135,6 +153,12 @@ const getMenuItemsByRole = (role) => {
       icon: IconQuestionMark,
       href: '/testDesigner/quiz/create',
     },
+       {
+      id: uniqueId(),
+      title: 'Create Quiz Result',
+      icon: IconQuestionMark,
+      href: '/testDesigner/quiz/quizResult/create',
+    },
     
 
 
@@ -178,7 +202,7 @@ const getMenuItemsByRole = (role) => {
   const MenuitemsContentCreator = [
     {
       id: uniqueId(),
-      title: 'Create Lesson',
+      title: 'Manage Lesson',
       icon: IconBook, // 📖 Biểu tượng bài học
       href: '/contentCreator/lesson',
     },

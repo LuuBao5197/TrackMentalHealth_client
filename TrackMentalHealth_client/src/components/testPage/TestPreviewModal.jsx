@@ -11,13 +11,13 @@ const TestPreviewModal = ({ show, onClose, testData, title }) => {
       </Modal.Header>
       <Modal.Body>
         <h4 className="text-primary">{testData.title}</h4>
-        <p><strong>Mô tả:</strong> {testData.description}</p>
-        <p><strong>Hướng dẫn:</strong> {testData.instructions}</p>
+        <p><strong>Description:</strong> {testData.description}</p>
+        <p><strong>Instructions:</strong> {testData.instructions}</p>
         <hr />
         {testData.questions && testData.questions.map((q, qIdx) => (
           <div key={qIdx} className="mb-4">
             <h5 className="text-dark">
-              Câu {qIdx + 1}: {q.questionText}
+              Question {qIdx + 1}: {q.questionText}
             </h5>
             <div className="ms-3">
               {q.options.map((opt, oIdx) => (
@@ -30,7 +30,7 @@ const TestPreviewModal = ({ show, onClose, testData, title }) => {
                   />
                   <label className="form-check-label">
                     {opt.optionText}
-                    <small className="text-muted ms-2">(Điểm: {opt.scoreValue})</small>
+                    <small className="text-muted ms-2">(Score: {opt.scoreValue})</small>
                   </label>
                 </div>
               ))}
@@ -39,7 +39,7 @@ const TestPreviewModal = ({ show, onClose, testData, title }) => {
         ))}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>Đóng</Button>
+        <Button variant="secondary" onClick={onClose}>Close</Button>
       </Modal.Footer>
     </Modal>
   );
