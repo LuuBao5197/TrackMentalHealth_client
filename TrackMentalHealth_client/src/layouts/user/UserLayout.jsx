@@ -12,7 +12,7 @@ import FAQ from '@components/userPage/FAQ';
 import Portfolio from '@components/userPage/Portfolio'
 import TeamSection from '@components/userPage/TeamSection'
 // import Testimonials from '../../pages/Testimonials'
-import ContactSection from '@components/userPage/ContactSection'
+
 
 import '../../assets/css/main.css';
 import useBodyScrolled from '../../hooks/useBodyScrolled';

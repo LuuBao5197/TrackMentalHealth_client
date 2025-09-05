@@ -162,7 +162,7 @@ const Header = () => {
                 {hasUnreadChat && <span className="red-dot"></span>}
               </Link>
             </li>
-            <li><Link to="/user/f" className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li>
+            <li><Link to="/user/feedback" className={currentPath === "/user/feedback" ? "active" : ""}>Contact</Link></li>
           </ul>
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>

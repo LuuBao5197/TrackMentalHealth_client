@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { getDiaries, updateDiary } from '../../api/diaryAPI';
 import { Modal, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '../../assets/css/DiaryHistoryPage.css'; // 👉 CSS riêng cho lịch sử
+import '../../assets/css/DiaryHistoryPage.css';
 
 const DiaryHistoryPage = () => {
   const [diaries, setDiaries] = useState([]);
   const [editingDiary, setEditingDiary] = useState(null);
   const [updatedContent, setUpdatedContent] = useState('');
+  const [currentPage, setCurrentPage] = useState(1); // 🔹 Trang hiện tại
+  const diariesPerPage = 14; // 🔹 Bao nhiêu nhật ký / trang
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,6 +23,12 @@ const DiaryHistoryPage = () => {
     };
     fetchData();
   }, []);
+
+  // 🔹 Tính toán phân trang
+  const indexOfLastDiary = currentPage * diariesPerPage;
+  const indexOfFirstDiary = indexOfLastDiary - diariesPerPage;
+  const currentDiaries = diaries.slice(indexOfFirstDiary, indexOfLastDiary);
+  const totalPages = Math.ceil(diaries.length / diariesPerPage);
 
   const handleEditClick = (diary) => {
     const diaryDate = new Date(diary.date);
@@ -56,11 +64,11 @@ const DiaryHistoryPage = () => {
     <div className="container py-5 diary-history">
       <h2 className="text-center text-primary mb-4">📖 Lịch Sử Nhật Ký</h2>
 
-      {diaries.length === 0 ? (
+      {currentDiaries.length === 0 ? (
         <p className="text-center text-muted">Chưa có nhật ký nào.</p>
       ) : (
         <div className="row g-4">
-          {diaries.map((diary) => {
+          {currentDiaries.map((diary) => {
             const diaryDate = new Date(diary.date);
             const today = new Date();
 
@@ -96,6 +104,35 @@ const DiaryHistoryPage = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* 🔹 Phân trang */}
+      {totalPages > 1 && (
+        <div className="d-flex justify-content-center mt-4">
+          <nav>
+            <ul className="pagination">
+              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
+                  «
+                </button>
+              </li>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <li key={i} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                  <button className="page-link" onClick={() => setCurrentPage(i + 1)}>
+                    {i + 1}
+                  </button>
+                </li>
+              ))}
+
+              <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
+                  »
+                </button>
+              </li>
+            </ul>
+          </nav>
         </div>
       )}
 

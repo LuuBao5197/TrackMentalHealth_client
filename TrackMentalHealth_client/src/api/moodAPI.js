@@ -51,5 +51,6 @@ export const getMyMoodsPaged = (page = 0, size = 5) => {
 // Lấy thống kê biểu đồ cảm xúc theo user đang đăng nhập
 export const getMoodStatistics = () => {
   return axios.get(`${API_URL}/my/statistics`, getAuthHeaders());
+  
 };
 

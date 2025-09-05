@@ -77,7 +77,7 @@ const HeroPage = () => {
       }
     } catch (err) {
       console.error("Lỗi tạo/cập nhật mood:", err);
-      setAiSuggestion("❌ Lỗi khi ghi nhận cảm xúc.");
+      setAiSuggestion("⚠️ Ghi chú không phù hợp với cảm xúc đã chọn. Vui lòng nhập lại.");
       setShowModal(true);
     } finally {
       setLoading(false);
@@ -95,16 +95,16 @@ const HeroPage = () => {
             <div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
               {moodLevels.map((m) => (
                 <button
-  key={m.id}
-  type="button"
-  className={`btn btn-mood border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
-  onClick={() => setSelectedMoodId(m.id)}
->
-  <div style={{ fontSize: "2.5rem" }}>
-    {moodIcons[m.name] || '❔'}
-  </div>
-  <div className="mt-2">{m.name}</div>
-</button>
+                  key={m.id}
+                  type="button"
+                  className={`btn btn-mood border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
+                  onClick={() => setSelectedMoodId(m.id)}
+                >
+                  <div style={{ fontSize: "2.5rem" }}>
+                    {moodIcons[m.name] || '❔'}
+                  </div>
+                  <div className="mt-2">{m.name}</div>
+                </button>
 
               ))}
             </div>
@@ -129,27 +129,33 @@ const HeroPage = () => {
           </div>
         </div>
 
-        {/* ✅ Modal hiển thị gợi ý từ AI */}
+        {/* ✅ Modal hiển thị gợi ý từ AI (giao diện tối giản) */}
         {showModal && (
-          <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Message</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <p>{aiSuggestion}</p>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-primary" onClick={() => setShowModal(false)}>
-                    Đóng
-                  </button>
-                </div>
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style={{ backgroundColor: "rgba(0,0,0,0.4)", zIndex: 1050 }}
+          >
+            <div
+              className="bg-white rounded-4 shadow p-4"
+              style={{ maxWidth: "420px", width: "90%" }}
+            >
+              <h5 className="text-center mb-3 fw-bold">Thông báo</h5>
+              <p className="text-center" style={{ fontSize: "1.1rem" }}>
+                {aiSuggestion}
+              </p>
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  className="btn btn-success px-4 py-2 rounded-pill"
+                  onClick={() => setShowModal(false)}
+                >
+                  Đóng
+                </button>
               </div>
             </div>
           </div>
         )}
+
 
         <div className="row feature-boxes">
           <FeatureBox

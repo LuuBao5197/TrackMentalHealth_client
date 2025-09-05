@@ -138,7 +138,7 @@ Chỉ cần trả lời ngắn gọn trong 1–2 câu, không cần liệt kê l
 
         fetchPaged();
     }, [currentPage]);
-
+    
     return (
         <section className="section">
             <div className="container">
@@ -221,5 +221,4 @@ Chỉ cần trả lời ngắn gọn trong 1–2 câu, không cần liệt kê l
         </section>
     );
 };
-
 export default MoodHistoryPage;
