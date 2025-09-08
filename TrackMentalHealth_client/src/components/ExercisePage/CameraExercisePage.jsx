@@ -1,19 +1,24 @@
+// src/components/ExercisePage/CameraExercisePage.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Hands } from "@mediapipe/hands";
-import { FaceMesh } from "@mediapipe/face_mesh";
-import { Camera } from "@mediapipe/camera_utils";
 import Swal from "sweetalert2";
 import axios from "axios";
 
-const CameraExercisePage = () => {
+// Import các hàm từ poseProcessor.js
+import { initHands, initFaceMesh, initPose, initPoseProcessing } from "./poseProcessor";
+import { title } from "process";
+
+const CameraExercisePage = ({ exercise }) => {
   const { id } = useParams();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const cameraRef = useRef(null);
   const handsRef = useRef(null);
   const faceMeshRef = useRef(null);
-
+  const poseRef = useRef(null);
+  const lastHandResults = useRef(null);
+  const lastFaceResults = useRef(null);
+  const lastPoseResults = useRef(null);
   const actionStartTime = useRef(null);
   const actionDetectedRef = useRef(false);
 
@@ -24,6 +29,15 @@ const CameraExercisePage = () => {
   const [condition, setCondition] = useState(null);
   const [cameraError, setCameraError] = useState(null);
   const [isReady, setIsReady] = useState(false);
+
+  // Global exercise countdown
+  const [globalTimeLeft, setGlobalTimeLeft] = useState(() => {
+    if (!exercise) return 0;
+    if (exercise.difficultyLevel === "Easy") return 360;
+    if (exercise.difficultyLevel === "Medium") return 160;
+    if (exercise.difficultyLevel === "Hard") return 100;
+    return exercise.estimatedDuration || 120;
+  });
 
   // 1️⃣ Lấy danh sách điều kiện từ API
   useEffect(() => {
@@ -61,188 +75,62 @@ const CameraExercisePage = () => {
 
   // 3️⃣ Khởi tạo Hands
   useEffect(() => {
-    const hands = new Hands({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-    });
-    hands.setOptions({
-      maxNumHands: 2,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7,
-    });
-    handsRef.current = hands;
-    console.log("Mediapipe Hands initialized");
-    return () => {
-      console.log("Cleaning up Mediapipe Hands");
-      hands.close();
-    };
+    const hands = initHands(handsRef, lastHandResults);
+    return () => hands?.close();
   }, []);
 
   // 4️⃣ Khởi tạo FaceMesh
   useEffect(() => {
-    const faceMesh = new FaceMesh({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-    });
-    faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7,
-    });
-    faceMeshRef.current = faceMesh;
-    console.log("Mediapipe FaceMesh initialized");
-    return () => {
-      console.log("Cleaning up Mediapipe FaceMesh");
-      faceMesh.close();
-    };
+    const faceMesh = initFaceMesh(faceMeshRef, lastFaceResults);
+    return () => faceMesh?.close();
   }, []);
 
-  // 5️⃣ Khởi tạo camera
+  // 5️⃣ Khởi tạo Pose
   useEffect(() => {
-    if (!isReady) return;
+    const pose = initPose(poseRef, lastPoseResults);
+    return () => pose?.close();
+  }, []);
+
+  // 6️⃣ Khởi tạo camera và xử lý
+  useEffect(() => {
+    if (!isReady || !condition) return;
     if (!videoRef.current || !canvasRef.current) {
       setCameraError("Video hoặc canvas chưa sẵn sàng.");
       return;
     }
-    const videoElement = videoRef.current;
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        if (handsRef.current) {
-          await handsRef.current.send({ image: videoElement });
-        }
-        if (faceMeshRef.current) {
-          await faceMeshRef.current.send({ image: videoElement });
-        }
-      },
-      width: 640,
-      height: 480,
-      facingMode: "user",
-    });
+    if (!handsRef.current || !faceMeshRef.current || !poseRef.current) {
+      setCameraError("Mediapipe modules chưa sẵn sàng.");
+      return;
+    }
+
+    const refs = {
+      handsRef,
+      faceMeshRef,
+      poseRef,
+      actionDetectedRef,
+      lastFaceResults,
+      lastHandResults,
+      lastPoseResults,
+    };
+
+    const camera = initPoseProcessing(videoRef.current, canvasRef.current, condition, refs);
+    if (!camera) {
+      setCameraError("Không thể khởi tạo camera processing.");
+      return;
+    }
+
     cameraRef.current = camera;
     camera.start().catch((err) => {
       console.error("Failed to start camera:", err);
       setCameraError("Không thể khởi động camera.");
     });
-    console.log("Camera initialized");
+
     return () => {
-      console.log("Cleaning up camera");
       camera.stop();
     };
-  }, [isReady]);
+  }, [isReady, condition]);
 
-  // 6️⃣ Xử lý Hands
-  useEffect(() => {
-    if (!condition || !handsRef.current || !canvasRef.current) return;
-    const canvasElement = canvasRef.current;
-    const canvasCtx = canvasElement.getContext("2d");
-    handsRef.current.onResults((results) => {
-      if (
-        condition.actionType === "LEFT_HAND_UP" ||
-        condition.actionType === "RIGHT_HAND_UP"
-      ) {
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        canvasCtx.scale(-1, 1);
-        canvasCtx.translate(-canvasElement.width, 0);
-        canvasCtx.drawImage(
-          results.image,
-          0,
-          0,
-          canvasElement.width,
-          canvasElement.height
-        );
-        let detected = false;
-        if (results.multiHandLandmarks && results.multiHandedness) {
-          for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-            let handedness = results.multiHandedness[i].label;
-            if (handedness === "Left") handedness = "Right";
-            else if (handedness === "Right") handedness = "Left";
-            const landmarks = results.multiHandLandmarks[i];
-            canvasCtx.fillStyle = "red";
-            landmarks.forEach((lm) => {
-              canvasCtx.beginPath();
-              canvasCtx.arc(
-                lm.x * canvasElement.width,
-                lm.y * canvasElement.height,
-                5,
-                0,
-                2 * Math.PI
-              );
-              canvasCtx.fill();
-            });
-            if (
-              condition.actionType === "LEFT_HAND_UP" &&
-              handedness === "Left" &&
-              landmarks[9].y < landmarks[0].y
-            ) {
-              detected = true;
-            }
-            if (
-              condition.actionType === "RIGHT_HAND_UP" &&
-              handedness === "Right" &&
-              landmarks[9].y < landmarks[0].y
-            ) {
-              detected = true;
-            }
-          }
-        }
-        actionDetectedRef.current = detected;
-        canvasCtx.restore();
-      }
-    });
-  }, [condition]);
-
-  // 7️⃣ Xử lý FaceMesh
-  useEffect(() => {
-    if (!condition || !faceMeshRef.current || !canvasRef.current) return;
-    const canvasElement = canvasRef.current;
-    const canvasCtx = canvasElement.getContext("2d");
-  
-    faceMeshRef.current.onResults((results) => {
-      if (condition.actionType.startsWith("TURN_HEAD_")) {
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        canvasCtx.scale(-1, 1);
-        canvasCtx.translate(-canvasElement.width, 0);
-        canvasCtx.drawImage(
-          results.image,
-          0,
-          0,
-          canvasElement.width,
-          canvasElement.height
-        );
-  
-        let detected = false;
-  
-        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-          const landmarks = results.multiFaceLandmarks[0];
-          const nose = landmarks[1];
-          const leftCheek = landmarks[234];
-          const rightCheek = landmarks[454];
-          const forehead = landmarks[10];
-          const chin = landmarks[152];
-  
-          const distLeft = Math.abs(nose.x - leftCheek.x);
-          const distRight = Math.abs(nose.x - rightCheek.x);
-          if (condition.actionType === "TURN_HEAD_LEFT" && distRight < distLeft * 0.8) detected = true;
-          if (condition.actionType === "TURN_HEAD_RIGHT" && distLeft < distRight * 0.8) detected = true;
-  
-          const distUp = Math.abs(nose.y - forehead.y);
-          const distDown = Math.abs(chin.y - nose.y);
-          if (condition.actionType === "TURN_HEAD_UP" && distUp < distDown * 0.7) detected = true;
-          if (condition.actionType === "TURN_HEAD_DOWN" && distDown < distUp * 0.7) detected = true;
-        }
-  
-        actionDetectedRef.current = detected;
-        canvasCtx.restore();
-      }
-    });
-  }, [condition]);
-  
-
-  // 8️⃣ Đếm ngược và chuyển bước
+  // 7️⃣ Đếm ngược và chuyển bước
   useEffect(() => {
     if (exerciseDone || !condition) return;
     const interval = setInterval(() => {
@@ -252,10 +140,7 @@ const CameraExercisePage = () => {
           setCountdown(condition.durationSeconds);
         } else {
           const elapsed = (Date.now() - actionStartTime.current) / 1000;
-          const timeLeft = Math.max(
-            0,
-            condition.durationSeconds - Math.floor(elapsed)
-          );
+          const timeLeft = Math.max(0, condition.durationSeconds - Math.floor(elapsed));
           setCountdown(timeLeft);
           if (elapsed >= condition.durationSeconds) {
             if (currentStepIndex < conditions.length - 1) {
@@ -289,6 +174,79 @@ const CameraExercisePage = () => {
     return () => clearInterval(interval);
   }, [exerciseDone, condition, currentStepIndex, conditions]);
 
+  // 8️⃣ Global countdown timer
+  useEffect(() => {
+    if (globalTimeLeft <= 0 || exerciseDone) return;
+    const timer = setInterval(() => {
+      setGlobalTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setExerciseDone(true);
+          Swal.fire({
+            icon: "warning",
+            title: "⏰ Time's up!",
+            text: "You ran out of time for this exercise.",
+          });
+          cameraRef.current?.stop();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [globalTimeLeft, exerciseDone]);
+
+  // 9️⃣ Khi hoàn thành → tính điểm + lưu lịch sử
+  useEffect(() => {
+    if (exerciseDone) {
+      const totalSteps = conditions.length;
+      const stepsDone = currentStepIndex + 1;
+      const totalTime =
+        exercise.difficultyLevel === "Medium"
+          ? 160
+          : exercise.difficultyLevel === "Hard"
+          ? 100
+          : exercise.estimatedDuration || 120;
+
+      const maxScoreTime = totalTime - 30; // ⏳ điểm tối đa khi còn lại (totalTime - 30)
+
+      let score = 0;
+      let status = "fail";
+
+      if (stepsDone === totalSteps) {
+        // ✅ Hoàn thành hết
+        if (globalTimeLeft >= maxScoreTime) {
+          score = 100;
+        } else {
+          score = Math.round((globalTimeLeft / maxScoreTime) * 100);
+        }
+        status = "success";
+      } else {
+        // ❌ Fail → tính theo % bước
+        score = Math.round((stepsDone / totalSteps) * 100);
+        status = "fail";
+      }
+
+      axios
+        .post("http://localhost:9999/api/exercise-history", {
+          userId: 1, // ⚠️ TODO: thay bằng userId thực tế từ auth
+          exerciseId: exercise.id,
+          status: status,
+          score: score,
+          title: exercise.title,
+          difficultyLevel: exercise.difficultyLevel,
+        })
+        .then(() => {
+          console.log("✅ Exercise history saved!");
+        })
+        .catch((err) => {
+          console.error("❌ Failed to save history:", err);
+        });
+    }
+  }, [exerciseDone]);
+
+
+  // UI render
   if (cameraError) {
     return <h3 style={{ color: "red" }}>{cameraError}</h3>;
   }
@@ -298,6 +256,11 @@ const CameraExercisePage = () => {
 
   return (
     <div style={{ textAlign: "center" }}>
+      {/* Global timer */}
+      <div style={{ marginBottom: "15px" }}>
+        <h3 style={{ color: "red" }}>⏱ Total Time Left: {globalTimeLeft}s</h3>
+      </div>
+
       {/* Step indicator */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
         {conditions.map((step, index) => {
@@ -327,17 +290,10 @@ const CameraExercisePage = () => {
         })}
       </div>
 
-      <h2>
-        {condition.description}
-      </h2>
+      <h2>{condition.description}</h2>
 
       <div style={{ position: "relative", display: "inline-block" }}>
-        <video
-          ref={videoRef}
-          style={{ display: "none" }}
-          autoPlay
-          playsInline
-        ></video>
+        <video ref={videoRef} style={{ display: "none" }} autoPlay playsInline></video>
         <canvas
           ref={canvasRef}
           width={640}

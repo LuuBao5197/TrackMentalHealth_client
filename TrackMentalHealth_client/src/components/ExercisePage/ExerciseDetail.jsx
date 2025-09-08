@@ -1,10 +1,7 @@
-// src/components/ExercisePage/ExerciseDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { BsHeadphones } from 'react-icons/bs';
-
-// ✅ Import trang camera
 import CameraExercisePage from './CameraExercisePage';
 
 const ExerciseDetail = () => {
@@ -15,16 +12,26 @@ const ExerciseDetail = () => {
     axios
       .get(`http://localhost:9999/api/exercise/${id}`)
       .then((res) => {
-        setExercise(res.data);
+        const data = res.data;
+
+        // 🎯 Thêm logic gán thời gian theo độ khó
+        let timeLimit = data.estimatedDuration || 0;
+        if (data.difficultyLevel === "Medium") {
+          timeLimit = 160;
+        } else if (data.difficultyLevel === "Hard") {
+          timeLimit = 100;
+        }
+
+        setExercise({ ...data, timeLimit });
       })
       .catch((err) => console.error('❌ Error loading exercise detail:', err));
   }, [id]);
 
   if (!exercise) return <p className="text-center p-4">Loading exercise details...</p>;
 
-  // 📌 Nếu type là "camera" thì hiển thị luôn trang CameraExercisePage
+  // 📌 Nếu type là "camera" thì hiển thị luôn CameraExercisePage kèm timeLimit
   if (exercise.mediaType === 'camera') {
-    return <CameraExercisePage />;
+    return <CameraExercisePage exercise={exercise} />;
   }
 
   return (
@@ -69,9 +76,10 @@ const ExerciseDetail = () => {
           </video>
         )}
 
-        {exercise.estimatedDuration && (
+        {/* Hiển thị thời gian giới hạn */}
+        {exercise.timeLimit > 0 && (
           <p className="text-muted">
-            ⏱️ Estimated Duration: {exercise.estimatedDuration} seconds
+            ⏱️ Time Limit: {exercise.timeLimit} seconds ({exercise.difficultyLevel || "Normal"})
           </p>
         )}
       </div>
