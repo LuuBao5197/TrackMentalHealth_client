@@ -81,50 +81,58 @@ function ChatWithUser() {
     }, [sessionId, currentUserId, receiverId]);
 
     // 🔹 Kết nối WebSocket và subscribe
-useEffect(() => {
-    const disconnect = connectWebSocket({
-        sessionId,
-        onMessageReceived: (msg) => {
-            setMessages(prev => {
-                const exists = prev.some(m => m.id === msg.id);
-                if (exists) return prev;
+    useEffect(() => {
+        const disconnect = connectWebSocket({
+            sessionId,
+            onPrivateMessage: (msg) => {
+                // Kiểm tra trùng tin nhắn
+                setMessages(prev => {
+                    const exists = prev.some(m => m.id === msg.id);
+                    if (exists) return prev;
 
-                return [
-                    ...prev,
-                    {
-                        id: msg.id || Date.now() + Math.random(),
-                        text: msg.message,
-                        user: {
-                            id: msg.senderId.toString(),
-                            name: msg.senderName,
-                            avatar: msg.senderAvatar?.trim() || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "U")}`
+                    const isSenderCurrentUser = msg.senderId === currentUserId;
+
+                    return [
+                        ...prev,
+                        {
+                            id: msg.id || Date.now() + Math.random(),
+                            text: msg.message,
+                            user: {
+                                id: msg.senderId.toString(),
+                                name: msg.senderName,
+                                avatar: isSenderCurrentUser
+                                    ? currentUserAvatar
+                                    : (msg.senderAvatar?.trim() || receiverAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "U")}`)
+                            }
                         }
-                    }
-                ];
-            });
+                    ];
+                });
 
-            setPrivateMessages(prev => [...prev, msg]);
-        }
-    });
 
-    return () => disconnect();
-}, [sessionId, setPrivateMessages]); // ❌ bỏ messages khỏi dependency
+                // Cập nhật privateMessages trong context
+                if (setPrivateMessages) {
+                    setPrivateMessages(prev => [...prev, msg]);
+                }
+            }
+        });
 
+        return () => disconnect();
+    }, [sessionId, currentUserId, currentUserAvatar, setPrivateMessages]);
 
     // 🔹 Gửi tin nhắn (optimistic UI)
     const handleSendMessage = (text) => {
         if (!text.trim() || !receiverId) return;
 
-        const tempId = Date.now() + Math.random();
-        // Hiển thị ngay trên UI
-        setMessages(prev => [
-            ...prev,
-            {
-                id: tempId,
-                text,
-                user: { id: currentUserId.toString(), name: currentUserName, avatar: currentUserAvatar }
-            }
-        ]);
+        // // Hiển thị ngay trên UI
+        // const tempId = Date.now() + Math.random();
+        // setMessages(prev => [
+        //     ...prev,
+        //     {
+        //         id: tempId,
+        //         text,
+        //         user: { id: currentUserId.toString(), name: currentUserName, avatar: currentUserAvatar }
+        //     }
+        // ]);
 
         sendWebSocketMessage(`/app/chat/${sessionId}`, {
             sender: { id: currentUserId },

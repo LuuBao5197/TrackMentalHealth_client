@@ -1,20 +1,19 @@
 import { Client } from '@stomp/stompjs';
 import { getCurrentUserId } from '../utils/getCurrentUserID';
+import { showToast } from '../utils/showToast';
 
 let client;
 let isConnected = false;
 
 export function connectWebSocket({
-    sessionId,
     groupId,
-    callId,
     onPrivateMessage,
     onGroupMessage,
     onNotification,
-    onCallSignal
+    onCallSignal, // callback cho call signal
 }) {
     const currentUserId = getCurrentUserId();
-    console.log("🧪 connectWebSocket params:", { sessionId, groupId, callId, currentUserId });
+    console.log("connectWebSocket params:", { groupId, currentUserId });
 
     client = new Client({
         webSocketFactory: () => new WebSocket("/ws"),
@@ -25,16 +24,15 @@ export function connectWebSocket({
             console.log("✅ WebSocket connected");
             isConnected = true;
 
-            // 🔹 Session chat (1-1) - dùng topic riêng nếu server publish về /topic/chat/{sessionId}
-            if (sessionId) {
-                client.subscribe(`/topic/chat/${sessionId}`, (msg) => {
-                    if (msg.body) {
-                        const data = JSON.parse(msg.body);
-                        console.log("💬 Session message:", data);
-                        onPrivateMessage?.(data); // hoặc callback riêng nếu muốn tách
-                    }
-                });
-            }
+            // 🔹 1-1 chat cho tất cả session của user
+            client.subscribe(`/topic/messages/${currentUserId}`, (msg) => {
+                if (msg.body) {
+                    const data = JSON.parse(msg.body);
+                    console.log("📩 New 1-1 message:", data);
+                    showToast("New message from "+data.senderName)
+                    onPrivateMessage?.(data);
+                }
+            });
 
             // 🔹 Group chat
             if (groupId) {
@@ -47,23 +45,21 @@ export function connectWebSocket({
                 });
             }
 
-            // 🔹 Call signal
-            if (callId) {
-                client.subscribe(`/topic/call/${callId}`, (msg) => {
-                    if (msg.body) {
-                        const signal = JSON.parse(msg.body);
-                        console.log("📞 Call signal:", signal);
-                        onCallSignal?.(signal);
-                    }
-                });
-            }
-
             // 🔹 Notifications
             client.subscribe(`/topic/notifications/${currentUserId}`, (msg) => {
                 if (msg.body) {
                     const notif = JSON.parse(msg.body);
                     console.log("🔔 Notification:", notif);
                     onNotification?.(notif);
+                }
+            });
+
+            // 🔹 Call signal cho user
+            client.subscribe(`/topic/call/${currentUserId}`, (msg) => {
+                if (msg.body) {
+                    const data = JSON.parse(msg.body);
+                    console.log("📞 Call signal:", data);
+                    onCallSignal?.(data);
                 }
             });
         },
@@ -85,35 +81,29 @@ export function connectWebSocket({
     };
 }
 
+// Gửi call signal
+export function sendCallSignal(payload) {
+    if (client && client.connected) {
+        client.publish({
+            destination: `/app/call/${getCurrentUserId()}`,
+            body: JSON.stringify(payload)
+        });
+        console.log("📤 Sent call signal:", payload);
+    } else {
+        console.error("🚫 WebSocket chưa kết nối khi gửi call signal:", payload);
+    }
+}
+
+// Gửi tin nhắn 1-1
 export function sendWebSocketMessage(destination, messageObj) {
     if (client && client.connected) {
         client.publish({
             destination,
-            body: JSON.stringify(messageObj)
+            body: JSON.stringify(messageObj),
         });
         console.log(`📤 Sent WS message to [${destination}]`, messageObj);
     } else {
-        console.error("🚫 WebSocket not connected.");
+        console.error("🚫 WebSocket not connected:", messageObj);
     }
 }
 
-export function sendCallSignal(callId, payload) {
-    if (client && client.connected) {
-        client.publish({
-            destination: `/app/call/${callId}`,
-            body: JSON.stringify(payload)
-        });
-        console.log("📤 Sent call signal:", { callId, payload });
-    } else {
-        console.error("🚫 WebSocket chưa kết nối khi gửi call signal:", { callId, payload });
-        setTimeout(() => {
-            if (client?.connected) {
-                client.publish({
-                    destination: `/app/call/${callId}`,
-                    body: JSON.stringify(payload)
-                });
-                console.log("📤 Retry sent call signal:", { callId, payload });
-            }
-        }, 300);
-    }
-}
