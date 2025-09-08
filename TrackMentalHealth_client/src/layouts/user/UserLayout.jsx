@@ -64,7 +64,7 @@ const UserLayout = () => {
       callId: `user_${user.userId}`,
       onNotification: (noti) => {
         setNotifications((prev) => [...prev, noti]);
-        showToast(`${noti.message}`);
+        showToast(`${noti.message}`,'info');
       },
       onCallSignal: (signal) => {
         setIncomingCallSignal(signal);

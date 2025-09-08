@@ -15,7 +15,7 @@ import {
     initiateChatSession,
     findUsersByGroupId,
 } from "../../api/api";
-import { connectWebSocket, sendWebSocketMessage } from "../../services/StompClient";
+import { connectWebSocket, sendWebSocketMessage } from "../../services/stompClient";
 
 
 function ChatGroup() {
@@ -40,7 +40,7 @@ function ChatGroup() {
                         id: m.id,
                         text: m.content,
                         user: {
-                            id: m.sender.id,
+                               id: String(m.sender.id),
                             name: m.sender.fullname || "Người dùng",
                             avatar:
                                 m.sender.avatar && m.sender.avatar.trim() !== ""
@@ -69,14 +69,13 @@ function ChatGroup() {
             groupId,
             onGroupMessage: (msg) => {
                 const senderId = msg.sender?.id ?? msg.senderId;
-
                 setMessages((prev) => [
                     ...prev,
                     {
                         id: msg.id,
                         text: msg.content,
                         user: {
-                            id: senderId,
+                          id: String(senderId),
                             name: msg.sender?.fullname ?? msg.senderName ?? "User",
                             avatar:
                                 msg.sender?.avatar ||
@@ -212,7 +211,7 @@ function ChatGroup() {
 
 
                         {/* Danh sách tin nhắn */}
-                        <MessageList currentUserId={currentUserId} messages={messages} />
+<MessageList currentUserId={String(currentUserId)} messages={messages} />
 
                         {/* Ô nhập tin nhắn */}
                         <MessageInput

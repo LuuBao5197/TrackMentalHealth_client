@@ -373,6 +373,21 @@ export const createReviewByAppointmentId = async (id,data) => {
     }
 };
 
+//get average rating psycho
+export const getAverageRatingByPsychologist = async (id) => {
+    try {
+        const response = await axios.get(`${review_url}/average/${id}`);
+        // trả về trực tiếp giá trị average rating
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi getAverageRatingByPsychologist:", error);
+        throw error;
+    }
+};
+
+
+
+
 
 
 

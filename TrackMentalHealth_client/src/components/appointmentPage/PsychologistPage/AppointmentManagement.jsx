@@ -1,31 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaPlus } from 'react-icons/fa';
-import {
-    getAppointmentById,
-    getAppointmentByPsyId,
-    saveNotification,
-    updateAppointment
-} from '../../../api/api';
+import { useSelector } from 'react-redux';
+import { getAppointmentById, getAppointmentByPsyId, updateAppointment, saveNotification } from '../../../api/api';
 import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
-import { getCurrentUserId } from '../../../utils/getCurrentUserID';
-import { useSelector } from 'react-redux';
-import ReactStars from "react-rating-stars-component";
 import { NotDTO } from '../../../utils/dto/NotDTO';
-
+import { FaRedo } from 'react-icons/fa';
+import { showToast } from '../../../utils/showToast';
+import ReactStars from 'react-stars';
 
 function AppointmentManagement() {
-
     const user = useSelector((state) => state.auth.user);
     const psychologistId = user.userId;
+
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [selectedReview, setSelectedReview] = useState(null);
+
     const itemsPerPage = 5;
     const nav = useNavigate();
 
+    // Format thời gian
     const formatDateTime = (dateStr) => {
         return new Date(dateStr).toLocaleString('en-US', {
             day: '2-digit',
@@ -37,40 +35,30 @@ function AppointmentManagement() {
         });
     };
 
-   const fetchAppointments = async () => {
-    try {
-        const res = await getAppointmentByPsyId(psychologistId);
-
-        console.log(res);
-        
-        // Đảm bảo res là mảng
-        const data = Array.isArray(res) ? res : [];
-
-        // Sắp xếp theo timeStart (mới nhất trước)
-        const sorted = [...data].sort(
-            (a, b) => new Date(b.timeStart) - new Date(a.timeStart)
-        );
-
-        // Ưu tiên Pending
-        const pending = sorted.filter(a => a.status === "PENDING");
-        const others = sorted.filter(a => a.status !== "PENDING");
-
-        setAppointments([...pending, ...others]);
-    } catch (err) {
-        setError("Failed to load appointments.");
-        console.error("fetchAppointments error:", err);
-    } finally {
-        setLoading(false);
-    }
-};
-
+    // Fetch appointment
+    const fetchAppointments = async () => {
+        try {
+            const res = await getAppointmentByPsyId(psychologistId);
+            const data = Array.isArray(res) ? res : [];
+            const sorted = [...data].sort(
+                (a, b) => new Date(b.timeStart) - new Date(a.timeStart)
+            );
+            const pending = sorted.filter(a => a.status === "PENDING");
+            const others = sorted.filter(a => a.status !== "PENDING");
+            setAppointments([...pending, ...others]);
+        } catch (err) {
+            setError("Failed to load appointments.");
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchAppointments();
-        console.log(psychologistId);
-
     }, []);
 
+    // Accept/Decline handlers
     const handleAccept = async (id) => {
         const confirmed = await showConfirm("Do you want to accept this appointment?");
         if (!confirmed) return;
@@ -80,16 +68,14 @@ function AppointmentManagement() {
             appt.status = "ACCEPTED";
             await updateAppointment(appt.id, appt);
 
-            // Tạo notification cho user
             const notificationToUser = NotDTO(appt.user.id, 'The expert has accepted your invitation.');
             await saveNotification(notificationToUser);
 
-            showAlert("Appointment accepted!",'success');
+            showAlert("Appointment accepted!", 'success');
             fetchAppointments();
         } catch (err) {
             showAlert("Error accepting appointment!", "error");
-            console.log(err);
-            
+            console.error(err);
         }
     };
 
@@ -102,31 +88,37 @@ function AppointmentManagement() {
             appt.status = "DECLINED";
             await updateAppointment(appt.id, appt);
 
-            // Tạo notification cho user
             const notificationToUser = NotDTO(appt.user.id, 'The expert has declined your invitation.');
             await saveNotification(notificationToUser);
 
-            showAlert("Appointment declined.",'error');
+            showAlert("Appointment declined.", 'error');
             fetchAppointments();
         } catch (err) {
             showAlert("Error declining appointment!", "error");
         }
     };
 
+    // Status badge
     const renderStatusBadge = (status) => {
         let className = 'badge ';
         switch (status) {
-            case 'ACCEPTED':
-                className += 'bg-success';
-                break;
-            case 'DECLINED':
-                className += 'bg-danger';
-                break;
+            case 'ACCEPTED': className += 'bg-success'; break;
+            case 'DECLINED': className += 'bg-danger'; break;
             case 'PENDING':
-            default:
-                className += 'bg-warning text-dark';
+            default: className += 'bg-warning text-dark';
         }
         return <span className={className}>{status}</span>;
+    };
+
+    // Modal handlers
+    const openReviewModal = (review) => {
+        setSelectedReview(review);
+        setShowReviewModal(true);
+    };
+
+    const closeReviewModal = () => {
+        setSelectedReview(null);
+        setShowReviewModal(false);
     };
 
     // Pagination logic
@@ -134,8 +126,8 @@ function AppointmentManagement() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentItems = appointments.slice(startIndex, startIndex + itemsPerPage);
 
-    const goToPrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-    const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    const goToPrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+    const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
     return (
         <div className="container mt-4 mb-4">
@@ -153,8 +145,19 @@ function AppointmentManagement() {
                     </li>
                 </ol>
             </nav>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-success">My Appointments</h2>
+
+                <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => {
+                        fetchAppointments();
+                        showToast("Appointments reset!", 'success');
+                    }}
+                >
+                    <FaRedo className="me-1" /> Reset
+                </button>
             </div>
 
             {loading && (
@@ -177,7 +180,7 @@ function AppointmentManagement() {
                                 <th>Time</th>
                                 <th>Note</th>
                                 <th>Status</th>
-                                <th>Rating</th>
+                                <th>Review</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -190,13 +193,29 @@ function AppointmentManagement() {
                                     <td>{item.note || 'None'}</td>
                                     <td>{renderStatusBadge(item.status)}</td>
                                     <td>
-                                        <ReactStars
-                                            count={item.review?.rating}
-                                            edit={false}
-                                            size={24}
-                                            activeColor="#ffd700"
-                                        />
+                                        {item.review ? (
+                                            <div className="d-flex align-items-center">
+                                                {/* Hiển thị số sao tổng thể */}
+                                                <ReactStars
+                                                    count={5}                  // Luôn 5 sao
+                                                    value={item.review.rating} // Số sao hiện tại
+                                                    edit={false}
+                                                    size={20}
+                                                    activeColor="#ffd700"
+                                                />
+                                                {/* Nút mở modal chi tiết */}
+                                                <button
+                                                    className="btn btn-sm btn-outline-success ms-3"
+                                                    onClick={() => openReviewModal(item.review)}
+                                                >
+                                                    View Detail
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-muted">No Review</span>
+                                        )}
                                     </td>
+
                                     <td>
                                         {item.status === "PENDING" ? (
                                             <>
@@ -246,6 +265,50 @@ function AppointmentManagement() {
                     <p className="alert text-center mt-4 alert-danger">No appointments found.</p>
                 )
             )}
+
+            {/* Review Modal */}
+            {showReviewModal && selectedReview && (
+                <>
+                    {/* Modal backdrop */}
+                    <div className="modal-backdrop fade show"></div>
+
+                    {/* Modal */}
+                    <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ overflowY: 'auto' }}>
+                        <div className="modal-dialog" role="document">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Review Details</h5>
+                                    <button type="button" className="btn-close" onClick={closeReviewModal}></button>
+                                </div>
+
+                                <div className="modal-body">
+                                    <div className="d-flex align-items-center mb-2">
+                                        <strong className="me-2">Rating:</strong>
+                                        <ReactStars
+                                            count={5}
+                                            value={selectedReview.rating}
+                                            edit={false}
+                                            size={24}
+                                            activeColor="#ffd700"
+                                        />
+                                        <span className="ms-2">({selectedReview.rating}/5)</span>
+                                    </div>
+
+                                    <p><strong>Comment:</strong> {selectedReview.comment || 'No comment'}</p>
+                                    <p><strong>Created At:</strong> {formatDateTime(selectedReview.createdAt)}</p>
+                                </div>
+
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" onClick={closeReviewModal}>
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
         </div>
     );
 }

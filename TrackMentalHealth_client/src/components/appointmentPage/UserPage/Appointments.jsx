@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSpinner, FaRedo } from 'react-icons/fa';
 import {
     deleteAppointment,
     getAppointmentByUserId,
+    createReviewByAppointmentId,
+    saveNotification
 } from '../../../api/api';
-import { createReviewByAppointmentId } from '../../../api/api'; // api review
 import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
 import { toast, ToastContainer } from 'react-toastify';
 import Rating from 'react-rating-stars-component';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { getCurrentUserId } from '../../../utils/getCurrentUserID';
+import { showToast } from '../../../utils/showToast';
+import { NotDTO } from '../../../utils/dto/NotDTO';
 
 function Appointments() {
     const { userId } = useParams();
@@ -24,49 +27,46 @@ function Appointments() {
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Pagination states
+    const [currentPagePending, setCurrentPagePending] = useState(1);
+    const [currentPageProcessed, setCurrentPageProcessed] = useState(1);
+    const itemsPerPage = 5;
+
     const nav = useNavigate();
 
-   const fetchAppointments = async () => {
-    try {
-        const res = await getAppointmentByUserId(userId);
-        // Nếu API trả về object có field data, thì lấy data
-        const data = Array.isArray(res) ? res : res?.data || [];
-        setAppointments(data);
-    } catch (err) {
-        showAlert("Không thể tải lịch hẹn.", "error");
-        setAppointments([]); // fallback để tránh lỗi filter
-    } finally {
-        setLoading(false);
-    }
-};
-
+    const fetchAppointments = async () => {
+        try {
+            const res = await getAppointmentByUserId(userId);
+            const data = Array.isArray(res) ? res : res?.data || [];
+            setAppointments(data);
+        } catch (err) {
+            showAlert("Không thể tải lịch hẹn.", "error");
+            setAppointments([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchAppointments();
     }, []);
 
-    const handleAdd = () => {
-        nav(`/user/appointment/create/${userId}`);
-    };
-
-    const handleEdit = (id) => {
-        nav(`/user/appointment/edit/${id}`);
-    };
-
+    const handleAdd = () => nav(`/user/appointment/create/${userId}`);
+    const handleEdit = (id) => nav(`/user/appointment/edit/${id}`);
     const handleDelete = async (id) => {
         const confirm = await showConfirm("Are you sure?");
-        if (confirm) {
-            try {
-                await deleteAppointment(id);
-                toast.success('Delete appointment successfully');
-                fetchAppointments();
-            } catch (err) {
-                showAlert("Lỗi khi xóa lịch hẹn.", "error");
-            }
+        if (!confirm) return;
+
+        try {
+            await deleteAppointment(id);
+            showToast('Delete appointment successfully', 'success');
+            fetchAppointments();
+        } catch (err) {
+            showAlert("Lỗi khi xóa lịch hẹn.", "error");
         }
     };
 
-    // Mở modal review
     const handleDone = (appointment) => {
         setSelectedAppointment(appointment);
         setRating(0);
@@ -74,7 +74,6 @@ function Appointments() {
         setShowReviewModal(true);
     };
 
-    // Submit review
     const submitReview = async () => {
         if (rating === 0) {
             showAlert("Please provide rating", "warning");
@@ -88,9 +87,12 @@ function Appointments() {
                 psychologistCode: selectedAppointment.psychologist?.id,
                 user: { id: getCurrentUserId() }
             });
-            toast.success("Review submitted successfully!");
-
-            // Cập nhật state appointment để nút Done biến mất
+            showToast("Review submitted successfully!", "success");
+            const notificationToPsy = NotDTO(
+                selectedAppointment.psychologist?.usersID.id,
+                `New review submitted by ${selectedAppointment.user?.fullname || 'a user'}: ${rating}/5 stars`
+            );
+            await saveNotification(notificationToPsy);
             setAppointments(prev =>
                 prev.map(a =>
                     a.id === selectedAppointment.id
@@ -98,82 +100,120 @@ function Appointments() {
                         : a
                 )
             );
-
             setShowReviewModal(false);
         } catch (err) {
             showAlert("Error submitting review", "error");
+            console.log(err);
+
         } finally {
             setSubmitting(false);
         }
     };
 
-    const renderTable = (data, title) => (
-        <>
-            <h5 className="mt-4">{title}</h5>
-            <table className="table table-bordered table-hover mt-2">
-                <thead className="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Full name</th>
-                        <th>Time Start</th>
-                        <th>Note</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((item, index) => (
-                        <tr key={item.id}>
-                            <td>{index + 1}</td>
-                            <td>{item.user?.fullname || 'Ẩn danh'}</td>
-                            <td>{new Date(item.timeStart).toLocaleString()}</td>
-                            <td>{item.note || 'Không có'}</td>
-                            <td>
-                                <span className={`badge ${item.status === 'PENDING' ? 'bg-warning text-dark' :
-                                    item.status === 'ACCEPTED' ? 'bg-success' :
-                                        item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
-                                    }`}>
-                                    {item.status}
-                                </span>
-                            </td>
-                            <td>
-                                {item.status === 'PENDING' ? (
-                                    !item ? (
-                                        <span className="text-muted">No data</span>
-                                    ) : (
-                                        <>
-                                            <button
-                                                className="btn btn-sm btn-outline-warning me-1"
-                                                onClick={() => handleEdit(item.id)}
-                                            >
-                                                <FaEdit /> Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => handleDelete(item.id)}
-                                            >
-                                                <FaTrash /> Delete
-                                            </button>
-                                        </>
-                                    )
-                                ) : item.status === 'ACCEPTED' && !item.review ? (
-                                    <button
-                                        className="btn btn-sm btn-outline-success"
-                                        onClick={() => handleDone(item)}
-                                    >
-                                        Done
-                                    </button>
-                                ) : (
-                                    <span className="text-muted">Processed</span>
-                                )}
-                            </td>
+    // Pagination helpers
+    const paginate = (data, currentPage) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return data.slice(startIndex, startIndex + itemsPerPage);
+    };
 
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </>
-    );
+    const totalPages = (data) => Math.ceil(data.length / itemsPerPage);
+
+    const renderTable = (data, title, currentPage, setCurrentPage) => {
+        const paginatedData = paginate(data, currentPage);
+        const pages = totalPages(data);
+
+        return (
+            <>
+                <h5 className="mt-4">{title}</h5>
+                {data.length === 0 ? (
+                    <p className="text-center text-muted alert alert-warning">No data</p>
+                ) : (
+                    <>
+                        <table className="table table-bordered table-hover mt-2">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Full name</th>
+                                    <th>Time Start</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedData.map((item, index) => (
+                                    <tr key={item.id}>
+                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                        <td>{item.user?.fullname || 'Ẩn danh'}</td>
+                                        <td>{new Date(item.timeStart).toLocaleString()}</td>
+                                        <td>{item.note || 'Không có'}</td>
+                                        <td>
+                                            <span className={`badge ${item.status === 'PENDING' ? 'bg-warning text-dark' :
+                                                item.status === 'ACCEPTED' ? 'bg-success' :
+                                                    item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
+                                                }`}>{item.status}</span>
+                                        </td>
+                                        <td>
+                                            {item.status === 'PENDING' ? (
+                                                <>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-warning me-1"
+                                                        onClick={() => handleEdit(item.id)}
+                                                    >
+                                                        <FaEdit /> Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={() => handleDelete(item.id)}
+                                                    >
+                                                        <FaTrash /> Delete
+                                                    </button>
+                                                </>
+                                            ) : item.status === 'ACCEPTED' && !item.review ? (
+                                                <button
+                                                    className="btn btn-sm btn-outline-success"
+                                                    onClick={() => handleDone(item)}
+                                                >
+                                                    Done
+                                                </button>
+                                            ) : (
+                                                <span className="text-muted">Processed</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Pagination Controls */}
+                        {pages && (
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                                <button
+                                    className="btn btn-outline-secondary btn-sm"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                >
+                                    Previous
+                                </button>
+                                <span>Page {currentPage} of {pages}</span>
+                                <button
+                                    className="btn btn-outline-secondary btn-sm"
+                                    disabled={currentPage === pages}
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pages))}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </>
+        );
+    };
+
+    // Filter appointments
+    const pendingAppointments = appointments.filter(a => a.status === 'PENDING');
+    const processedAppointments = appointments.filter(a => a.status !== 'PENDING');
 
     return (
         <div className="container mt-4">
@@ -191,11 +231,28 @@ function Appointments() {
                     </li>
                 </ol>
             </nav>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-success">My Appointments</h2>
-                <button className="btn btn-outline-success" onClick={handleAdd}>
-                    <FaPlus /> Add new appointment
-                </button>
+
+                <div>
+                    <button className="btn btn-outline-success me-2" onClick={handleAdd}>
+                        <FaPlus /> Add new appointment
+                    </button>
+
+                    <button
+                        className="btn btn-outline-secondary"
+                        onClick={() => {
+                            setCurrentPagePending(1);
+                            setCurrentPageProcessed(1);
+                            fetchAppointments();
+                            showToast("Appointments reset!", 'success');
+                        }}
+                    >
+                        <FaRedo className="me-1" /> Reset
+                    </button>
+
+                </div>
             </div>
 
             {loading ? (
@@ -206,8 +263,8 @@ function Appointments() {
                 </div>
             ) : (
                 <>
-                    {renderTable(appointments.filter(a => a.status === 'PENDING'), 'Pending Appointments')}
-                    {renderTable(appointments.filter(a => a.status !== 'PENDING'), 'Processed Appointments')}
+                    {renderTable(pendingAppointments, 'Pending Appointments', currentPagePending, setCurrentPagePending)}
+                    {renderTable(processedAppointments, 'Processed Appointments', currentPageProcessed, setCurrentPageProcessed)}
                     {appointments.length === 0 && (
                         <p className="alert alert-danger text-center mt-4">No appointments yet.</p>
                     )}
@@ -251,9 +308,7 @@ function Appointments() {
                                 <span className="spinner-border spinner-border-sm me-2"></span>
                                 Submitting...
                             </>
-                        ) : (
-                            "Submit"
-                        )}
+                        ) : "Submit"}
                     </Button>
                 </Modal.Footer>
             </Modal>

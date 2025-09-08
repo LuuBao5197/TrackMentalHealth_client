@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { joinRoom, leaveRoom, destroyRoom } from "../../../services/ZegoService";
 import { sendCallSignal } from "../../../services/stompClient";
-import  { showToast } from "../../../utils/showToast";
+import { showToast } from "../../../utils/showToast";
 
 export default function VideoCallZego() {
   const { sessionId } = useParams();
@@ -57,8 +57,8 @@ export default function VideoCallZego() {
 
     return () => {
       cancelAnimationFrame(raf);
-      try { leaveRoom(); } catch {}
-      try { destroyRoom(); } catch {}
+      try { leaveRoom(); } catch { }
+      try { destroyRoom(); } catch { }
       joinedRef.current = false;
       setJoined(false);
       console.log("[VideoCallZego] cleanup done");
@@ -66,25 +66,42 @@ export default function VideoCallZego() {
   }, [sessionId, currentUserId, currentUserName, isCaller]);
 
   const handleEndCall = () => {
-  // Gửi tín hiệu cho cả phòng
-  sendCallSignal(sessionId, {
-    type: "CALL_ENDED",
-    from: currentUserId,
-  });
+    // Gửi tín hiệu cho cả phòng
+    sendCallSignal(sessionId, {
+      type: "CALL_ENDED",
+      from: currentUserId,
+    });
 
-  showToast({ message:'Call ended...',type:ToastTypes.SUCCESS})
-  // Người bấm cũng thoát ngay
-  navigate(`/user/chat/${sessionId}`);
-};
+    showToast({ message: 'Call ended...', type: ToastTypes.SUCCESS })
+    // Người bấm cũng thoát ngay
+    navigate(`/user/chat/${sessionId}`);
+  };
 
 
   return (
     <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column" }}>
+      <nav aria-label="breadcrumb">
+        <ol className="breadcrumb">
+          <li
+            className="breadcrumb-item"
+            style={{ cursor: "pointer", color: "#038238ff" }}
+            onClick={() => navigate("/user/chat/list")}
+          >
+            Chat
+          </li>
+          <li className="breadcrumb-item " aria-current="page">
+            Chat private
+          </li>
+
+          <li className="breadcrumb-item active" aria-current="page">
+            Video call
+          </li>
+        </ol>
+      </nav>
       <div className="alert alert-success d-flex justify-content-between align-items-center">
         <span>
           {joined ? "In call..." : `Connecting as ${isCaller ? "caller" : "callee"}...`}
         </span>
-        <button onClick={handleEndCall} className="btn btn-danger">End call</button>
       </div>
 
       <div

@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+
 export function showToast(
   message = "",
   type = "info",
@@ -15,54 +16,27 @@ export function showToast(
     showCallButtons = false,
   } = {}
 ) {
+
+  let toastId; // khai báo trước
+
   const content = (
     <div>
-      {/* Title cố định */}
-      <div
-        style={{
-          fontWeight: "bold",
-          fontSize: 14,
-          marginBottom: 4,
-          color: "#ffffffff",
-        }}
-      >
+      <div style={{ fontWeight: "bold", fontSize: 14, marginBottom: 4, color: "#fff" }}>
         New notification
       </div>
-
-      {/* Message động */}
       {message && <div style={{ fontSize: 13 }}>{message}</div>}
 
       {showCallButtons && (
         <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
           <button
-            style={{
-              backgroundColor: "#4caf50",
-              border: "none",
-              padding: "6px 12px",
-              color: "white",
-              cursor: "pointer",
-              borderRadius: 4,
-            }}
-            onClick={() => {
-              if (onAccept) onAccept();
-              toast.dismiss();
-            }}
+            style={{ backgroundColor: "#4caf50", border: "none", padding: "6px 12px", color: "white", cursor: "pointer", borderRadius: 4 }}
+            onClick={() => { if(onAccept) onAccept(); toast.dismiss(toastId); }}
           >
             Accept
           </button>
           <button
-            style={{
-              backgroundColor: "#f44336",
-              border: "none",
-              padding: "6px 12px",
-              color: "white",
-              cursor: "pointer",
-              borderRadius: 4,
-            }}
-            onClick={() => {
-              if (onCancel) onCancel();
-              toast.dismiss();
-            }}
+            style={{ backgroundColor: "#f44336", border: "none", padding: "6px 12px", color: "white", cursor: "pointer", borderRadius: 4 }}
+            onClick={() => { if(onCancel) onCancel(); toast.dismiss(toastId); }}
           >
             Cancel
           </button>
@@ -72,25 +46,27 @@ export function showToast(
   );
 
   const options = {
-    autoClose: time,
+    autoClose: showCallButtons ? false : time,
     position,
     closeButton,
     pauseOnHover,
     draggable,
   };
 
+  // Gán toastId **sau khi tạo toast**
   switch (type) {
     case "success":
-      toast.success(content, options);
+      toastId = toast.success(content, options);
       break;
     case "error":
-      toast.error(content, options);
+      toastId = toast.error(content, options);
       break;
     case "warning":
-      toast.warning(content, options);
+      toastId = toast.warning(content, options);
       break;
     case "info":
     default:
-      toast.info(content, options);
+      toastId = toast.info(content, options);
   }
 }
+

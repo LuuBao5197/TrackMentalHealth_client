@@ -13,6 +13,7 @@ import {
     createNewGroup,
     deleteGroupById,
     uploadFile,
+    getAverageRatingByPsychologist,
 } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { showAlert } from "../../utils/showAlert";
@@ -23,6 +24,7 @@ import GroupModal from "../../utils/Modals/GroupModal";
 import NotificationDetailModal from "../../utils/Modals/NotificationDetailModal";
 import { useSelector } from "react-redux";
 
+
 import {
     MDBTabs,
     MDBTabsItem,
@@ -32,6 +34,7 @@ import {
 } from "mdb-react-ui-kit";
 import { showToast } from "../../utils/showToast";
 import { connectWebSocket } from "../../services/stompClient";
+import ReactStars from "react-stars";
 
 const getOtherUser = (session, currentUserId) =>
     session.sender.id === currentUserId ? session.receiver : session.sender;
@@ -57,6 +60,8 @@ function ChatPage() {
 
     const [currentSessionMessages, setCurrentSessionMessages] = useState([]);
     const [currentSession, setCurrentSession] = useState(null);
+    const [psyRatings, setPsyRatings] = useState({});
+
 
     // ====== Fetch data & websocket ======
     useEffect(() => {
@@ -116,8 +121,28 @@ function ChatPage() {
             try {
                 const data = await getPsychologists();
                 setPsychologists(data);
-            } catch (err) { }
+
+                // Lấy rating trung bình cho từng bác sĩ dựa trên psyId
+                const ratings = {};
+                await Promise.all(
+                    data.map(async (p) => {
+                        try {
+                            const avg = await getAverageRatingByPsychologist(p.id); // p.id là psyId
+                            ratings[p.id] = avg;
+                        } catch (err) {
+                            ratings[p.id] = 0; // fallback nếu lỗi
+                        }
+                    })
+                );
+
+                setPsyRatings(ratings);
+                console.log(psyRatings);
+
+            } catch (err) {
+                console.error(err);
+            }
         };
+
 
         const fetchChatGroup = async () => {
             try {
@@ -203,7 +228,7 @@ function ChatPage() {
         } catch (err) {
             showAlert("An error occurred while deleting the group.", "error");
             console.log(err);
-            
+
         }
     };
 
@@ -247,7 +272,7 @@ function ChatPage() {
                 const newGroup = await createNewGroup(payload);
                 setMyGroup((prev) => [...prev, newGroup]);
                 setGroup((prev) => [...prev, newGroup]);
-                showToast("Group created!",'success');
+                showToast("Group created!", 'success');
             }
 
             setShowModal(false);
@@ -279,7 +304,7 @@ function ChatPage() {
                                 className="btn btn-outline-success btn-sm"
                                 onClick={() => navigate("/user/chat/public-call")}
                             >
-                                Video
+                                Public call
                             </button>
                         </>
                     ) : (
@@ -411,7 +436,25 @@ function ChatPage() {
                                     key={p.id}
                                     className="list-group-item d-flex justify-content-between align-items-center"
                                 >
-                                    <span>{p.usersID?.fullname || "No name"}</span>
+                                    {/* Tên + Rating */}
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span>{p.usersID?.fullname || "No name"}</span>
+                                        <ReactStars
+                                            count={5}
+                                            value={Number((psyRatings[p.id] ?? 0))} // chuyển về number
+                                            size={20}
+                                            isHalf={true}
+                                            edit={false}
+                                            activeColor="#ffc107"
+                                        />
+
+                                        <small className="text-warning">
+                                            ({(psyRatings[p.id] ?? 0).toFixed(1)})
+                                        </small>
+
+                                    </div>
+
+                                    {/* Nút chat */}
                                     <button
                                         className="btn btn-sm btn-outline-primary"
                                         onClick={() => chatWithPsychologist(p.usersID.id)}
@@ -423,6 +466,7 @@ function ChatPage() {
                         </ul>
                     )}
                 </MDBTabsPane>
+
 
                 {/* Groups */}
                 <MDBTabsPane open={activeTab === "group"} className="mb-3">
@@ -452,7 +496,7 @@ function ChatPage() {
                                 <img
                                     src={grp.avt || "/default-group.png"}
                                     alt="group avatar"
-                                    className="rounded-circle me-2"
+                                    className="rounded-circle me-2 border"
                                     style={{ width: "40px", height: "40px", objectFit: "cover" }}
                                 />
                                 {/* Info */}
@@ -497,7 +541,7 @@ function ChatPage() {
                             <img
                                 src={grp.avt || "/default-group.png"}
                                 alt="group avatar"
-                                className="rounded-circle me-2"
+                                className="rounded-circle me-2 border"
                                 style={{ width: "40px", height: "40px", objectFit: "cover" }}
                             />
                             <div className="d-flex flex-column flex-grow-1">

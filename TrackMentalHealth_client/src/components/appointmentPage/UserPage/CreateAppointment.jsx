@@ -5,6 +5,9 @@ import { getCurrentUserId } from '../../../utils/getCurrentUserID';
 import { toast } from 'react-toastify';
 import { NotDTO } from '../../../utils/dto/NotDTO';
 import { useSelector } from 'react-redux';
+import { showToast } from '../../../utils/showToast';
+import { showAlert } from '../../../utils/showAlert';
+import { title } from 'process';
 
 function CreateAppointment() {
 
@@ -59,35 +62,52 @@ function CreateAppointment() {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        const payload = {
-            timeStart: formData.timeStart,
-            status: formData.status,
-            note: formData.note,
-            user: { id: currentUserId },
-            psychologist: { id: parseInt(formData.psychologist) }
-        };
-
-        try {
-            await saveAppointment(payload);
-            toast.success('Create appointment successfully');
-
-            // Gửi notification
-            const notificationToUser = NotDTO(currentUserId, 'New appointment created successfully');
-            const notificationToPsy = NotDTO(selectedPsyUserId, `You have a new appointment invitation with ${user.sub} at ${formData.timeStart} `);
-
-            await Promise.all([
-                saveNotification(notificationToUser),
-                saveNotification(notificationToPsy)
-            ]);
-
-            nav(`/user/appointment/${currentUserId}`);
-        } catch (error) {
-            console.error(error);
-        }
+    const payload = {
+        timeStart: formData.timeStart,
+        status: formData.status,
+        note: formData.note,
+        user: { id: currentUserId },
+        psychologist: { id: parseInt(formData.psychologist) }
     };
+
+    console.log(payload);
+
+    try {
+        await saveAppointment(payload);
+
+        // Format timeStart cho notification
+        const formattedTime = new Date(formData.timeStart).toLocaleString('en-GB', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // Gửi notification
+        showToast("Appointment created!", 'success');
+        const notificationToPsy = NotDTO(
+            selectedPsyUserId, 
+            `You have a new appointment invitation with ${user.sub} at ${formattedTime}`
+        );
+
+        await Promise.all([
+            saveNotification(notificationToPsy)
+        ]);
+
+        nav(`/user/appointment/${currentUserId}`);
+    } catch (error) {
+        if (error.response?.status === 409 || error.message?.toLowerCase().includes('conflict')) {
+            showAlert('An appointment already exists', 'warning');
+        } else {
+            showAlert('An error occurred while creating the appointment', 'error');
+        }
+    }
+};
+
 
 
 

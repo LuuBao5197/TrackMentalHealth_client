@@ -4,90 +4,85 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getUserInfo } from "../../api/userAPI";
-import { getNotificationsByUserId, deleteNotificationById, changeStatusNotification, hasUnreadMessages } from "../../api/api";
+import { getNotificationsByUserId, deleteNotificationById, changeStatusNotification } from "../../api/api";
 import { logout } from "../../redux/slices/authSlice";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { connectWebSocket } from "../../services/stompClient";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import NotificationDropdown from "../notification/NotificationDropdown";
 import imgLogo from "@assets/images/logos/logoTMH.png";
 import NotificationDetailModal from "../../utils/Modals/NotificationDetailModal";
+import { showToast } from "../../utils/showToast";
 
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [selectedNotification, setSelectedNotification] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const currentPath = location.pathname;
 
   const userInfo = useSelector((state) => state.auth.user);
   const userID = userInfo?.userId;
-  const [user, setUser] = useState(null);
+  const currentUserId = parseInt(getCurrentUserId());
 
+  const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState([]);
-  const [hasUnreadChat, setHasUnreadChat] = useState(false); // state mới
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const currentUserId = parseInt(getCurrentUserId());
-  const currentPath = location.pathname;
-
-  // Fetch user info
+  // Load user info
   useEffect(() => {
     if (userID) {
       getUserInfo(userID)
-        .then((res) => setUser(res.data))
-        .catch((err) => console.error("Error fetching user info:", err));
+        .then(res => setUser(res.data))
+        .catch(err => console.error(err));
     }
   }, [userID]);
 
-  // Fetch notifications
-useEffect(() => {
-  if (!userID) return;
-  const fetchNotifications = async () => {
-    try {
-      const res = await getNotificationsByUserId(userID);
-      const data = res || [];
-      
-      setNotifications(data);
-      setUnreadNotifications(data.filter(n => !n.read));
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
-
-  fetchNotifications();
-}, [userID]);
-
-
-
-  // Check unread chat khi load trang
+  // Load initial notifications
   useEffect(() => {
-    if (!currentUserId) return;
-    const checkUnread = async () => {
+    if (!userID) return;
+    const fetchNotifications = async () => {
       try {
-        const result = await hasUnreadMessages(currentUserId);
-        setHasUnreadChat(result);
+        const res = await getNotificationsByUserId(userID);
+        const data = res || [];
+        setNotifications(data);
+        setUnreadNotifications(data.filter(n => !n.read));
       } catch (err) {
-        console.error("Lỗi check unread chat:", err);
+        console.error(err);
       }
     };
-    checkUnread();
+    fetchNotifications();
+  }, [userID]);
+
+  // Connect WebSocket for realtime notifications
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const disconnect = connectWebSocket({
+      callId: `user_${currentUserId}`,
+      onNotification: (newNoti) => {
+        // Update notifications state
+        setNotifications(prev => [newNoti, ...prev]);
+        setUnreadNotifications(prev => [newNoti, ...prev]);
+        showToast(`New notification: ${newNoti.title}`, 'info'); // optional toast
+      }
+    });
+
+    return () => {
+      disconnect && disconnect();
+    };
   }, [currentUserId]);
 
-  // Mark notification as read
+  // Open notification detail
   const handleOpenNotificationDetail = async (noti) => {
     setSelectedNotification(noti);
     setShowDetailModal(true);
 
     if (!noti.read) {
       await changeStatusNotification(noti.id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === noti.id ? { ...n, read: true } : n))
-      );
-      setUnreadNotifications((prev) =>
-        prev.filter((n) => n.id !== noti.id)
-      );
+      setNotifications(prev => prev.map(n => n.id === noti.id ? { ...n, read: true } : n));
+      setUnreadNotifications(prev => prev.filter(n => n.id !== noti.id));
     }
   };
 
@@ -95,19 +90,16 @@ useEffect(() => {
   const handleDeleteNotification = async (id) => {
     try {
       await deleteNotificationById(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      setUnreadNotifications((prev) => prev.filter((n) => n.id !== id));
-      toast.success("Notification deleted");
-
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      setUnreadNotifications(prev => prev.filter(n => n.id !== id));
+      showToast("Notification deleted", 'success');
     } catch (err) {
       toast.error("Delete failed");
     }
   };
 
   const handleEditProfile = () => {
-    if (userInfo && userInfo.userId) {
-      navigate(`/user/edit-profile/${userInfo.userId}`);
-    }
+    if (userInfo?.userId) navigate(`/user/edit-profile/${userInfo.userId}`);
   };
 
   const handleLogout = () => {
@@ -125,7 +117,7 @@ useEffect(() => {
           </h1>
         </Link>
 
-        {/* NAV MENU */}
+        {/* NAV */}
         <nav id="navmenu" className="navmenu">
           <ul>
             <li><Link to="/user/homepage" className={currentPath === "/user/homepage" ? "active" : ""}>HomePage</Link></li>
@@ -137,30 +129,20 @@ useEffect(() => {
             <li><Link to="/user/social" className={currentPath === "/user/social" ? "active" : ""}>Community Social</Link></li>
             <li><Link to="/user/tests" className={currentPath === "/user/tests" ? "active" : ""}>Mental Tests</Link></li>
             <li><Link to="/user/quizs" className={currentPath === "/user/quizs" ? "active" : ""}>Quiz</Link></li>
-
-            <li>
-              <Link
-                to="/user/chat/list"
-                className={`position-relative ${currentPath === "/user/chat/list" ? "active" : ""}`}
-              >
-                Chat
-                {hasUnreadChat && <span className="red-dot"></span>}
-              </Link>
-            </li>
-            {/* <li><Link to="/user/f" className={currentPath === "/user/f" ? "active" : ""}>Contact</Link></li> */}
           </ul>
           <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
 
-        {/* Notification + User menu */}
+        {/* Notification + User */}
         {userInfo ? (
           <div className="d-flex align-items-center gap-3">
             <NotificationDropdown
               notifications={notifications}
-              unreadNotifications={unreadNotifications}
               handleOpenNotificationDetail={handleOpenNotificationDetail}
               handleDeleteNotification={handleDeleteNotification}
             />
+
+            {/* User avatar dropdown */}
             <div className="dropdown">
               <a
                 href="#"
@@ -173,47 +155,15 @@ useEffect(() => {
                   src={user?.avatar || "/default-avatar.png"}
                   alt="User Avatar"
                   className="rounded-circle border border-1 border-dark shadow-sm"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    cursor: "pointer",
-                    transition: "transform 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }}
                 />
               </a>
               <ul className="dropdown-menu dropdown-menu-end shadow">
-                <li>
-                  <button className="dropdown-item" onClick={handleEditProfile}>
-                    Edit Profile
-                  </button>
-                </li>
-
-                <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`
-
-                  )}>
-                    View Quiz History
-                  </button>
-                </li>
-                <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`
-
-                  )}>
-                    View Test History
-                  </button>
-                </li>
-
-
-
+                <li><button className="dropdown-item" onClick={handleEditProfile}>Edit Profile</button></li>
+                <li><button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`)}>View Quiz History</button></li>
+                <li><button className="dropdown-item" onClick={() => navigate(`/user/test/history`)}>View Test History</button></li>
                 <li><hr className="dropdown-divider" /></li>
-                <li>
-                  <button className="dropdown-item" onClick={handleLogout}>
-                    Logout
-                  </button>
-                </li>
+                <li><button className="dropdown-item" onClick={handleLogout}>Logout</button></li>
               </ul>
             </div>
           </div>
@@ -223,6 +173,8 @@ useEffect(() => {
           </Link>
         )}
       </div>
+
+      {/* Notification detail modal */}
       <NotificationDetailModal
         show={showDetailModal}
         onClose={() => setShowDetailModal(false)}

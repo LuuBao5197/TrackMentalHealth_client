@@ -1,8 +1,8 @@
 // services/zegoService.js
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 
-const APP_ID = 1208118836;
-const SERVER_SECRET = "2ce327a5bf092634cba9d35ff700ddd8";
+const APP_ID = 520529008;
+const SERVER_SECRET = "4456c4fc98e6f18c1b5fdea763949ad5";
 
 let zegoInstance = null;
 let currentRoomID = null;
