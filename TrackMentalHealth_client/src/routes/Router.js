@@ -56,6 +56,7 @@ import PublicCall from '../components/chatPage/chatvideo/PublicCall.jsx';
 import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
 import TestHistory from '../components/testPage/TestHistory.jsx';
 import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
+import ExerciseHistoryList from '../components/ExercisePage/ExerciseHistoryList.jsx';
 
 
 /* ***Layouts**** */
@@ -158,6 +159,7 @@ const Router = [
           { path: 'doTest/:testId', element: <DoTestForm /> },
           { path: 'doQuiz/:quizId', element: <DoQuizForm /> },
           { path: 'quiz/history', element: <QuizAttemptList /> },
+          { path: 'exercise/history', element: <ExerciseHistoryList /> },
           { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
           { path: 'test/history', element: <TestHistory /> },
           { path: 'test-attempt-detail/:id', element: <TestAttemptDetail /> },
