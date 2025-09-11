@@ -9,7 +9,7 @@ export default function VideoCallZego() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { currentUserId, currentUserName, isCaller } = location.state || {};
+  const { currentUserId, currentUserName, isCaller,calleeUserId  } = location.state || {};
   const zegoCallContainer = useRef(null);
 
   const [joined, setJoined] = useState(false);
@@ -44,7 +44,21 @@ export default function VideoCallZego() {
         userID: currentUserId,
         userName: currentUserName,
         mode: "one-on-one",
+        onLeave: () => {
+
+          sendCallSignal({
+            type: "CALL_ENDED",
+            callerId: currentUserId,
+            callerName: currentUserName,
+            calleeId: calleeUserId, // nhớ truyền từ location.state
+            sessionId, // giữ lại sessionId nếu cần
+          });
+
+          // Điều hướng sau khi end call
+          navigate(`/user/chat/${sessionId}`);
+        },
       })
+
         .then(() => {
           console.log(`[VideoCallZego] ${isCaller ? "Caller" : "Callee"} joined room OK`);
           joinedRef.current = true;

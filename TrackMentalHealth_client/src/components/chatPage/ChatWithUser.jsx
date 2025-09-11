@@ -119,20 +119,9 @@ function ChatWithUser() {
         return () => disconnect();
     }, [sessionId, currentUserId, currentUserAvatar, setPrivateMessages]);
 
-    // 🔹 Gửi tin nhắn (optimistic UI)
+    // Gửi tin nhắn ws
     const handleSendMessage = (text) => {
         if (!text.trim() || !receiverId) return;
-
-        // // Hiển thị ngay trên UI
-        // const tempId = Date.now() + Math.random();
-        // setMessages(prev => [
-        //     ...prev,
-        //     {
-        //         id: tempId,
-        //         text,
-        //         user: { id: currentUserId.toString(), name: currentUserName, avatar: currentUserAvatar }
-        //     }
-        // ]);
 
         sendWebSocketMessage(`/app/chat/${sessionId}`, {
             sender: { id: currentUserId },
@@ -142,75 +131,22 @@ function ChatWithUser() {
         });
     };
 
-    // 🔹 Xử lý tín hiệu cuộc gọi
-    useEffect(() => {
-        if (incomingCallSignal && incomingCallSignal.sessionId === sessionId) {
-            switch (incomingCallSignal.type) {
-                case "CALL_REQUEST":
-                    if (incomingCallSignal.callerId !== currentUserId) {
-                        showToast({
-                            message: `Cuộc gọi từ ${incomingCallSignal.callerName}...`,
-                            type: "info",
-                            time: 15000,
-                            showCallButtons: true,
-                            position: 'top-center',
-                            onAccept: () => {
-                                setIncomingCallSignal(null);
-                                navigate(`/user/chat/video-call/${incomingCallSignal.sessionId}`, {
-                                    state: { currentUserId, currentUserName, isCaller: false }
-                                });
-                                sendCallSignal(incomingCallSignal.sessionId, {
-                                    type: "CALL_ACCEPTED",
-                                    receiverId: currentUserId,
-                                    receiverName: currentUserName,
-                                    sessionId: incomingCallSignal.sessionId
-                                });
-                            },
-                            onCancel: () => {
-                                setIncomingCallSignal(null);
-                                sendCallSignal(incomingCallSignal.sessionId, {
-                                    type: "CALL_REJECTED",
-                                    receiverId: currentUserId,
-                                    receiverName: currentUserName,
-                                    sessionId: incomingCallSignal.sessionId
-                                });
-                            }
-                        });
-                    }
-                    break;
-                case "CALL_ACCEPTED":
-                    if (incomingCallSignal.receiverId !== currentUserId) {
-                        showToast({ message: `${incomingCallSignal.receiverName} đã chấp nhận cuộc gọi`, type: "success" });
-                    }
-                    break;
-                case "CALL_REJECTED":
-                    showToast({ message: `${incomingCallSignal.receiverName || "Người nhận"} đã từ chối cuộc gọi`, type: "warning" });
-                    break;
-                default:
-                    console.log("Tín hiệu cuộc gọi không xác định:", incomingCallSignal);
-            }
-        }
-    }, [incomingCallSignal, currentUserId, currentUserName, navigate, sessionId, setIncomingCallSignal]);
+    const handleStartVideoCall = (calleeUserId) => {
+        if (!calleeUserId) return;
 
-    // Cleanup
-    useEffect(() => {
-        return () => { leaveRoom(); destroyRoom(); };
-    }, []);
-
-    const handleStartVideoCall = () => {
-        if (!sessionId) return;
-
-        sendCallSignal(sessionId, {
+        sendCallSignal({
             type: "CALL_REQUEST",
             callerId: currentUserId,
             callerName: currentUserName,
-            sessionId
+            calleeId:calleeUserId,
+            sessionId, // vẫn giữ sessionId nếu cần xác định chat session
         });
 
         navigate(`/user/chat/video-call/${sessionId}`, {
-            state: { currentUserId, currentUserName, isCaller: true }
+            state: { currentUserId, currentUserName,calleeUserId, isCaller: true }
         });
     };
+
 
     return (
         <div className="container mt-3 mb-3">
@@ -227,9 +163,14 @@ function ChatWithUser() {
                             <div style={{ display: "flex", alignItems: "center", width: "100%", justifyContent: "space-between", position: "relative" }}>
                                 <span>{receiverName}</span>
                                 <CallManager sessionId={sessionId} currentUserId={currentUserId} receiverName={receiverName} />
-                                <button onClick={handleStartVideoCall} style={{ background: "transparent", border: "none", cursor: "pointer", position: "absolute", right: "10px" }} title="Video Call">
+                                <button
+                                    onClick={() => handleStartVideoCall(receiverId)}
+                                    style={{ background: "transparent", border: "none", cursor: "pointer", position: "absolute", right: "10px" }}
+                                    title="Video Call"
+                                >
                                     <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#038238ff" }}></i>
                                 </button>
+
                             </div>
                         </MessageHeader>
 

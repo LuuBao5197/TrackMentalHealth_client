@@ -1,43 +1,43 @@
-import { useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import { getCurrentUserId } from '../../../utils/getCurrentUserID';
-import { connectWebSocket, sendCallSignal } from '../../../services/stompClient';
+import { useEffect, useRef } from "react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { sendCallSignal } from "../../../services/stompClient";
+import { showToast } from "../../../utils/showToast";
 
-const CallSignalListener = ({ sessionId }) => {
+const CallSignalListener = ({ signal, currentUserId }) => {
   const navigate = useNavigate();
-  const currentUserId = getCurrentUserId();
+  const toastIdRef = useRef(null);
 
   useEffect(() => {
-    if (!sessionId || !currentUserId) return;
+    if (!signal || !currentUserId) return;
 
-    const disconnect = connectWebSocket({
-      sessionId,
-      callId: sessionId,
-      onCallSignal: (signal) => {
-        console.log("📞 Nhận tín hiệu call:", signal);
+    console.log("📞Nhận tín hiệu call:", signal);
 
-        switch (signal.type) {
-          // 📩 Caller gửi REQUEST -> callee sẽ thấy popup
-          case "CALL_REQUEST":
-            if (signal.callerId !== currentUserId) {
-              toast.info(({ closeToast }) => (
+    switch (signal.type) {
+      case "CALL_REQUEST":
+        if (signal.calleeId === currentUserId) {
+          // tránh tạo nhiều toast trùng lặp
+          if (!toast.isActive(toastIdRef.current)) {
+            toastIdRef.current = toast.info(
+              ({ closeToast }) => (
                 <div>
                   <strong>{signal.callerName}</strong> is calling...
                   <div style={{ marginTop: 10, display: "flex", gap: "8px" }}>
                     <button
                       onClick={() => {
-                        sendCallSignal(sessionId, {
+                        sendCallSignal({
                           type: "CALL_ACCEPTED",
+                          callerId: signal.callerId,
                           calleeId: currentUserId,
-                          sessionId
+                          sessionId: signal.sessionId,
                         });
-                        closeToast();
-                        navigate(`/user/chat/video-call/${sessionId}`, {
+                        toast.dismiss(toastIdRef.current); // đóng hẳn toast
+                        navigate(`/user/chat/video-call/${signal.sessionId}`, {
                           state: {
                             currentUserId,
-                            currentUserName: "User " + currentUserId,
-                            isCaller: false, // ✅ callee
+                            currentUserName:
+                              signal.callerName || "User " + currentUserId,
+                            isCaller: false,
                           },
                         });
                       }}
@@ -47,12 +47,13 @@ const CallSignalListener = ({ sessionId }) => {
                     </button>
                     <button
                       onClick={() => {
-                        sendCallSignal(sessionId, {
+                        sendCallSignal({
                           type: "CALL_REJECTED",
+                          callerId: signal.callerId,
                           calleeId: currentUserId,
-                          sessionId
+                          sessionId: signal.sessionId,
                         });
-                        closeToast();
+                        toast.dismiss(toastIdRef.current); // đóng hẳn toast
                       }}
                       className="btn btn-danger btn-sm"
                     >
@@ -60,46 +61,50 @@ const CallSignalListener = ({ sessionId }) => {
                     </button>
                   </div>
                 </div>
-              ), {
+              ),
+              {
+                toastId: "incoming-call", // đặt id để tránh toast trùng
                 position: "top-center",
                 autoClose: false,
                 draggable: false,
-                closeButton: false
-              });
-            }
-            break;
-
-          // 📩 Caller nhận được tín hiệu callee Accept
-          case "CALL_ACCEPTED":
-            if (signal.calleeId !== currentUserId) {
-              navigate(`/user/chat/video-call/${sessionId}`, {
-                state: {
-                  currentUserId,
-                  currentUserName: "User " + currentUserId,
-                  isCaller: true, // ✅ caller
-                },
-              });
-            }
-            break;
-
-          case "CALL_REJECTED":
-            toast.warning("📵 Call was rejected");
-            navigate(`/user/chat/${sessionId}`);
-            break;
-
-          case "CALL_ENDED":
-            toast.info("📴 Call ended");
-            navigate(`/user/chat/${sessionId}`);
-            break;
-
-          default:
-            break;
+                closeButton: false,
+              }
+            );
+          }
         }
-      }
-    });
+        break;
 
-    return () => disconnect && disconnect();
-  }, [sessionId, currentUserId, navigate]);
+      case "CALL_ACCEPTED":
+        if (signal.callerId !== currentUserId) {
+          toast.dismiss(toastIdRef.current); // caller cũng đóng nếu callee accept
+          navigate(`/user/chat/video-call/${signal.sessionId}`, {
+            state: {
+              currentUserId,
+              currentUserName: signal.callerName || "User " + currentUserId,
+              isCaller: true,
+            },
+          });
+        }
+        break;
+
+      case "CALL_REJECTED":
+        toast.dismiss(toastIdRef.current); // reject thì đóng toast luôn
+        if (signal.callerId !== currentUserId) {
+          showToast("Call was rejected", "warning");
+          navigate(`/user/chat/${signal.sessionId}`);
+        }
+        break;
+
+      case "CALL_ENDED":
+        toast.dismiss(toastIdRef.current); // end thì đóng luôn
+        showToast("Call ended", "info");
+        navigate(`/user/chat/${signal.sessionId}`);
+        break;
+
+      default:
+        break;
+    }
+  }, [signal, currentUserId, navigate]);
 
   return null;
 };

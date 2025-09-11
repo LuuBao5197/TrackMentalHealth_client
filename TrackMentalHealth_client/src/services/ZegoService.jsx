@@ -3,7 +3,6 @@ import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 
 const APP_ID = 520529008;
 const SERVER_SECRET = "4456c4fc98e6f18c1b5fdea763949ad5";
-
 let zegoInstance = null;
 let currentRoomID = null;
 
@@ -27,7 +26,8 @@ export async function joinRoom(
     roomID,
     userID,
     userName,
-    mode = "one-on-one", // "one-on-one" | "group"
+    mode = "one-on-one",
+    onLeave
   } = {}
 ) {
   console.log("[ZegoService] joinRoom called:", { roomID, userID, mode });
@@ -63,7 +63,8 @@ export async function joinRoom(
     zp.joinRoom({
       container,
       scenario,
-
+      showLeavingView: false, // ẩn view rời phòng (bao gồm nút End mặc định)
+      showLeavingConfirm: false,
       // one-on-one: bỏ pre-join
       showPreJoinView: mode === "group",
 
@@ -99,6 +100,7 @@ export async function joinRoom(
       },
       onLeaveRoom: () => {
         console.log("[ZegoService] Left room:", roomID);
+        if (onLeave) onLeave(roomID);   // ✅ Gọi callback
         zegoInstance = null;
         currentRoomID = null;
       },
