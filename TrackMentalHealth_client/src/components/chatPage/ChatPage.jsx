@@ -34,7 +34,7 @@ import {
 } from "mdb-react-ui-kit";
 import { showToast } from "../../utils/showToast";
 import { connectWebSocket } from "../../services/stompClient";
-import ReactStars from "react-stars";
+import ReactStars from "react-rating-stars-component";
 
 const getOtherUser = (session, currentUserId) =>
     session.sender.id === currentUserId ? session.receiver : session.sender;
@@ -439,14 +439,20 @@ function ChatPage() {
                                     {/* Tên + Rating */}
                                     <div className="d-flex align-items-center gap-2">
                                         <span>{p.usersID?.fullname || "No name"}</span>
-                                        <ReactStars
-                                            count={5}
-                                            value={Number((psyRatings[p.id] ?? 0))} // chuyển về number
-                                            size={20}
-                                            isHalf={true}
-                                            edit={false}
-                                            activeColor="#ffc107"
-                                        />
+                                        {/* Debug: {JSON.stringify(psyRatings[p.id])} */}
+                                        <div className="d-flex align-items-center">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <i
+                                                    key={star}
+                                                    className={`fa fa-star ${
+                                                        star <= (psyRatings[p.id]/5 || 0) 
+                                                            ? 'text-warning' 
+                                                            : 'text-muted'
+                                                    }`}
+                                                    style={{ fontSize: '16px' }}
+                                                />
+                                            ))}
+                                        </div>
 
                                         <small className="text-warning">
                                             ({(psyRatings[p.id] ?? 0).toFixed(1)})
