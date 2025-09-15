@@ -9,7 +9,7 @@ export default function VideoCallZego() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { currentUserId, currentUserName, isCaller,calleeUserId  } = location.state || {};
+  const { currentUserId, currentUserName, isCaller, calleeUserId } = location.state || {};
   const zegoCallContainer = useRef(null);
 
   const [joined, setJoined] = useState(false);
@@ -103,7 +103,10 @@ export default function VideoCallZego() {
           >
             Chat
           </li>
-          <li className="breadcrumb-item " aria-current="page">
+          <li className="breadcrumb-item " aria-current="page"
+            style={{ cursor: "pointer", color: "#038238ff" }}
+            onClick={() => navigate(`/user/chat/${sessionId}`)}
+          >
             Chat private
           </li>
 

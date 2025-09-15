@@ -4,10 +4,7 @@ import { getCurrentUserId } from "../../../utils/getCurrentUserID";
 import { joinRoom, destroyRoom } from "../../../services/ZegoService";
 
 export default function PublicCall() {
-  const { id: paramRoomID } = useParams();
-  const roomID =
-    paramRoomID || String(Math.floor(100000 + Math.random() * 900000));
-
+  const roomID ='public_room'
   const ref = useRef(null);
   const navigate = useNavigate();
   const userID = String(
@@ -22,7 +19,7 @@ export default function PublicCall() {
       userID,
       userName,
       mode: "group", // hoặc "one-on-one"
-      showPreJoinView: true,
+      showPreJoinView: false,
       turnOnCameraWhenJoining: true,
       turnOnMicrophoneWhenJoining: true,
     });

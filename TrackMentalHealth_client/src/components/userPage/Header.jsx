@@ -159,9 +159,33 @@ const Header = () => {
                 />
               </a>
               <ul className="dropdown-menu dropdown-menu-end shadow">
-                <li><button className="dropdown-item" onClick={handleEditProfile}>Edit Profile</button></li>
-                <li><button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`)}>View Quiz History</button></li>
-                <li><button className="dropdown-item" onClick={() => navigate(`/user/test/history`)}>View Test History</button></li>
+                <li>
+                  <button className="dropdown-item" onClick={handleEditProfile}>
+                    Edit Profile
+                  </button>
+                </li>
+
+                <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/exercise/history`
+
+                  )}>
+                    View Exercise History
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`
+
+                  )}>
+                    View Quiz History
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`
+
+                  )}>
+                    View Test History
+                  </button>
+                </li>
                 <li><hr className="dropdown-divider" /></li>
                 <li><button className="dropdown-item" onClick={handleLogout}>Logout</button></li>
               </ul>
