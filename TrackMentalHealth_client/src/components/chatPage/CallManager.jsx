@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { connectWebSocket, sendCallSignal } from "../../services/stompClient";
+import { connectWebSocket, sendCallSignal } from "../../services/StompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import "../../assets/css/chat.css";
 import ringtone from "../../assets/ringtone/ringtone.mp3";

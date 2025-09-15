@@ -7,7 +7,7 @@ import { getUserInfo } from "../../api/userAPI";
 import { getNotificationsByUserId, deleteNotificationById, changeStatusNotification } from "../../api/api";
 import { logout } from "../../redux/slices/authSlice";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
-import { connectWebSocket } from "../../services/stompClient";
+import { connectWebSocket } from "../../services/StompClient";
 import { toast } from "react-toastify";
 import NotificationDropdown from "../notification/NotificationDropdown";
 import imgLogo from "@assets/images/logos/logoTMH.png";

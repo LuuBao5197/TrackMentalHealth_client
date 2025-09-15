@@ -7,6 +7,7 @@ const ai_url = 'http://localhost:9999/api/chatai/';
 const notification_url = 'http://localhost:9999/api/notification/';
 const chatGroup_url = "http://localhost:9999/api/chatgroup/";
 const upload_url = 'http://localhost:9999/api/upload';
+const review_url = 'http://localhost:9999/api/review';
 
 
 export const uploadFile = async (file) => {
@@ -101,7 +102,7 @@ export const getAppointmentByPsyId = async (psyId) => {
         console.log(response.data);
         return response.data;
     } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
+        console.error('Lỗi getAppointmentByPsyId:', error);
         throw error;
     }
 };
@@ -349,6 +350,44 @@ export const changeStatusIsRead = async (sessionId, receiverId) => {
         throw error;
     }
 };
+
+
+//review api
+export const getReviewByAppointmentId = async (id) => {
+    try {
+        const response = await axios.get(`${review_url}/appointment/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi getReviewByAppointmentId :", error);
+        throw error;
+    }
+};
+
+export const createReviewByAppointmentId = async (id,data) => {
+    try {
+        const response = await axios.post(`${review_url}/appointment/${id}`,data);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi createReviewByAppointmentId :", error);
+        throw error;
+    }
+};
+
+//get average rating psycho
+export const getAverageRatingByPsychologist = async (id) => {
+    try {
+        const response = await axios.get(`${review_url}/average/${id}`);
+        // trả về trực tiếp giá trị average rating
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi getAverageRatingByPsychologist:", error);
+        throw error;
+    }
+};
+
+
+
+
 
 
 

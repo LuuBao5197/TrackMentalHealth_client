@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { showAlert } from '../showAlert';
+import { toast } from 'react-toastify';
 
 function GroupModal({ show, onClose, onSubmit, initialData = {} }) {
     const [loading, setLoading] = useState(false);
@@ -30,24 +31,32 @@ function GroupModal({ show, onClose, onSubmit, initialData = {} }) {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = () => {
-        if (!formData.name) {
-            return showAlert("Group name is required", "warning");
-        }
+   const handleSubmit = async () => {
+    if (!formData.name) {
+        return showAlert("Group name is required", "warning");
+    }
 
-        if (!initialData?.id && formData.maxMember <= 1) {
-            return showAlert("Max members must be greater than 1", "warning");
-        }
-
-        const payload = {
-            name: formData.name,
-            des: formData.des,
-            maxMember: parseInt(formData.maxMember, 10),
-            file: formData.file // gửi file thật cho cha để upload
-        };
-
-        onSubmit(payload);
+    const payload = {
+        name: formData.name,
+        des: formData.des,
+        maxMember: 100,
+        file: formData.file
     };
+
+    try {
+        setLoading(true);
+        // chờ hàm onSubmit (bạn nhớ đảm bảo onSubmit trả về Promise)
+        await onSubmit(payload);
+        // nếu thành công thì đóng modal
+        onClose();
+    } catch (err) {
+        console.error("Create group failed:", err);
+        toast.success("Failed to create group", "error");
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     return (
         <Modal show={show} onHide={onClose} backdrop="static">
@@ -76,7 +85,7 @@ function GroupModal({ show, onClose, onSubmit, initialData = {} }) {
                         />
                     </Form.Group>
 
-                    {!initialData?.id && (
+                    {/* {!initialData?.id && (
                         <Form.Group className="mb-3">
                             <Form.Label>Max Members</Form.Label>
                             <Form.Control
@@ -87,7 +96,7 @@ function GroupModal({ show, onClose, onSubmit, initialData = {} }) {
                                 onChange={handleChange}
                             />
                         </Form.Group>
-                    )}
+                    )} */}
 
                     <Form.Group className="mb-3">
                         <Form.Label>Avatar</Form.Label>

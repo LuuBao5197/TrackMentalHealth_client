@@ -1,31 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSpinner, FaRedo } from 'react-icons/fa';
 import {
     deleteAppointment,
-    getAppointmentByUserId
+    getAppointmentByUserId,
+    createReviewByAppointmentId,
+    saveNotification
 } from '../../../api/api';
 import { showAlert } from '../../../utils/showAlert';
 import { showConfirm } from '../../../utils/showConfirm';
 import { toast, ToastContainer } from 'react-toastify';
+import Rating from 'react-rating-stars-component';
+import { Modal, Button, Form } from 'react-bootstrap';
+import { getCurrentUserId } from '../../../utils/getCurrentUserID';
+import { showToast } from '../../../utils/showToast';
+import { NotDTO } from '../../../utils/dto/NotDTO';
 
 function Appointments() {
     const { userId } = useParams();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const nav = useNavigate();
+
+    // Review modal states
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     // Pagination states
+    const [currentPagePending, setCurrentPagePending] = useState(1);
+    const [currentPageProcessed, setCurrentPageProcessed] = useState(1);
     const itemsPerPage = 5;
-    const [pendingPage, setPendingPage] = useState(1);
-    const [handledPage, setHandledPage] = useState(1);
+
+    const nav = useNavigate();
 
     const fetchAppointments = async () => {
         try {
             const res = await getAppointmentByUserId(userId);
-            setAppointments(res);
+            const data = Array.isArray(res) ? res : res?.data || [];
+            setAppointments(data);
         } catch (err) {
             showAlert("Không thể tải lịch hẹn.", "error");
+            setAppointments([]);
         } finally {
             setLoading(false);
         }
@@ -35,119 +52,207 @@ function Appointments() {
         fetchAppointments();
     }, []);
 
-    const handleAdd = () => {
-        nav(`/user/appointment/create/${userId}`);
-    };
-
-    const handleEdit = (id) => {
-        nav(`/user/appointment/edit/${id}`);
-    };
-
+    const handleAdd = () => nav(`/user/appointment/create/${userId}`);
+    const handleEdit = (id) => nav(`/user/appointment/edit/${id}`);
     const handleDelete = async (id) => {
         const confirm = await showConfirm("Are you sure?");
-        if (confirm) {
-            try {
-                await deleteAppointment(id);
-                toast.success('Delete appointment successfully');
-                fetchAppointments();
-            } catch (err) {
-                showAlert("Lỗi khi xóa lịch hẹn.", "error");
-            }
+        if (!confirm) return;
+
+        try {
+            await deleteAppointment(id);
+            showToast('Delete appointment successfully', 'success');
+            fetchAppointments();
+        } catch (err) {
+            showAlert("Lỗi khi xóa lịch hẹn.", "error");
         }
     };
 
-    const pending = appointments.filter(a => a.status === 'PENDING');
-    const handled = appointments.filter(a => a.status !== 'PENDING');
-
-    const paginate = (data, currentPage) => {
-        const start = (currentPage - 1) * itemsPerPage;
-        return data.slice(start, start + itemsPerPage);
+    const handleDone = (appointment) => {
+        setSelectedAppointment(appointment);
+        setRating(0);
+        setComment('');
+        setShowReviewModal(true);
     };
 
-    const renderPagination = (data, currentPage, setPage) => {
-        const totalPages = Math.ceil(data.length / itemsPerPage);
-        if (totalPages <= 1) return null;
+    const submitReview = async () => {
+        if (rating === 0) {
+            showAlert("Please provide rating", "warning");
+            return;
+        }
+        setSubmitting(true);
+        try {
+            await createReviewByAppointmentId(selectedAppointment.id, {
+                rating,
+                comment,
+                psychologistCode: selectedAppointment.psychologist?.id,
+                user: { id: getCurrentUserId() }
+            });
+            showToast("Review submitted successfully!", "success");
+            const notificationToPsy = NotDTO(
+                selectedAppointment.psychologist?.usersID.id,
+                `New review submitted by ${selectedAppointment.user?.fullname || 'a user'}: ${rating}/5 stars`
+            );
+            await saveNotification(notificationToPsy);
+            setAppointments(prev =>
+                prev.map(a =>
+                    a.id === selectedAppointment.id
+                        ? { ...a, review: { rating, comment } }
+                        : a
+                )
+            );
+            setShowReviewModal(false);
+        } catch (err) {
+            showAlert("Error submitting review", "error");
+            console.log(err);
+
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Pagination helpers
+    const paginate = (data, currentPage) => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return data.slice(startIndex, startIndex + itemsPerPage);
+    };
+
+    const totalPages = (data) => Math.ceil(data.length / itemsPerPage);
+
+    const renderTable = (data, title, currentPage, setCurrentPage) => {
+        const paginatedData = paginate(data, currentPage);
+        const pages = totalPages(data);
 
         return (
-            <nav className="mt-2">
-                <ul className="pagination justify-content-center">
-                    {Array.from({ length: totalPages }, (_, i) => (
-                        <li key={i} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                            <button className="page-link" onClick={() => setPage(i + 1)}>
-                                {i + 1}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
+            <>
+                <h5 className="mt-4">{title}</h5>
+                {data.length === 0 ? (
+                    <p className="text-center text-muted alert alert-warning">No data</p>
+                ) : (
+                    <>
+                        <table className="table table-bordered table-hover mt-2">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Full name</th>
+                                    <th>Time Start</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedData.map((item, index) => (
+                                    <tr key={item.id}>
+                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                        <td>{item.user?.fullname || 'Ẩn danh'}</td>
+                                        <td>{new Date(item.timeStart).toLocaleString()}</td>
+                                        <td>{item.note || 'Không có'}</td>
+                                        <td>
+                                            <span className={`badge ${item.status === 'PENDING' ? 'bg-warning text-dark' :
+                                                item.status === 'ACCEPTED' ? 'bg-success' :
+                                                    item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
+                                                }`}>{item.status}</span>
+                                        </td>
+                                        <td>
+                                            {item.status === 'PENDING' ? (
+                                                <>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-warning me-1"
+                                                        onClick={() => handleEdit(item.id)}
+                                                    >
+                                                        <FaEdit /> Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={() => handleDelete(item.id)}
+                                                    >
+                                                        <FaTrash /> Delete
+                                                    </button>
+                                                </>
+                                            ) : item.status === 'ACCEPTED' && !item.review ? (
+                                                <button
+                                                    className="btn btn-sm btn-outline-success"
+                                                    onClick={() => handleDone(item)}
+                                                >
+                                                    Done
+                                                </button>
+                                            ) : (
+                                                <span className="text-muted">Processed</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Pagination Controls */}
+                        {pages && (
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                                <button
+                                    className="btn btn-outline-secondary btn-sm"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                >
+                                    Previous
+                                </button>
+                                <span>Page {currentPage} of {pages}</span>
+                                <button
+                                    className="btn btn-outline-secondary btn-sm"
+                                    disabled={currentPage === pages}
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pages))}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </>
         );
     };
 
-    const renderTable = (data, title, currentPage, setPage) => (
-        <>
-            <h5 className="mt-4">{title}</h5>
-            <table className="table table-bordered table-hover mt-2">
-                <thead className="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Full name</th>
-                        <th>Time Start</th>
-                        <th>Note</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {paginate(data, currentPage).map((item, index) => (
-                        <tr key={item.id}>
-                            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                            <td>{item.user?.fullname || 'Ẩn danh'}</td>
-                            <td>{new Date(item.timeStart).toLocaleString()}</td>
-                            <td>{item.note || 'Không có'}</td>
-                            <td>
-                                <span className={`badge ${item.status === 'PENDING' ? 'bg-warning text-dark' :
-                                    item.status === 'ACCEPTED' ? 'bg-success' :
-                                        item.status === 'DECLINED' ? 'bg-danger' : 'bg-secondary'
-                                    }`}>
-                                    {item.status}
-                                </span>
-                            </td>
-                            <td>
-                                {item.status === 'PENDING' ? (
-                                    <>
-                                        <button
-                                            className="btn btn-sm btn-outline-warning me-1"
-                                            onClick={() => handleEdit(item.id)}
-                                        >
-                                            <FaEdit /> Edit
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => handleDelete(item.id)}
-                                        >
-                                            <FaTrash /> Delete
-                                        </button>
-                                    </>
-                                ) : (
-                                    <span className="text-muted">Processed</span>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            {renderPagination(data, currentPage, setPage)}
-        </>
-    );
+    // Filter appointments
+    const pendingAppointments = appointments.filter(a => a.status === 'PENDING');
+    const processedAppointments = appointments.filter(a => a.status !== 'PENDING');
 
     return (
         <div className="container mt-4">
+            <nav aria-label="breadcrumb">
+                <ol className="breadcrumb">
+                    <li
+                        className="breadcrumb-item"
+                        style={{ cursor: "pointer", color: "#038238ff" }}
+                        onClick={() => nav("/user/chat/list")}
+                    >
+                        Chat
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        Appointment
+                    </li>
+                </ol>
+            </nav>
+
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2 className="text-success">My Appointments</h2>
-                <button className="btn btn-outline-success" onClick={handleAdd}>
-                    <FaPlus /> Add new appointment
-                </button>
+
+                <div>
+                    <button className="btn btn-outline-success me-2" onClick={handleAdd}>
+                        <FaPlus /> Add new appointment
+                    </button>
+
+                    <button
+                        className="btn btn-outline-secondary"
+                        onClick={() => {
+                            setCurrentPagePending(1);
+                            setCurrentPageProcessed(1);
+                            fetchAppointments();
+                            showToast("Appointments reset!", 'success');
+                        }}
+                    >
+                        <FaRedo className="me-1" /> Reset
+                    </button>
+
+                </div>
             </div>
 
             {loading ? (
@@ -158,20 +263,58 @@ function Appointments() {
                 </div>
             ) : (
                 <>
-                    {pending.length > 0 && renderTable(pending, 'Pending Appointments', pendingPage, setPendingPage)}
-                    {handled.length > 0 && renderTable(handled, 'Processed Appointments', handledPage, setHandledPage)}
-                    {pending.length === 0 && handled.length === 0 && (
+                    {renderTable(pendingAppointments, 'Pending Appointments', currentPagePending, setCurrentPagePending)}
+                    {renderTable(processedAppointments, 'Processed Appointments', currentPageProcessed, setCurrentPageProcessed)}
+                    {appointments.length === 0 && (
                         <p className="alert alert-danger text-center mt-4">No appointments yet.</p>
                     )}
                 </>
             )}
 
+            {/* Review Modal */}
+            <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} backdrop="static">
+                <Modal.Header closeButton>
+                    <Modal.Title>Rate Psychologist</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group>
+                        <Form.Label>Rating</Form.Label>
+                        <Rating
+                            count={5}
+                            size={30}
+                            value={rating}
+                            onChange={setRating}
+                            activeColor="#ffd700"
+                        />
+                    </Form.Group>
+                    <Form.Group className="mt-3">
+                        <Form.Label>Comment</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={3}
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="Leave a comment"
+                        />
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowReviewModal(false)} disabled={submitting}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={submitReview} disabled={submitting}>
+                        {submitting ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2"></span>
+                                Submitting...
+                            </>
+                        ) : "Submit"}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
-            <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop />
-
+            <ToastContainer position="top-right" autoClose={3000} pauseOnFocusLoss={false} />
         </div>
-
-
     );
 }
 
