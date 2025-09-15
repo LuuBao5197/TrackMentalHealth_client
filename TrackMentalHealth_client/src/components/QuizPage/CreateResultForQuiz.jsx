@@ -25,22 +25,22 @@ const QuizResultForm = () => {
             setTotalPages(res.data.totalPages || 1);
             setCurrentPage(res.data.currentPage || 1);
         } catch (err) {
-            alert('Không thể tải danh sách bài quiz');
+            alert('Cannot load quiz list');
         }
     };
 
     const validationSchema = Yup.object({
-        quizId: Yup.number().required('Bắt buộc chọn bài quiz'),
+        quizId: Yup.number().required('Quiz selection is required'),
         results: Yup.array().of(
             Yup.object().shape({
-                minScore: Yup.number().required('Bắt buộc').min(0, 'Điểm phải >= 0').max(99, 'Điểm phải <= 99)'),
+                minScore: Yup.number().required('Required').min(0, 'Score must be >= 0').max(99, 'Score must be <= 99'),
                 maxScore: Yup.number()
-                    .required('Bắt buộc').max(100, 'Điểm phải <=100')
-                    .test('greater-than-from', 'Đến phải >= Từ', function (value) {
+                    .required('Required').max(100, 'Score must be <= 100')
+                    .test('greater-than-from', 'Max must be >= Min', function (value) {
                         const { minScore } = this.parent;
                         return value >= minScore;
                     }),
-                resultLabel: Yup.string().required('Bắt buộc')
+                resultLabel: Yup.string().required('Required')
             })
         )
     });
@@ -76,7 +76,7 @@ const QuizResultForm = () => {
                 const prevTo = sorted[i - 1].maxScore;
                 const currFrom = sorted[i].minScore;
                 if (currFrom !== prevTo + 1) {
-                    alert(`Khoảng điểm phải nối tiếp sau khoảng trước đó (bắt đầu từ ${prevTo + 1})`);
+                    alert(`Score ranges must be continuous (should start from ${prevTo + 1})`);
                     return;
                 }
             }
@@ -92,7 +92,7 @@ const QuizResultForm = () => {
                 await axios.post('http://localhost:9999/api/quiz-results/multiQuizResult', payload);
                 showAlert('Create quiz success', 'success');
             } catch (err) {
-                  showAlert(`Create quiz fail ${err}`, 'error');
+                showAlert(`Create quiz fail ${err}`, 'error');
             }
         }
     });
@@ -114,17 +114,17 @@ const QuizResultForm = () => {
     return (
         <FormikProvider value={formik}>
             <Form onSubmit={handleSubmit} className="container mt-1">
-                <h4>Thiết lập Thang điểm (%)</h4>
+                <h4>Set up Score Range (%)</h4>
 
                 <Form.Group className="mb-3 mt-3">
                     <div className="input-group w-50">
                         <Form.Control
                             readOnly
                             value={values.quizName}
-                            placeholder="Chọn bài quiz"
+                            placeholder="Select a quiz"
                             isInvalid={!!(touched.quizId && errors.quizId)}
                         />
-                        <Button variant="outline-secondary" onClick={handleOpenModal}>Chọn</Button>
+                        <Button variant="outline-secondary" onClick={handleOpenModal}>Select</Button>
                     </div>
                     {touched.quizId && errors.quizId && (
                         <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
@@ -135,7 +135,7 @@ const QuizResultForm = () => {
 
                 {maxScore !== null && (
                     <div className="mb-3">
-                        <strong>Điểm tối đa:</strong> {maxScore}
+                        <strong>Max Score:</strong> {maxScore}
                     </div>
                 )}
 
@@ -148,7 +148,7 @@ const QuizResultForm = () => {
                                         <Form.Control
                                             type="number"
                                             name={`results[${index}].minScore`}
-                                            placeholder="Từ"
+                                            placeholder="From"
                                             value={result.minScore}
                                             onChange={handleChange}
                                             isInvalid={!!(errors.results?.[index]?.minScore && touched.results?.[index]?.minScore)}
@@ -161,7 +161,7 @@ const QuizResultForm = () => {
                                         <Form.Control
                                             type="number"
                                             name={`results[${index}].maxScore`}
-                                            placeholder="Đến"
+                                            placeholder="To"
                                             value={result.maxScore}
                                             onChange={handleChange}
                                             isInvalid={!!(errors.results?.[index]?.maxScore && touched.results?.[index]?.maxScore)}
@@ -174,7 +174,7 @@ const QuizResultForm = () => {
                                         <Form.Control
                                             type="text"
                                             name={`results[${index}].resultLabel`}
-                                            placeholder="Kết quả và gợi ý giải pháp"
+                                            placeholder="Result and suggestions"
                                             value={result.resultLabel}
                                             onChange={handleChange}
                                             isInvalid={!!(errors.results?.[index]?.resultLabel && touched.results?.[index]?.resultLabel)}
@@ -184,7 +184,7 @@ const QuizResultForm = () => {
                                         </Form.Control.Feedback>
                                     </Col>
                                     <Col md={2}>
-                                        <Button variant="danger" onClick={() => remove(index)}>Xóa</Button>
+                                        <Button variant="danger" onClick={() => remove(index)}>Delete</Button>
                                     </Col>
                                 </Row>
                             ))}
@@ -197,24 +197,24 @@ const QuizResultForm = () => {
                                     push({ minScore: newScoreFrom, maxScore: '', resultLabel: '' });
                                 }}
                             >
-                                Thêm kết quả
+                                Add result
                             </Button>
                         </>
                     )}
                 </FieldArray>
 
-                <Button type="submit" className="mt-2 mx-3">Lưu</Button>
+                <Button type="submit" className="mt-2 mx-3">Save</Button>
             </Form>
 
             <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Chọn bài Quiz</Modal.Title>
+                    <Modal.Title>Select a Quiz</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <input
                         type="text"
                         className="form-control mb-3"
-                        placeholder="Tìm kiếm..."
+                        placeholder="Search..."
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
@@ -223,7 +223,7 @@ const QuizResultForm = () => {
                     />
                     <ul className="list-group">
                         {console.log(quizList)}
-                        {quizList.filter(quiz=>quiz.hasResults == true).map(quiz => (
+                        {quizList.filter(quiz => quiz.hasResults == true).map(quiz => (
                             <li
                                 key={quiz.id}
                                 className="list-group-item list-group-item-action"
@@ -238,13 +238,13 @@ const QuizResultForm = () => {
                 <Modal.Footer className="d-flex justify-content-between">
                     <div>
                         <Button variant="secondary" onClick={() => fetchQuizs(currentPage - 1, searchTerm)} disabled={currentPage === 1}>
-                            ← Trước
+                            ← Previous
                         </Button>{' '}
                         <Button variant="secondary" onClick={() => fetchQuizs(currentPage + 1, searchTerm)} disabled={currentPage === totalPages}>
-                            Sau →
+                            Next →
                         </Button>
                     </div>
-                    <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Đóng</Button>
+                    <Button variant="outline-secondary" onClick={() => setShowModal(false)}>Close</Button>
                 </Modal.Footer>
             </Modal>
         </FormikProvider>

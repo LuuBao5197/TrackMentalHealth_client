@@ -7,7 +7,6 @@ import { showConfirm } from '../../../utils/showConfirm';
 import { NotDTO } from '../../../utils/dto/NotDTO';
 import { FaRedo } from 'react-icons/fa';
 import { showToast } from '../../../utils/showToast';
-import ReactStars from 'react-stars';
 
 function AppointmentManagement() {
     const user = useSelector((state) => state.auth.user);

@@ -43,7 +43,7 @@ const MentalAlertBox = () => {
             <strong>Hướng dẫn:</strong> {result.suggestion.instructions}
           </p>
           <Link
-            to={`/TrackMentalHealth/user/doTest/${result.suggestion.testId}`}
+            to={`/user/doTest/${result.suggestion.testId}`}
             className="btn btn-outline-primary"
           >
             👉 Làm bài test ngay
