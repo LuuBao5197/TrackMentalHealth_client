@@ -92,7 +92,7 @@ const LoginForm = ({ subtext, subtitle }) => {
                                 loginWithSocialToken('google', credential);
                             }}
                             onError={() => setErrorMessage('Google login failed')}
-                            useOneTap
+                            useOneTap 
                         />    
                     </Stack>
                 </>
