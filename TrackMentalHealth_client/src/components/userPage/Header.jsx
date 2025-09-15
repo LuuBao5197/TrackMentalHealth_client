@@ -166,23 +166,17 @@ const Header = () => {
                 </li>
 
                 <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/exercise/history`
-
-                  )}>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/exercise/history`)}>
                     View Exercise History
                   </button>
                 </li>
                 <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`
-
-                  )}>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`)}>
                     View Quiz History
                   </button>
                 </li>
                 <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`
-
-                  )}>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`)}>
                     View Test History
                   </button>
                 </li>
