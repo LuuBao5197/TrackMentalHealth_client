@@ -40,7 +40,7 @@ const TestListForUser = () => {
   };
 
   const handleDoTest = (id) => {
-    navigate(`/user/doTest/${id}`);x
+    navigate(`/user/doTest/${id}`); x
   };
 
   const handlePageChange = (newPage) => {
@@ -74,11 +74,15 @@ const TestListForUser = () => {
             <Col md={6} key={test.id} className="mb-4">
               <Card className="h-100 shadow-sm">
                 <Card.Body>
-                  <Card.Title>{test.title}</Card.Title>
+                  <Card.Title><span
+                    dangerouslySetInnerHTML={{ __html: test.title }}
+                  ></span></Card.Title>
                   {/* <Card.Subtitle className="mb-2 text-muted">
                     {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : 'Unknown date'}
                   </Card.Subtitle> */}
-                  <Card.Text>{test.description?.substring(0, 150)}...</Card.Text>
+                  <Card.Text><span
+                    dangerouslySetInnerHTML={{ __html: test.description?.substring(0, 150) }}
+                  ></span></Card.Text>
                   <div className="d-flex justify-content-between align-items-center mt-3">
                     <span className="text-capitalize text-secondary">Status: {test.status}</span>
                     <Button

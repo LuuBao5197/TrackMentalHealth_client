@@ -93,14 +93,15 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       showAlert("Status đã được đăng thành công");
       resetForm();
       handleClose();
       onPostCreated;
 
     } catch (err) {
-      showAlert("Dang bai that bai", "error")
+      console.log(err)
+      showAlert(`Created fail because ${err.response.data.error}`, "error");
       setError('Đăng bài thất bại. Vui lòng thử lại.');
     }
   };

@@ -21,6 +21,7 @@ const TestList = () => {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedTest, setSelectedTest] = useState(null);
   const navigate = useNavigate();
+
   const fetchTests = useCallback(async (page, size = perPage, searchTerm = search) => {
     setLoading(true);
     try {
@@ -74,12 +75,12 @@ const TestList = () => {
   };
 
   const handleDelete = async (testId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xoá không?')) {
+    if (window.confirm('Are you sure you want to delete this?')) {
       try {
         await axios.delete(`http://localhost:9999/api/test/${testId}`);
         fetchTests(currentPage - 1);
       } catch (error) {
-        console.error('Xoá thất bại:', error);
+        console.error('Delete failed:', error);
       }
     }
   };
@@ -164,7 +165,7 @@ const TestList = () => {
 
   return (
     <div className="container mt-4">
-      <h3 className="mb-3">Danh sách bài Test</h3>
+      <h3 className="mb-3">Test List</h3>
 
       <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div className="input-group" style={{ minWidth: '250px' }}>
@@ -174,13 +175,13 @@ const TestList = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Tìm kiếm tiêu đề..."
+            placeholder="Search by title..."
             value={search}
             onChange={handleSearchChange}
           />
         </div>
         <span className="text-muted">
-          Trang {currentPage} / {totalPages}
+          Page {currentPage} / {totalPages}
         </span>
       </div>
 
@@ -199,8 +200,7 @@ const TestList = () => {
         highlightOnHover
         striped
         responsive
-        noDataComponent="Không có dữ liệu"
-
+        noDataComponent="No data available"
       />
       <TestPreviewModal
         show={showDetail}
@@ -208,9 +208,7 @@ const TestList = () => {
         testData={selectedTest}
         title="Test Detail"
       />
-
     </div>
-
   );
 };
 

@@ -128,6 +128,7 @@ const Header = () => {
             <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Article</Link></li>
             <li><Link to="/user/exercise" className={currentPath === "/user/exercise" ? "active" : ""}>Exercise</Link></li>
             <li><Link to="/user/social" className={currentPath === "/user/social" ? "active" : ""}>Community Social</Link></li>
+            <li><Link to="/user/chat/list" className={currentPath === "/user/chat/list" ? "active" : ""}>Chat</Link></li>
             <li><Link to="/user/tests" className={currentPath === "/user/tests" ? "active" : ""}>Mental Tests</Link></li>
             <li><Link to="/user/quizs" className={currentPath === "/user/quizs" ? "active" : ""}>Quiz</Link></li>
           </ul>

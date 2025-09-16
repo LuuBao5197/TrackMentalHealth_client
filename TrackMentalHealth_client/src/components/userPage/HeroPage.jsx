@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -13,11 +12,11 @@ import {
 } from '../../api/moodAPI';
 
 const moodIcons = {
-  "Rất tệ": "😢",
-  "Tệ": "😟",
-  "Bình thường": "😐",
-  "Vui": "😊",
-  "Rất vui": "😄",
+  "Very bad": "😢",
+  "Bad": "😟",
+  "Normal": "😐",
+  "Happy": "😊",
+  "Very happy": "😄",
 };
 
 const HeroPage = () => {
@@ -32,7 +31,7 @@ const HeroPage = () => {
   useEffect(() => {
     getMoodLevels()
       .then(res => setMoodLevels(res.data))
-      .catch(err => console.error('Lỗi tải moods:', err));
+      .catch(err => console.error('Error loading moods:', err));
 
     getTodayMood()
       .then(res => {
@@ -44,13 +43,13 @@ const HeroPage = () => {
           setAiSuggestion(mood.aiSuggestion || '');
         }
       })
-      .catch(err => console.error("Lỗi kiểm tra mood hôm nay:", err));
+      .catch(err => console.error("Error checking today mood:", err));
 
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedMoodId) return alert("Vui lòng chọn cảm xúc");
+    if (!selectedMoodId) return alert("Please select a mood");
 
     const selectedMood = moodLevels.find(m => m.id === selectedMoodId);
     const mood = {
@@ -67,17 +66,17 @@ const HeroPage = () => {
       if (todayMood) {
         const updated = await updateMood(todayMood.id, { ...mood, id: todayMood.id });
         setTodayMood(updated.data);
-        setAiSuggestion(updated.data.aiSuggestion || '✅ Cập nhật cảm xúc thành công!');
+        setAiSuggestion(updated.data.aiSuggestion || '✅ Mood updated successfully!');
         setShowModal(true);
       } else {
         const created = await createMood(mood);
         setTodayMood(created.data);
-        setAiSuggestion(created.data.aiSuggestion || '✅ Ghi nhận cảm xúc thành công!');
+        setAiSuggestion(created.data.aiSuggestion || '✅ Mood saved successfully!');
         setShowModal(true);
       }
     } catch (err) {
-      console.error("Lỗi tạo/cập nhật mood:", err);
-      setAiSuggestion("❌ Lỗi khi ghi nhận cảm xúc.");
+      console.error("Error creating/updating mood:", err);
+      setAiSuggestion("❌ Error while saving mood.");
       setShowModal(true);
     } finally {
       setLoading(false);
@@ -90,29 +89,28 @@ const HeroPage = () => {
         <div className="row mb-5">
           <div className="col-lg-8 mx-auto text-center">
             <h3 className="mb-4 fw-bold">
-              {todayMood ? "💬 Cảm xúc của bạn hôm nay" : "💬 Hôm nay bạn cảm thấy thế nào?"}
+              {todayMood ? "💬 Your mood today" : "💬 How are you feeling today?"}
             </h3>
             <div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
               {moodLevels.map((m) => (
                 <button
-  key={m.id}
-  type="button"
-  className={`btn btn-mood border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
-  onClick={() => setSelectedMoodId(m.id)}
->
-  <div style={{ fontSize: "2.5rem" }}>
-    {moodIcons[m.name] || '❔'}
-  </div>
-  <div className="mt-2">{m.name}</div>
-</button>
-
+                  key={m.id}
+                  type="button"
+                  className={`btn btn-mood border shadow-sm ${selectedMoodId === m.id ? 'btn-primary text-white' : 'btn-light'}`}
+                  onClick={() => setSelectedMoodId(m.id)}
+                >
+                  <div style={{ fontSize: "2.5rem" }}>
+                    {moodIcons[m.name] || '❔'}
+                  </div>
+                  <div className="mt-2">{m.name}</div>
+                </button>
               ))}
             </div>
 
             <textarea
               className="form-control mb-4 shadow-sm"
               rows={4}
-              placeholder="📝 Ghi chú thêm về cảm xúc hôm nay..."
+              placeholder="📝 Add a note about your mood today..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
               style={{ fontSize: '1.1rem' }}
@@ -124,12 +122,12 @@ const HeroPage = () => {
               disabled={loading}
               onClick={handleSubmit}
             >
-              {loading ? 'Đang lưu...' : (todayMood ? '📤 Cập nhật cảm xúc' : '💾 Lưu cảm xúc')}
+              {loading ? 'Saving...' : (todayMood ? '📤 Update mood' : '💾 Save mood')}
             </button>
           </div>
         </div>
 
-        {/* ✅ Modal hiển thị gợi ý từ AI */}
+        {/* ✅ Modal showing AI suggestion */}
         {showModal && (
           <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="modal-dialog modal-dialog-centered">
@@ -143,7 +141,7 @@ const HeroPage = () => {
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-primary" onClick={() => setShowModal(false)}>
-                    Đóng
+                    Close
                   </button>
                 </div>
               </div>
@@ -154,26 +152,25 @@ const HeroPage = () => {
         <div className="row feature-boxes">
           <FeatureBox
             icon={<BsPen />}
-            title="Ghi nhật ký"
-            text="Bắt đầu ghi"
+            title="Write a diary"
+            text="Start writing"
             delay="200"
             link="/user/write-diary"
           />
           <FeatureBox
             icon={<BsClockHistory />}
-            title="Xem lại lịch sử"
-            text="Theo dõi cảm xúc theo thời gian một cách trực quan."
+            title="Review history"
+            text="Track your mood over time visually."
             delay="300"
             link="/user/history"
           />
           <FeatureBox
             icon={<BsPencilSquare />}
-            title="Lịch sử cảm xúc"
-            text="Xem biểu đồ và lịch sử cảm xúc của bạn."
+            title="Mood history"
+            text="View charts and your mood history."
             delay="400"
             link="/user/mood-history"
           />
-
         </div>
       </div>
     </section>
