@@ -13,7 +13,10 @@ export function connectWebSocket({
     onGroupMessage,
     onNotification,
     onCallSignal,
-    onNewMessage
+    onNewMessage,
+    onConnect,
+    onDisconnect,
+    onError
 }) {
     const currentUserId = getCurrentUserId();
     console.log("🧪 connectWebSocket params:", { sessionId, groupId, currentUserId });
@@ -58,13 +61,33 @@ export function connectWebSocket({
 
             // 🔹 Notifications
             subscribeSafe(`/topic/notifications/${currentUserId}`, onNotification, "Notification");
+
+            // 🔹 Callback onConnect
+            if (onConnect) {
+                onConnect();
+            }
         },
 
         onStompError: (frame) => {
             console.error("💥 STOMP error:", frame.headers['message'], frame.body);
+            isConnected = false;
+            if (onError) {
+                onError(frame);
+            }
         },
         onWebSocketError: (err) => {
             console.error("🛑 WebSocket error:", err);
+            isConnected = false;
+            if (onError) {
+                onError(err);
+            }
+        },
+        onDisconnect: () => {
+            console.log("❌ WebSocket disconnected");
+            isConnected = false;
+            if (onDisconnect) {
+                onDisconnect();
+            }
         }
     });
 

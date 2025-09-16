@@ -11,9 +11,8 @@ import {
 import { sendWebSocketMessage, sendCallSignal, connectWebSocket } from "../../services/stompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
-import CallManager from "./CallManager";
 import { showToast } from "../../utils/showToast";
-import { leaveRoom, destroyRoom } from "../../services/ZegoService";
+import { leaveRoom, destroyRoom } from "../../services/AgoraService";
 import { WebSocketContext } from "../../layouts/user/UserLayout";
 
 function ChatWithUser() {
@@ -161,15 +160,15 @@ function ChatWithUser() {
                         <MessageHeader onBack={() => navigate("/user/chat/list")} avatar={receiverAvatar}>
                             <div style={{ display: "flex", alignItems: "center", width: "100%", justifyContent: "space-between", position: "relative" }}>
                                 <span>{receiverName}</span>
-                                <CallManager sessionId={sessionId} currentUserId={currentUserId} receiverName={receiverName} />
-                                <button
-                                    onClick={() => handleStartVideoCall(receiverId)}
-                                    style={{ background: "transparent", border: "none", cursor: "pointer", position: "absolute", right: "10px" }}
-                                    title="Video Call"
-                                >
-                                    <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#038238ff" }}></i>
-                                </button>
-
+                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                    <button
+                                        onClick={() => handleStartVideoCall(receiverId)}
+                                        style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                                        title="Video Call"
+                                    >
+                                        <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#038238ff" }}></i>
+                                    </button>
+                                </div>
                             </div>
                         </MessageHeader>
 

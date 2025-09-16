@@ -12,6 +12,7 @@ export default function CallManager({ receiverName }) {
 
   const [incomingCall, setIncomingCall] = useState(null);
   const [isCalling, setIsCalling] = useState(false);
+  const [callStatus, setCallStatus] = useState('idle'); // 'idle', 'calling', 'ringing', 'connected'
 
   // Lắng nghe tín hiệu call
   useEffect(() => {
@@ -27,19 +28,34 @@ export default function CallManager({ receiverName }) {
               setIncomingCall({
                 sessionId: msg.sessionId,
                 callerName: msg.callerName,
+                callerId: msg.callerId,
               });
+              setCallStatus('ringing');
             }
             break;
 
           case "CALL_ACCEPTED":
             setIsCalling(false);
+            setCallStatus('connected');
             navigate(`/user/video-call/${msg.sessionId}`);
             break;
 
           case "CALL_REJECTED":
+            setIsCalling(false);
+            setIncomingCall(null);
+            setCallStatus('idle');
+            break;
+
           case "CALL_CANCEL":
             setIsCalling(false);
             setIncomingCall(null);
+            setCallStatus('idle');
+            break;
+
+          case "CALL_ENDED":
+            setIsCalling(false);
+            setIncomingCall(null);
+            setCallStatus('idle');
             break;
 
           default:
@@ -53,19 +69,25 @@ export default function CallManager({ receiverName }) {
 
   // Hành động gọi
   const startCall = () => {
-    sendCallSignal(sessionId, {
+    // Cần lấy calleeId từ sessionId hoặc từ props
+    const calleeId = sessionId; // Giả sử sessionId chính là calleeId
+    
+    sendCallSignal({
       type: "CALL_REQUEST",
       callerId: currentUserId,
       callerName: receiverName,
-      sessionId,
+      calleeId: calleeId,
+      sessionId: sessionId,
     });
     setIsCalling(true);
+    setCallStatus('calling');
   };
 
   const acceptCall = () => {
-    sendCallSignal(sessionId, {
+    sendCallSignal({
       type: "CALL_ACCEPTED",
       sessionId,
+      callerId: incomingCall?.callerId,
       calleeId: currentUserId,
     });
     setIncomingCall(null);
@@ -73,19 +95,21 @@ export default function CallManager({ receiverName }) {
   };
 
   const declineCall = () => {
-    sendCallSignal(sessionId, {
+    sendCallSignal({
       type: "CALL_REJECTED",
       sessionId,
+      callerId: incomingCall?.callerId,
       calleeId: currentUserId,
     });
     setIncomingCall(null);
   };
 
   const cancelCall = () => {
-    sendCallSignal(sessionId, {
+    sendCallSignal({
       type: "CALL_CANCEL",
       sessionId,
       callerId: currentUserId,
+      calleeId: sessionId, // Giả sử sessionId là calleeId
     });
     setIsCalling(false);
   };

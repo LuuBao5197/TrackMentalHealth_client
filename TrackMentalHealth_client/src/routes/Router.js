@@ -52,7 +52,7 @@ import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprova
 import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
 import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
 import PublicCall from '../components/chatPage/chatvideo/PublicCall.jsx';
-import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
+import VideoCallAgora from '../components/chatPage/chatvideo/VideoCallAgora.jsx';
 import TestHistory from '../components/testPage/TestHistory.jsx';
 import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
 import ExerciseHistoryList from '../components/ExercisePage/ExerciseHistoryList.jsx';
@@ -192,7 +192,7 @@ const Router = [
           { path: 'chat/public-call', element: <PublicCall /> },
           {
             path: 'chat/video-call/:sessionId',
-            element: <VideoCallZego />
+            element: <VideoCallAgora />
           },
         ],
       },
