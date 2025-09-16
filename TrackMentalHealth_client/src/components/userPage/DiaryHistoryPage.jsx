@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getDiaries, updateDiary } from '../../api/diaryAPI';
 import { Modal, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '../../assets/css/DiaryHistoryPage.css';
+import '../../assets/css/DiaryHistoryPage.css'; // 👉 Custom CSS for diary history
 
 const DiaryHistoryPage = () => {
   const [diaries, setDiaries] = useState([]);
@@ -18,7 +18,7 @@ const DiaryHistoryPage = () => {
         setDiaries(res.data);
       } catch (err) {
         console.error(err);
-        alert('Không thể tải nhật ký');
+        alert('Unable to load diaries.');
       }
     };
     fetchData();
@@ -40,7 +40,7 @@ const DiaryHistoryPage = () => {
       diaryDate.getDate() === today.getDate();
 
     if (!isSameDay) {
-      alert('Chỉ được phép chỉnh sửa nhật ký trong ngày hôm nay.');
+      alert('You can only edit diaries from today.');
       return;
     }
 
@@ -51,21 +51,21 @@ const DiaryHistoryPage = () => {
   const handleSave = async () => {
     try {
       await updateDiary(editingDiary.id, { ...editingDiary, content: updatedContent });
-      alert('✅ Cập nhật thành công!');
+      alert('✅ Update successful!');
       setDiaries(diaries.map(d => d.id === editingDiary.id ? { ...d, content: updatedContent } : d));
       setEditingDiary(null);
     } catch (err) {
       console.error(err);
-      alert('❌ Cập nhật thất bại');
+      alert('❌ Update failed.');
     }
   };
 
   return (
     <div className="container py-5 diary-history">
-      <h2 className="text-center text-primary mb-4">📖 Lịch Sử Nhật Ký</h2>
+      <h2 className="text-center text-primary mb-4">📖 Diary History</h2>
 
-      {currentDiaries.length === 0 ? (
-        <p className="text-center text-muted">Chưa có nhật ký nào.</p>
+      {diaries.length === 0 ? (
+        <p className="text-center text-muted">No diaries yet.</p>
       ) : (
         <div className="row g-4">
           {currentDiaries.map((diary) => {
@@ -81,7 +81,7 @@ const DiaryHistoryPage = () => {
               <div className="col-md-6" key={diary.id}>
                 <div className="diary-card shadow-sm p-3 rounded position-relative">
                   <small className="text-muted">
-                    {diaryDate.toLocaleDateString('vi-VN', {
+                    {diaryDate.toLocaleDateString('en-GB', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
@@ -107,40 +107,11 @@ const DiaryHistoryPage = () => {
         </div>
       )}
 
-      {/* 🔹 Phân trang */}
-      {totalPages > 1 && (
-        <div className="d-flex justify-content-center mt-4">
-          <nav>
-            <ul className="pagination">
-              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
-                  «
-                </button>
-              </li>
-
-              {[...Array(totalPages)].map((_, i) => (
-                <li key={i} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                  <button className="page-link" onClick={() => setCurrentPage(i + 1)}>
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
-
-              <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
-                  »
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      )}
-
-      {/* Modal chỉnh sửa */}
+      {/* Edit Modal */}
       {editingDiary && (
         <Modal show onHide={() => setEditingDiary(null)} centered>
           <Modal.Header closeButton>
-            <Modal.Title>📝 Chỉnh sửa nhật ký</Modal.Title>
+            <Modal.Title>📝 Edit Diary</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <textarea
@@ -152,10 +123,10 @@ const DiaryHistoryPage = () => {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setEditingDiary(null)}>
-              Hủy
+              Cancel
             </Button>
             <Button variant="success" onClick={handleSave}>
-              Lưu thay đổi
+              Save Changes
             </Button>
           </Modal.Footer>
         </Modal>

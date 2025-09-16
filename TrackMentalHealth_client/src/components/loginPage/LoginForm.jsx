@@ -33,7 +33,7 @@ const LoginForm = ({ subtext, subtitle }) => {
             } else if(decoded.role === "ADMIN") {
                 navigate("/dashboard");
             } else if(decoded.role === "PSYCHOLOGIST") {
-                navigate("/user/appointment/psychologist");
+                navigate("/user/homepage");
             } else if(decoded.role === "TEST_DESIGNER") {
                 navigate("/testDesigner/test/");
             } else if(decoded.role === "CONTENT_CREATOR") {
@@ -92,7 +92,7 @@ const LoginForm = ({ subtext, subtitle }) => {
                                 loginWithSocialToken('google', credential);
                             }}
                             onError={() => setErrorMessage('Google login failed')}
-                            useOneTap
+                            useOneTap 
                         />    
                     </Stack>
                 </>

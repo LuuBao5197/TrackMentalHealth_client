@@ -256,30 +256,39 @@ const DoQuizForm = () => {
 
                                 {(q.type === 'SINGLE_CHOICE' || q.type === 'SCORE_BASED') &&
                                     Array.isArray(q.options) &&
-                                    q.options.map(opt => (
-                                        <Form.Check
-                                            type="radio"
-                                            name={`q-${q.id}`}
-                                            key={opt.id}
-                                            id={`q-${q.id}-opt-${opt.id}`}
-                                            label={opt.content}
-                                            checked={answers[q.id] === opt.id}
-                                            onChange={() => handleAnswer(q.id, opt.id, q.type)}
-                                        />
-                                    ))}
+                                    q.options.map(opt => {
+                                        return (
+                                            <Form.Check
+                                                type="radio"
+                                                name={`q-${q.id}`}
+                                                key={opt.id}
+                                                id={`q-${q.id}-opt-${opt.id}`}
+                                                label={opt.content}
+                                                value={opt.content}
+                                                checked={answers[q.id] === opt.id}
+                                                onChange={() => handleAnswer(q.id, opt.id, q.type)}
+                                            />
+                                        )
+
+                                    })}
 
                                 {q.type === 'MULTI_CHOICE' &&
                                     Array.isArray(q.options) &&
-                                    q.options.map(opt => (
-                                        <Form.Check
-                                            type="checkbox"
-                                            key={opt.id}
-                                            id={`q-${q.id}-opt-${opt.id}`}
-                                            label={opt.optionText}
-                                            checked={answers[q.id]?.includes(opt.id) || false}
-                                            onChange={(e) => handleAnswer(q.id, opt.id, 'MULTI_CHOICE', e.target.checked)}
-                                        />
-                                    ))}
+                                    q.options.map(opt => {
+                                        {console.log(opt)}
+                                        return (
+                                            <Form.Check
+                                                type="checkbox"
+                                                key={opt.id}
+                                                id={`q-${q.id}-opt-${opt.id}`}
+                                                label={opt.content}
+                                                value={opt.content}
+                                                checked={answers[q.id]?.includes(opt.id) || false}
+                                                onChange={(e) => handleAnswer(q.id, opt.id, 'MULTI_CHOICE', e.target.checked)}
+                                            />
+                                        )
+                                    }
+                                    )}
 
                                 {q.type === 'ORDERING' && Array.isArray(q.orderingItems) && (
                                     <DragDropContext onDragEnd={(result) => handleDragEnd(q, result)}>

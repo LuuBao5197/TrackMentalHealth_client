@@ -40,7 +40,7 @@ function ChatGroup() {
                         id: m.id,
                         text: m.content,
                         user: {
-                            id: m.sender.id,
+                               id: String(m.sender.id),
                             name: m.sender.fullname || "Người dùng",
                             avatar:
                                 m.sender.avatar && m.sender.avatar.trim() !== ""
@@ -69,14 +69,13 @@ function ChatGroup() {
             groupId,
             onGroupMessage: (msg) => {
                 const senderId = msg.sender?.id ?? msg.senderId;
-
                 setMessages((prev) => [
                     ...prev,
                     {
                         id: msg.id,
                         text: msg.content,
                         user: {
-                            id: senderId,
+                          id: String(senderId),
                             name: msg.sender?.fullname ?? msg.senderName ?? "User",
                             avatar:
                                 msg.sender?.avatar ||
@@ -118,98 +117,114 @@ function ChatGroup() {
         }
     };
 
+    const handleVideoCallGroup = () => {
+        nav(`/user/chat/public-call`);
+    };
+
+
     return (
-        <MinChatUiProvider theme="#68c790">
-            <MainContainer style={{ height: "100vh" }}>
-                <MessageContainer>
-                    {group && (
-                        <MessageHeader
-                            onBack={() => nav("/user/chat/list")}
-                            avatar={
-                                group.avt && group.avt.trim() !== ""
-                                    ? group.avt
-                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}`
-                            }
-                        >
-                            <div className="d-flex flex-wrap justify-content-between align-items-center w-100">
-                                {/* Trái: Tên nhóm + Creator + Dropdown thành viên */}
-                                <div className="d-flex align-items-center gap-2">
-                                    <div className="d-flex flex-column">
-                                        <strong>{group.name}</strong>
-                                        <small className="text-muted d-flex align-items-center gap-2">
-                                            Creator: <u>{group.createdBy.fullname.toUpperCase()}</u>
+        <div className="mt-3 mb-3">
+            <MinChatUiProvider theme="#68c790">
+                <MainContainer style={{ height: "100vh" }}>
+                    <MessageContainer>
+                        {group && (
+                            <MessageHeader
+                                onBack={() => nav("/user/chat/list")}
+                                avatar={
+                                    group.avt && group.avt.trim() !== ""
+                                        ? group.avt
+                                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}`
+                                }
+                            >
+                                <div className="d-flex flex-wrap justify-content-between align-items-center w-100">
+                                    {/* Trái: Tên nhóm + Creator + Dropdown thành viên */}
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="d-flex flex-column">
+                                            <strong>{group.name}</strong>
+                                            <small className="text-muted d-flex align-items-center gap-2">
+                                                Creator: <u>{group.createdBy.fullname.toUpperCase()}</u>
 
-                                            {/* Icon thành viên (dropdown) */}
-                                            <div className="dropdown ms-2">
-                                                <button
-                                                    className="btn btn-link p-0 border-0"
-                                                    type="button"
-                                                    id="memberDropdown"
-                                                    data-bs-toggle="dropdown"
-                                                    aria-expanded="false"
-                                                >
-                                                    <i className="bi bi-people-fill" style={{ fontSize: "18px", color: 'black' }}></i>
-                                                </button>
-                                                <ul className="dropdown-menu" aria-labelledby="memberDropdown">
-                                                    {participants.length > 0 ? (
-                                                        participants.map((p) => (
-                                                            <li
-                                                                key={p.id}
-                                                                className="dropdown-item d-flex align-items-center"
-                                                                onClick={() => openPrivateChat(p.id)}
-                                                            >
-                                                                <img
-                                                                    src={
-                                                                        p.avatar && p.avatar.trim() !== ""
-                                                                            ? p.avatar
-                                                                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullname || "U")}`
-                                                                    }
-                                                                    alt="avatar"
-                                                                    className="rounded-circle me-2"
-                                                                    style={{ width: "24px", height: "24px" }}
-                                                                    onError={(e) => {
-                                                                        e.target.onerror = null;
-                                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullname || "U")}`;
-                                                                    }}
-                                                                />
-                                                                {p.fullname}
-                                                            </li>
-                                                        ))
-                                                    ) : (
-                                                        <li className="dropdown-item text-muted text-center">No members yet</li>
-                                                    )}
-                                                </ul>
+                                                {/* Icon thành viên (dropdown) */}
+                                                <div className="dropdown ms-2">
+                                                    <button
+                                                        className="btn btn-link p-0 border-0"
+                                                        type="button"
+                                                        id="memberDropdown"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                    >
+                                                        <i className="bi bi-people-fill" style={{ fontSize: "18px", color: 'black' }}></i>
+                                                    </button>
+                                                    <ul className="dropdown-menu" aria-labelledby="memberDropdown">
+                                                        {participants.length > 0 ? (
+                                                            participants.map((p) => (
+                                                                <li
+                                                                    key={p.id}
+                                                                    className="dropdown-item d-flex align-items-center"
+                                                                    onClick={() => openPrivateChat(p.id)}
+                                                                >
+                                                                    <img
+                                                                        src={
+                                                                            p.avatar && p.avatar.trim() !== ""
+                                                                                ? p.avatar
+                                                                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullname || "U")}`
+                                                                        }
+                                                                        alt="avatar"
+                                                                        className="rounded-circle me-2"
+                                                                        style={{ width: "24px", height: "24px" }}
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.fullname || "U")}`;
+                                                                        }}
+                                                                    />
+                                                                    {p.fullname}
+                                                                </li>
+                                                            ))
+                                                        ) : (
+                                                            <li className="dropdown-item text-muted text-center">No members yet</li>
+                                                        )}
+                                                    </ul>
 
-                                            </div>
-                                        </small>
+                                                </div>
+                                            </small>
+                                        </div>
                                     </div>
+
+                                    {/* Phải: Ngày tạo */}
+                                    <button
+                                        onClick={handleVideoCallGroup}
+                                        style={{
+                                            background: "transparent",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            position: "absolute",
+                                            right: "10px"
+                                        }}
+                                        title="Video Call"
+                                    >
+                                        <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#007936ff" }}></i>
+                                    </button>
                                 </div>
+                            </MessageHeader>
 
-                                {/* Phải: Ngày tạo */}
-                                <div className="text-end mt-2 mt-sm-0">
-                                    <small className="text-muted d-block">
-                                        Created at: <u>{new Date(group.createdAt).toLocaleDateString("en-GB")}</u>
-                                    </small>
-                                </div>
-                            </div>
-                        </MessageHeader>
-
-                    )}
+                        )}
 
 
-                    {/* Danh sách tin nhắn */}
-                    <MessageList currentUserId={currentUserId} messages={messages} />
+                        {/* Danh sách tin nhắn */}
+<MessageList currentUserId={String(currentUserId)} messages={messages} />
 
-                    {/* Ô nhập tin nhắn */}
-                    <MessageInput
-                        placeholder="Nhập tin nhắn..."
-                        onSendMessage={handleSendMessage}
-                        showSendButton
-                        showAttachButton={false}
-                    />
-                </MessageContainer>
-            </MainContainer>
-        </MinChatUiProvider>
+                        {/* Ô nhập tin nhắn */}
+                        <MessageInput
+                            placeholder="Nhập tin nhắn..."
+                            onSendMessage={handleSendMessage}
+                            showSendButton
+                            showAttachButton={false}
+                        />
+                    </MessageContainer>
+                </MainContainer>
+            </MinChatUiProvider>
+        </div>
+
     );
 }
 

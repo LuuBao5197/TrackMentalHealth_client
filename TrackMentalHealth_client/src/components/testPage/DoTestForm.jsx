@@ -95,6 +95,7 @@ const DoTestForm = () => {
         };
 
         try {
+            console.log(payload);
             const res = await axios.post('http://localhost:9999/api/test/submitUserTestResult', payload);
             // console.log(res);
             showAlert(`${res.data}`);

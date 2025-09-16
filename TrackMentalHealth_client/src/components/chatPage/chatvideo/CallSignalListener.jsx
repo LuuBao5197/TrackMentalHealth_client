@@ -18,6 +18,7 @@ const CallSignalListener = ({ sessionId }) => {
         console.log("📞 Nhận tín hiệu call:", signal);
 
         switch (signal.type) {
+          // 📩 Caller gửi REQUEST -> callee sẽ thấy popup
           case "CALL_REQUEST":
             if (signal.callerId !== currentUserId) {
               toast.info(({ closeToast }) => (
@@ -32,8 +33,15 @@ const CallSignalListener = ({ sessionId }) => {
                           sessionId
                         });
                         closeToast();
-                        navigate(`/user/video-call/${sessionId}`);
+                        navigate(`/user/chat/video-call/${sessionId}`, {
+                          state: {
+                            currentUserId,
+                            currentUserName: "User " + currentUserId,
+                            isCaller: false, // ✅ callee
+                          },
+                        });
                       }}
+                      className="btn btn-success btn-sm"
                     >
                       Accept
                     </button>
@@ -46,8 +54,9 @@ const CallSignalListener = ({ sessionId }) => {
                         });
                         closeToast();
                       }}
+                      className="btn btn-danger btn-sm"
                     >
-                      Cancel
+                      Reject
                     </button>
                   </div>
                 </div>
@@ -60,24 +69,37 @@ const CallSignalListener = ({ sessionId }) => {
             }
             break;
 
+          // 📩 Caller nhận được tín hiệu callee Accept
           case "CALL_ACCEPTED":
-            navigate(`/user/video-call/${sessionId}`);
+            if (signal.calleeId !== currentUserId) {
+              navigate(`/user/chat/video-call/${sessionId}`, {
+                state: {
+                  currentUserId,
+                  currentUserName: "User " + currentUserId,
+                  isCaller: true, // ✅ caller
+                },
+              });
+            }
             break;
 
           case "CALL_REJECTED":
             toast.warning("📵 Call was rejected");
+            navigate(`/user/chat/${sessionId}`);
             break;
 
           case "CALL_ENDED":
-            toast.info("Call ended");
+            toast.info("📴 Call ended");
             navigate(`/user/chat/${sessionId}`);
+            break;
+
+          default:
             break;
         }
       }
     });
 
     return () => disconnect && disconnect();
-  }, [sessionId, currentUserId]);
+  }, [sessionId, currentUserId, navigate]);
 
   return null;
 };

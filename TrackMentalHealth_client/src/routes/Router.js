@@ -11,7 +11,7 @@ import WriteDiaryPage from '../components/userPage/WriteDiaryPage.jsx';
 import DiaryHistoryPage from '../components/userPage/DiaryHistoryPage.jsx';
 import MoodHistoryPage from '../components/userPage/MoodHistoryPage.jsx';
 import EditProfile from '../components/adminPage/EditProfile.jsx';
-import ChatList from '../components/chatPage/ChatList.jsx';
+import ChatList from '../components/chatPage/ChatPage.jsx';
 import CreateLesson from '../components/LessonPage/CreateLesson.jsx';
 import LessonDetail from '../components/LessonPage/LessonDetail';
 import ArticleDetail from '../components/ArticlePage/ArticleDetail.jsx';
@@ -52,8 +52,11 @@ import ArticleApprovalForAdmin from '../components/ArticlePage/ArticleApprovalFo
 import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprovalForAdmin.jsx';
 import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
 import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
+import PublicCall from '../components/chatPage/chatvideo/PublicCall.jsx';
+import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
 import TestHistory from '../components/testPage/TestHistory.jsx';
 import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
+import ExerciseHistoryList from '../components/ExercisePage/ExerciseHistoryList.jsx';
 
 
 /* ***Layouts**** */
@@ -79,11 +82,6 @@ const DoTestForm = Loadable(lazy(() => import('../components/testPage/DoTestForm
 const SocialPage = Loadable(lazy(() => import('../components/miniSocialPage/NewsFeed')))
 
 const Router = [
-
-  {
-    path: 'user/video-call/:sessionId',
-    element: <VideoCall />,
-  },
 
   {
     path: '/auth',
@@ -161,6 +159,7 @@ const Router = [
           { path: 'doTest/:testId', element: <DoTestForm /> },
           { path: 'doQuiz/:quizId', element: <DoQuizForm /> },
           { path: 'quiz/history', element: <QuizAttemptList /> },
+          { path: 'exercise/history', element: <ExerciseHistoryList /> },
           { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
           { path: 'test/history', element: <TestHistory /> },
           { path: 'test-attempt-detail/:id', element: <TestAttemptDetail /> },
@@ -171,7 +170,6 @@ const Router = [
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },
           { path: 'appointment/create/:userId', element: <CreateAppointment /> },
-
 
         ],
       },
@@ -192,7 +190,11 @@ const Router = [
           { path: 'chat/ai', element: <ChatWithAI /> },
           { path: 'chat/:sessionId', element: <ChatWithUser /> },
           { path: 'chat/group/:groupId', element: <ChatGroup /> },
-          // { path: 'video-call/:sessionId', element: <VideoCall /> },
+          { path: 'chat/public-call', element: <PublicCall /> },
+          {
+            path: 'chat/video-call/:sessionId',
+            element: <VideoCallZego />
+          },
         ],
       },
     ],
