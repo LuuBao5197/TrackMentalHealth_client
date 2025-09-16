@@ -14,45 +14,68 @@ const MentalAlertBox = () => {
         },
       })
       .then((res) => {
-        setResult(res.data); // Gán kết quả phân tích vào biến `result`
+        setResult(res.data); // JSON result from backend
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setResult({
-          description: "Không thể lấy thông tin phân tích tâm lý.",
+          description: "Unable to fetch mental health analysis.",
           suggestion: null,
         });
         setLoading(false);
       });
   }, []);
 
-  if (loading) return <p>Đang phân tích dữ liệu tâm lý...</p>;
+  if (loading) return <p>Analyzing your mental health data...</p>;
 
   return (
-    <div className="alert alert-warning mt-4">
-      <h5 className="fw-bold">📢 Cảnh báo sức khỏe tinh thần</h5>
-      <p>{result?.description || "Không có mô tả."}</p>
+    <div
+      className={`alert mt-4 ${
+        result?.level === 1 ? "alert-success" : "alert-warning"
+      }`}
+    >
+      <h5 className="fw-bold">
+        {result?.level === 1
+          ? "💡 Your mental state is stable"
+          : "📢 Mental health alert"}
+      </h5>
+
+      <p>{result?.description || "No description available."}</p>
+
+      {result?.suggestion?.type === "motivation" && (
+        <div className="mt-3">
+          <p className="fw-bold text-success">🌱</p>
+          <p>{result.suggestion.message}</p>
+        </div>
+      )}
 
       {result?.suggestion?.type === "test" && (
         <div className="mt-3">
           <p className="mb-1 fw-bold">
-            🧪 Gợi ý bài test phù hợp: {result.suggestion.testTitle}
+            🧪 Suggested test: {result.suggestion.testTitle}
           </p>
           <p>{result.suggestion.testDescription}</p>
-          
           <Link
             to={`/user/doTest/${result.suggestion.testId}`}
             className="btn btn-outline-primary"
           >
-            👉 Làm bài test ngay
+            👉 Take the test now
           </Link>
         </div>
       )}
 
       {result?.suggestion?.type === "emergency" && (
         <div className="mt-3">
-          <p className="text-danger fw-bold">🚨 Cảnh báo khẩn cấp</p>
+          <p className="text-danger fw-bold">🚨 Emergency alert</p>
           <p>{result.suggestion.message}</p>
+        </div>
+      )}
+      {result?.level === 4 && (
+        <div className="mt-3">
+          <p className="text-danger fw-bold">⚠️ Your condition is severe</p>
+          <Link to="/" className="btn btn-danger">
+            👨‍⚕️ Contact a doctor now
+          </Link>
         </div>
       )}
     </div>
