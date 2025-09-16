@@ -18,11 +18,8 @@ const reactionTypes = [
 function PostItem({ post, onUpdatePost }) {
   const userInfo = useSelector((state) => state.auth.user);
   const userID = userInfo?.userId;
-  const [userReaction, setUserReaction] = useState(null); //
-  const defaultReactionState = {
-    like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0
-  };
-  // console.log(post);
+  const [userReaction, setUserReaction] = useState(null);
+  const defaultReactionState = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
 
   const [reactions, setReactions] = useState(post.reactions || defaultReactionState);
 
@@ -34,6 +31,7 @@ function PostItem({ post, onUpdatePost }) {
   const [showPopover, setShowPopover] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
   const handleReaction = async (type) => {
     if (!userID) return;
     setShowPopover(false);
@@ -41,10 +39,10 @@ function PostItem({ post, onUpdatePost }) {
     try {
       if (userReaction) {
         if (userReaction.emojiType === type) {
-          // 🧹 Huỷ cảm xúc
+          // Remove reaction
           await axios.delete(`http://localhost:9999/api/community/reaction/${userReaction.id}`);
         } else {
-          // 🔁 Đã có reaction, nhưng khác → update
+          // Update reaction
           await axios.put(`http://localhost:9999/api/community/reaction/${userReaction.id}`, {
             id: userReaction.id,
             post: { id: post.id },
@@ -53,7 +51,7 @@ function PostItem({ post, onUpdatePost }) {
           });
         }
       } else {
-        // 🆕 Thêm mới reaction
+        // Add new reaction
         await axios.post(`http://localhost:9999/api/community/post/${post.id}/reaction`, {
           post: { id: post.id },
           user: { id: userID },
@@ -62,115 +60,83 @@ function PostItem({ post, onUpdatePost }) {
       }
 
       if (onUpdatePost) {
-        await onUpdatePost(post.id); // cập nhật lại post
+        await onUpdatePost(post.id);
       }
     } catch (error) {
-      console.error('Lỗi khi xử lý cảm xúc:', error);
+      console.error('Error handling reaction:', error);
     }
   };
 
   const getReactionSummary = () => {
-    const counts = {
-      like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0
-    };
+    const counts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
     post.reactions?.forEach(r => {
-      if (counts.hasOwnProperty(r.emojiType)) {
-        counts[r.emojiType]++;
-      }
+      if (counts.hasOwnProperty(r.emojiType)) counts[r.emojiType]++;
     });
     return counts;
   };
+
   const handleEdit = (post) => {
     setShowEditModal(true);
-    // Có thể mở modal, chuyển route, hoặc gọi callback truyền từ cha
-    console.log("Sửa bài viết:", post);
-    // Ví dụ: mở form chỉnh sửa bài
+    console.log("Editing post:", post);
   };
 
   const handleDelete = async (postId) => {
-    if (!window.confirm("Bạn có chắc muốn xóa bài viết này?")) return;
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     try {
       await axios.delete(`http://localhost:9999/api/community/post/${postId}`);
-      if (onUpdatePost) {
-        await onUpdatePost(postId); // Cập nhật lại danh sách bài viết
-      }
+      if (onUpdatePost) await onUpdatePost(postId);
     } catch (error) {
-      console.error("Lỗi khi xóa bài viết:", error);
+      console.error("Error deleting post:", error);
     }
   };
-
-
 
   return (
     <div className="card mb-3">
       <div className="card-body">
-        {post.isAnonymous == false ? (
+        {post.isAnonymous === false ? (
           <div className="d-flex mb-2 align-items-center">
-            <a href={post.avatarUser} target='blank'><img src={post.avatarUser} className="rounded-circle me-2" alt="avatar" width={50} /></a>
+            <a href={post.avatarUser} target='_blank' rel="noreferrer">
+              <img src={post.avatarUser} className="rounded-circle me-2" alt="avatar" width={50} />
+            </a>
             <strong>{post?.username}</strong>
-            {userID == post?.userID && (
+            {userID === post?.userID && (
               <div className="dropdown ms-auto">
-                <button className="btn btn-sm btn-light" data-bs-toggle="dropdown">
-                  ⋮
-                </button>
+                <button className="btn btn-sm btn-light" data-bs-toggle="dropdown">⋮</button>
                 <ul className="dropdown-menu">
-                  <li>
-                    <button className="dropdown-item" onClick={() => handleEdit(post)}>
-                      ✏️ Sửa bài viết
-                    </button>
-                  </li>
-                  <li>
-                    <button className="dropdown-item text-danger" onClick={() => handleDelete(post.id)}>
-                      🗑️ Xóa bài viết
-                    </button>
-                  </li>
+                  <li><button className="dropdown-item" onClick={() => handleEdit(post)}>✏️ Edit Post</button></li>
+                  <li><button className="dropdown-item text-danger" onClick={() => handleDelete(post.id)}>🗑️ Delete Post</button></li>
                 </ul>
               </div>
             )}
-          </div>) : (
+          </div>
+        ) : (
           <div className="d-flex mb-2 align-items-center">
             <img src="/TrackMentalHealth/AnonymousUser.png" className="rounded-circle me-2" alt="anonymous" width={50} />
             <strong>Anonymous User</strong>
-            {userID == post?.userID && (
+            {userID === post?.userID && (
               <div className="dropdown ms-auto">
-                <button className="btn btn-sm btn-light" data-bs-toggle="dropdown">
-                  ⋮
-                </button>
+                <button className="btn btn-sm btn-light" data-bs-toggle="dropdown">⋮</button>
                 <ul className="dropdown-menu">
-                  <li>
-                    <button className="dropdown-item" onClick={() => handleEdit(post)}>
-                      ✏️ Sửa bài viết
-                    </button>
-                  </li>
-                  <li>
-                    <button className="dropdown-item text-danger" onClick={() => handleDelete(post.id)}>
-                      🗑️ Xóa bài viết
-                    </button>
-                  </li>
+                  <li><button className="dropdown-item" onClick={() => handleEdit(post)}>✏️ Edit Post</button></li>
+                  <li><button className="dropdown-item text-danger" onClick={() => handleDelete(post.id)}>🗑️ Delete Post</button></li>
                 </ul>
               </div>
             )}
-          </div>)
-        }
+          </div>
+        )}
 
         <p>{post.content}</p>
+
         {post.mediaList && (
           <div className="post-images mb-3">
             {(() => {
-              const images = Array.isArray(post.mediaList)
-                ? post.mediaList
-                : [post.mediaList];
+              const images = Array.isArray(post.mediaList) ? post.mediaList : [post.mediaList];
 
               if (images.length === 1) {
                 return (
-                  <a href={images[0].mediaUrl} target='blank'>
-                    <img
-                      src={images[0].mediaUrl}
-                      alt="post"
-                      className="img-fluid rounded mb-2"
-                      style={{ objectFit: 'cover', width: '300px', height: 'auto' }}
-                    />
+                  <a href={images[0].mediaUrl} target='_blank' rel="noreferrer">
+                    <img src={images[0].mediaUrl} alt="post" className="img-fluid rounded mb-2" style={{ objectFit: 'cover', width: '300px', height: 'auto' }} />
                   </a>
                 );
               }
@@ -180,13 +146,8 @@ function PostItem({ post, onUpdatePost }) {
                   <div className="row g-2">
                     {images.map((img, idx) => (
                       <div className="col-6" key={idx}>
-                        <a href={img.mediaUrl} target='blank'>
-                          <img
-                            src={img.mediaUrl}
-                            alt={`post-${idx}`}
-                            className="img-fluid rounded w-100"
-                            style={{ objectFit: 'cover', height: '200px' }}
-                          />
+                        <a href={img.mediaUrl} target='_blank' rel="noreferrer">
+                          <img src={img.mediaUrl} alt={`post-${idx}`} className="img-fluid rounded w-100" style={{ objectFit: 'cover', height: '200px' }} />
                         </a>
                       </div>
                     ))}
@@ -198,36 +159,18 @@ function PostItem({ post, onUpdatePost }) {
                 return (
                   <div className="row g-2">
                     <div className="col-12 text-center">
-                      <a href={images[0].mediaUrl} target='blank'>
-                        <img
-                          src={images[0].mediaUrl}
-                          alt="post-0"
-                          className="img-fluid rounded w-50"
-                          style={{ objectFit: 'cover', height: 'auto' }}
-                        />
-
+                      <a href={images[0].mediaUrl} target='_blank' rel="noreferrer">
+                        <img src={images[0].mediaUrl} alt="post-0" className="img-fluid rounded w-50" style={{ objectFit: 'cover', height: 'auto' }} />
                       </a>
                     </div>
                     <div className="col-6">
-                      <a href={images[1].mediaUrl} target='blank'>
-                        <img
-                          src={images[1].mediaUrl}
-                          alt="post-1"
-                          className="img-fluid rounded w-75"
-                          style={{ objectFit: 'cover', height: 'auto' }}
-                        />
-
+                      <a href={images[1].mediaUrl} target='_blank' rel="noreferrer">
+                        <img src={images[1].mediaUrl} alt="post-1" className="img-fluid rounded w-75" style={{ objectFit: 'cover', height: 'auto' }} />
                       </a>
                     </div>
                     <div className="col-6">
-                      <a href={images[2].mediaUrl} target='blank'>
-
-                        <img
-                          src={images[2].mediaUrl}
-                          alt="post-2"
-                          className="img-fluid rounded w-75"
-                          style={{ objectFit: 'cover', height: 'auto' }}
-                        />
+                      <a href={images[2].mediaUrl} target='_blank' rel="noreferrer">
+                        <img src={images[2].mediaUrl} alt="post-2" className="img-fluid rounded w-75" style={{ objectFit: 'cover', height: 'auto' }} />
                       </a>
                     </div>
                   </div>
@@ -238,7 +181,6 @@ function PostItem({ post, onUpdatePost }) {
             })()}
           </div>
         )}
-
 
         {/* Reaction Summary */}
         <div className="mt-2 d-flex align-items-center gap-2">
@@ -255,7 +197,6 @@ function PostItem({ post, onUpdatePost }) {
             })}
         </div>
 
-
         <div className="d-flex gap-3 align-items-center">
           <div
             className="reaction-wrapper position-relative"
@@ -263,11 +204,11 @@ function PostItem({ post, onUpdatePost }) {
           >
             <button
               className={`btn btn-sm ${userReaction ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => handleReaction(userReaction.emojiType || 'like')}
+              onClick={() => handleReaction(userReaction?.emojiType || 'like')}
             >
               {userReaction
                 ? `${reactionTypes.find(r => r.value === userReaction.emojiType)?.icon} ${reactionTypes.find(r => r.value === userReaction.emojiType)?.label}`
-                : '👍 Thích'}
+                : '👍 Like'}
             </button>
 
             {showPopover && (
@@ -287,13 +228,13 @@ function PostItem({ post, onUpdatePost }) {
           </div>
 
           <button className="btn btn-outline-secondary btn-sm" onClick={() => setShowComments(!showComments)}>
-            💬 Bình luận
+            💬 Comment
           </button>
-
         </div>
-        {console.log(post)}
+
         {showComments && <CommentBox postId={post.id} commentLists={post.comments} />}
       </div>
+
       <EditPostModalForm
         show={showEditModal}
         onClose={() => setShowEditModal(false)}
@@ -301,8 +242,7 @@ function PostItem({ post, onUpdatePost }) {
         onPostUpdated={onUpdatePost}
       />
     </div>
-
   );
 }
 
-export default PostItem; 
+export default PostItem;
