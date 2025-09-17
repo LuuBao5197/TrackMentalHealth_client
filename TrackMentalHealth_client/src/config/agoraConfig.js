@@ -1,10 +1,9 @@
 // Agora configuration
 export const AGORA_CONFIG = {
   // Replace with your actual Agora App ID
-  APP_ID: '424e849bc4574f96ae03fbd8fffe8a1c',
+  APP_ID: '93206addcb2a486b9460a5c95ba8b7c4',
   
-  // Token server URL (for production)
-  TOKEN_SERVER_URL: 'https://your-token-server.com/rtc-token',
+
   
   // Default video settings
   VIDEO_CONFIG: {

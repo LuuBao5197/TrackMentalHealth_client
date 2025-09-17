@@ -13,6 +13,7 @@ import NotificationDropdown from "../notification/NotificationDropdown";
 import imgLogo from "@assets/images/logos/logoTMH.png";
 import NotificationDetailModal from "../../utils/Modals/NotificationDetailModal";
 import { showToast } from "../../utils/showToast";
+import GamePage from "../gameHtml/gamePage";
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -181,6 +182,13 @@ const Header = () => {
                 <li>
                   <button className="dropdown-item" onClick={() => navigate(`/user/test/history`)}>
                     View Test History
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/game`)
+
+                  }>
+                    Play game
                   </button>
                 </li>
                 <li><hr className="dropdown-divider" /></li>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { joinRoom, leaveRoom, destroyRoom, playLocalVideo, toggleCamera, toggleMicrophone } from "../../../services/AgoraService";
-import { sendCallSignal, connectWebSocket } from "../../../services/stompClient";
+import { sendCallSignal } from "../../../services/stompClient";
 import { showToast } from "../../../utils/showToast";
 
 export default function VideoCallAgora() {
@@ -15,56 +15,7 @@ export default function VideoCallAgora() {
   const [joined, setJoined] = useState(false);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [microphoneEnabled, setMicrophoneEnabled] = useState(true);
-  const [connectionError, setConnectionError] = useState(false);
-  const [callEnded, setCallEnded] = useState(false);
   const joinedRef = useRef(false);
-
-  // Fallback: Hiển thị controls sau 3 giây nếu chưa join được
-  useEffect(() => {
-    const fallbackTimer = setTimeout(() => {
-      if (!joined) {
-        console.log("[VideoCallAgora] Fallback: Showing controls after timeout");
-        setJoined(true);
-        setConnectionError(true);
-      }
-    }, 3000);
-
-    return () => clearTimeout(fallbackTimer);
-  }, [joined]);
-
-  // Hiển thị controls ngay lập tức cho người nhận cuộc gọi
-  useEffect(() => {
-    if (!isCaller && currentUserId) {
-      console.log("[VideoCallAgora] Callee: Showing controls immediately");
-      setJoined(true);
-    }
-  }, [isCaller, currentUserId]);
-
-  // Lắng nghe CALL_ENDED signal từ bên kia
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const disconnect = connectWebSocket({
-      sessionId: null,
-      groupId: null,
-      onCallSignal: (signal) => {
-        console.log("[VideoCallAgora] Received call signal:", signal);
-        
-        if (signal.type === "CALL_ENDED" && signal.sessionId === sessionId) {
-          console.log("[VideoCallAgora] Call ended by other party");
-          setCallEnded(true);
-          showToast("Call ended by other party", "info");
-          
-          // Tự động quay về trang chat sau 2 giây
-          setTimeout(() => {
-            navigate(`/user/chat/${sessionId}`);
-          }, 2000);
-        }
-      },
-    });
-
-    return () => disconnect && disconnect();
-  }, [currentUserId, sessionId, navigate]);
 
   useEffect(() => {
     if (!sessionId || !currentUserId) {
@@ -136,28 +87,15 @@ export default function VideoCallAgora() {
   }, [sessionId, currentUserId, currentUserName, isCaller]);
 
   const handleEndCall = () => {
-    if (callEnded) {
-      // Nếu call đã kết thúc, chỉ navigate
-      navigate(`/user/chat/${sessionId}`);
-      return;
-    }
-
-    // Gửi tín hiệu cho bên kia
-    sendCallSignal({
+    // Gửi tín hiệu cho cả phòng
+    sendCallSignal(sessionId, {
       type: "CALL_ENDED",
-      callerId: currentUserId,
-      callerName: currentUserName,
-      calleeId: calleeUserId,
-      sessionId,
+      from: currentUserId,
     });
 
     showToast('Call ended...', 'success');
-    setCallEnded(true);
-    
     // Người bấm cũng thoát ngay
-    setTimeout(() => {
-      navigate(`/user/chat/${sessionId}`);
-    }, 1000);
+    navigate(`/user/chat/${sessionId}`);
   };
 
   const handleToggleCamera = async () => {
@@ -202,32 +140,29 @@ export default function VideoCallAgora() {
           </li>
         </ol>
       </nav>
-      <div className={`alert ${callEnded ? 'alert-info' : connectionError ? 'alert-warning' : 'alert-success'} d-flex justify-content-between align-items-center`}>
+      <div className="alert alert-success d-flex justify-content-between align-items-center">
         <span>
-          {callEnded ? "Call ended - Returning to chat..." : joined ? (connectionError ? "Connection failed - Controls available" : "In call...") : `Connecting as ${isCaller ? "caller" : "callee"}...`}
+          {joined ? "In call..." : `Connecting as ${isCaller ? "caller" : "callee"}...`}
         </span>
         {joined && (
           <div className="d-flex gap-2">
             <button
               className={`btn btn-sm ${cameraEnabled ? 'btn-success' : 'btn-danger'}`}
               onClick={handleToggleCamera}
-              disabled={connectionError || callEnded}
             >
               {cameraEnabled ? '📹' : '📹❌'} Camera
             </button>
             <button
               className={`btn btn-sm ${microphoneEnabled ? 'btn-success' : 'btn-danger'}`}
               onClick={handleToggleMicrophone}
-              disabled={connectionError || callEnded}
             >
               {microphoneEnabled ? '🎤' : '🎤❌'} Mic
             </button>
             <button
               className="btn btn-sm btn-danger"
               onClick={handleEndCall}
-              disabled={callEnded}
             >
-              {callEnded ? '📞 Call Ended' : '📞 End Call'}
+              📞 End Call
             </button>
           </div>
         )}

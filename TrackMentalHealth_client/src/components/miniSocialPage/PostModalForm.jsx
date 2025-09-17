@@ -5,6 +5,7 @@ import getCroppedImg from '../../utils/handleImage/cropImage';
 import './PostModalForm.css';
 import axios from 'axios';
 import { showAlert } from '../../utils/showAlert';
+
 const filters = [
   { name: 'None', value: 'none' },
   { name: 'Grayscale', value: 'grayscale(1)' },
@@ -12,14 +13,11 @@ const filters = [
   { name: 'Brightness', value: 'brightness(1.5)' },
   { name: 'Contrast', value: 'contrast(1.5)' },
 ];
-// const handleClose = () => {
-//   resetForm();``
-//   onClose();
-// };
+
 function PostModalForm({ show, handleClose, onPostCreated, userID }) {
   const [content, setContent] = useState('');
-  const [rawImages, setRawImages] = useState([]); // blob urls
-  const [croppedImages, setCroppedImages] = useState([]); // preview urls
+  const [rawImages, setRawImages] = useState([]); // blob URLs
+  const [croppedImages, setCroppedImages] = useState([]); // preview URLs
   const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState('');
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -38,24 +36,24 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
 
     for (let file of files) {
       if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-        setError('Chỉ chấp nhận ảnh JPG, JPEG, PNG.');
+        setError('Only JPG, JPEG, PNG images are allowed.');
         return;
       }
       if (file.size > 4 * 1024 * 1024) {
-        setError('Ảnh phải nhỏ hơn 4MB.');
+        setError('Image size must be less than 4MB.');
         return;
       }
       validFiles.push(URL.createObjectURL(file));
     }
 
     if (validFiles.length + rawImages.length > 3) {
-      setError('Tối đa 3 ảnh!');
+      setError('Maximum 3 images allowed!');
       return;
     }
 
     setError('');
     setRawImages([...rawImages, ...validFiles]);
-    setCurrentIndex(rawImages.length); // chuyển sang ảnh mới
+    setCurrentIndex(rawImages.length); // switch to new image
   };
 
   const handleCrop = async () => {
@@ -71,7 +69,7 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
 
   const handlePost = async () => {
     if (!content && croppedImages.length === 0) {
-      setError('Vui lòng nhập nội dung hoặc chọn ít nhất 1 ảnh.');
+      setError('Please enter content or select at least one image.');
       return;
     }
 
@@ -79,7 +77,7 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
       const formData = new FormData();
       formData.append('content', content);
       formData.append('isAnonymous', isAnonymous);
-      formData.append('userId', userID); // số nguyên
+      formData.append('userId', userID);
 
       for (let i = 0; i < croppedImages.length; i++) {
         const response = await fetch(croppedImages[i]);
@@ -88,21 +86,19 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
         formData.append('images', file);
       }
 
-      const res = await axios.post('http://localhost:9999/api/community/post', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      await axios.post('http://localhost:9999/api/community/post', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-  
-      showAlert("Status đã được đăng thành công");
+
+      showAlert('Post created successfully!');
       resetForm();
       handleClose();
-      onPostCreated;
+      onPostCreated && onPostCreated();
 
     } catch (err) {
-      console.log(err)
-      showAlert(`Created fail because ${err.response.data.error}`, "error");
-      setError('Đăng bài thất bại. Vui lòng thử lại.');
+      console.log(err);
+      showAlert(`Failed to create post: ${err.response?.data?.error || err.message}`, "error");
+      setError('Failed to create post. Please try again.');
     }
   };
 
@@ -130,13 +126,13 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
   return (
     <Modal show={show} onHide={handleClose} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>Đăng bài viết</Modal.Title>
+        <Modal.Title>Create Post</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
 
         <Form.Group className="mb-3">
-          <Form.Label>Nội dung</Form.Label>
+          <Form.Label>Content</Form.Label>
           <Form.Control
             as="textarea"
             rows={3}
@@ -144,31 +140,32 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
             onChange={(e) => setContent(e.target.value)}
           />
         </Form.Group>
+
         <Form.Group className="mb-3">
           <Form.Check
             type="checkbox"
-            label="Đăng bài ẩn danh"
+            label="Post anonymously"
             checked={isAnonymous}
             onChange={(e) => setIsAnonymous(e.target.checked)}
           />
         </Form.Group>
 
         <Form.Group className="mb-3">
-          <Form.Label>Chọn ảnh (tối đa 3)</Form.Label>
+          <Form.Label>Select Images (max 3)</Form.Label>
           <Form.Control type="file" multiple accept="image/*" onChange={handleImageChange} />
         </Form.Group>
 
         {rawImages.length > 0 && (
           <>
             <div className="mb-2">
-              <strong>Đang chỉnh ảnh {currentIndex + 1} / {rawImages.length}</strong>
+              <strong>Editing image {currentIndex + 1} / {rawImages.length}</strong>
               <Button
                 variant="outline-danger"
                 size="sm"
                 className="ms-3"
                 onClick={() => removeImage(currentIndex)}
               >
-                Xoá ảnh này
+                Remove this image
               </Button>
             </div>
             <div className="crop-container mb-3">
@@ -183,13 +180,8 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
                 style={{
-                  containerStyle: {
-                    height: 300,
-                    position: 'relative',
-                  },
-                  mediaStyle: {
-                    filter,
-                  },
+                  containerStyle: { height: 300, position: 'relative' },
+                  mediaStyle: { filter },
                 }}
               />
               <div className="d-flex gap-2 mt-2 align-items-center">
@@ -202,13 +194,11 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
                 />
                 <Form.Select value={filter} onChange={(e) => setFilter(e.target.value)}>
                   {filters.map((f) => (
-                    <option key={f.value} value={f.value}>
-                      {f.name}
-                    </option>
+                    <option key={f.value} value={f.value}>{f.name}</option>
                   ))}
                 </Form.Select>
                 <Button variant="success" size="sm" onClick={handleCrop}>
-                  Áp dụng
+                  Apply
                 </Button>
               </div>
               <div className="d-flex justify-content-between mt-2">
@@ -217,14 +207,14 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex(currentIndex - 1)}
                 >
-                  ← Trước
+                  ← Previous
                 </Button>
                 <Button
                   variant="outline-secondary"
                   disabled={currentIndex === rawImages.length - 1}
                   onClick={() => setCurrentIndex(currentIndex + 1)}
                 >
-                  Tiếp →
+                  Next →
                 </Button>
               </div>
             </div>
@@ -233,7 +223,7 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
 
         {croppedImages.length > 0 && (
           <div className="preview-container text-center mb-3">
-            <strong>Ảnh đã xử lý</strong>
+            <strong>Processed Images</strong>
             <div className="d-flex gap-2 mt-2 flex-wrap justify-content-center">
               {croppedImages.map((img, idx) => (
                 <img
@@ -250,10 +240,10 @@ function PostModalForm({ show, handleClose, onPostCreated, userID }) {
       </Modal.Body>
       <Modal.Footer className="d-flex justify-content-center gap-2">
         <Button variant="secondary" onClick={handleClose}>
-          Hủy
+          Cancel
         </Button>
         <Button variant="primary" onClick={handlePost} disabled={croppedImages.length === 0 && !content}>
-          Đăng bài
+          Post
         </Button>
       </Modal.Footer>
     </Modal>

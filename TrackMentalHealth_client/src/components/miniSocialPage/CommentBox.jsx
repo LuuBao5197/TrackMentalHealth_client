@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import './CommentBox.css';
 import { showAlert } from '../../utils/showAlert';
 
-
 function CommentBox({ postId, commentLists }) {
   const [comments, setComments] = useState(commentLists || []);
   const [text, setText] = useState('');
@@ -37,8 +36,8 @@ function CommentBox({ postId, commentLists }) {
       setComments(prev => [...prev, res.data]);
       setText('');
     } catch (err) {
-      console.error('Error gửi bình luận:', err.response?.data || err.message);
-      alert('Gửi bình luận thất bại');
+      console.error('Error sending comment:', err.response?.data || err.message);
+      alert('Failed to send comment');
     }
   };
 
@@ -46,10 +45,10 @@ function CommentBox({ postId, commentLists }) {
     try {
       console.log(commentId);
       await axios.delete(`http://localhost:9999/api/community/post/comment/${commentId}`);
-      showAlert("Xoa binh luan thanh cong")
+      showAlert("Comment deleted successfully")
       setComments(prev => prev.filter(c => c.id !== commentId));
     } catch (err) {
-      showAlert('Xóa bình luận thất bại:'+err, "error");
+      showAlert('Failed to delete comment:'+err, "error");
     }
   };
 
@@ -60,18 +59,17 @@ function CommentBox({ postId, commentLists }) {
           <input
             type="text"
             className="form-control"
-            placeholder="Viết bình luận..."
+            placeholder="Write a comment..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <button className="btn btn-primary" type="submit">Gửi</button>
+          <button className="btn btn-primary" type="submit">Send</button>
         </div>
       </form>
 
       <div className="comment-list">
         {comments.map((c, idx) => (
           <div key={idx} className="d-flex align-items-start mb-2 comment-item">
-            {/* {console.log(c)} */}
             <img
               src={c.user?.avatar || '/default-avatar.png'}
               alt="avatar"
@@ -79,13 +77,13 @@ function CommentBox({ postId, commentLists }) {
               style={{ width: '45px', height: '45px', objectFit: 'cover' }}
             />
             <div className="bg-light rounded p-2 flex-grow-1 position-relative">
-              <strong className="d-block">{c.user?.username || 'Ẩn danh'}</strong>
+              <strong className="d-block">{c.user?.username || 'Anonymous'}</strong>
               <span>{c.content}</span>
               {c.user?.id === userID && (
                 <button
                   onClick={() => handleRemove(c.id)}
                   className="btn btn-sm btn-link text-danger position-absolute end-0 top-0"
-                  title="Xóa bình luận"
+                  title="Delete comment"
                 >
                   ❌
                 </button>

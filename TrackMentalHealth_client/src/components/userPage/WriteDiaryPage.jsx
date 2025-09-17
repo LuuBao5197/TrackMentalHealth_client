@@ -13,7 +13,7 @@ const WriteDiaryPage = () => {
     try {
       await createDiary({ content });
       alert('📝 Diary saved successfully!');
-      navigate('/history');
+      navigate('/user/history');
     } catch (error) {
       console.error(error);
       alert('❌ An error occurred while saving the diary.');
