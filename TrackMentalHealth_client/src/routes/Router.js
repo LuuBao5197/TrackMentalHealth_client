@@ -57,6 +57,7 @@ import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
 import TestHistory from '../components/testPage/TestHistory.jsx';
 import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
 import ExerciseHistoryList from '../components/ExercisePage/ExerciseHistoryList.jsx';
+import GamePage from '../components/gameHtml/gamePage.jsx';
 
 
 /* ***Layouts**** */
@@ -146,9 +147,7 @@ const Router = [
       { path: 'lesson/:id', element: <LessonDetail /> },
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
-
-
-
+      {path: 'game', element: <GamePage />},
       // USER ONLY
       {
         element: <ProtectedRoute allowedRoles={['USER']} />,
