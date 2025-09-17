@@ -74,10 +74,12 @@ const HeroPage = () => {
         setAiSuggestion(created.data.aiSuggestion || '✅ Mood saved successfully!');
         setShowModal(true);
       }
-    } catch (err) {
-      console.error("Error creating/updating mood:", err);
-      setAiSuggestion("❌ Error while saving mood.");
-      setShowModal(true);
+    }  catch (err) {
+  console.error("Error creating/updating mood:", err);
+
+  const backendMsg = err.response?.data;
+  setAiSuggestion(backendMsg || "❌ Error while saving mood.");
+  setShowModal(true);
     } finally {
       setLoading(false);
     }
@@ -149,6 +151,7 @@ const HeroPage = () => {
           </div>
         )}
 
+
         <div className="row feature-boxes">
           <FeatureBox
             icon={<BsPen />}
@@ -159,7 +162,7 @@ const HeroPage = () => {
           />
           <FeatureBox
             icon={<BsClockHistory />}
-            title="Review history"
+            title="Diary History"
             text="Track your mood over time visually."
             delay="300"
             link="/user/history"

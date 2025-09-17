@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { getDiaries, updateDiary } from '../../api/diaryAPI';
 import { Modal, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '../../assets/css/DiaryHistoryPage.css'; // 👉 Custom CSS for diary history
+import '../../assets/css/DiaryHistoryPage.css';
 
 const DiaryHistoryPage = () => {
   const [diaries, setDiaries] = useState([]);
   const [editingDiary, setEditingDiary] = useState(null);
   const [updatedContent, setUpdatedContent] = useState('');
+  const [currentPage, setCurrentPage] = useState(1); // 🔹 Current page
+  const diariesPerPage = 14; // 🔹 Number of diaries per page
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,11 +18,17 @@ const DiaryHistoryPage = () => {
         setDiaries(res.data);
       } catch (err) {
         console.error(err);
-        alert('Unable to load diaries.');
+        alert('Unable to load diaries');
       }
     };
     fetchData();
   }, []);
+
+  // 🔹 Pagination calculation
+  const indexOfLastDiary = currentPage * diariesPerPage;
+  const indexOfFirstDiary = indexOfLastDiary - diariesPerPage;
+  const currentDiaries = diaries.slice(indexOfFirstDiary, indexOfLastDiary);
+  const totalPages = Math.ceil(diaries.length / diariesPerPage);
 
   const handleEditClick = (diary) => {
     const diaryDate = new Date(diary.date);
@@ -32,7 +40,7 @@ const DiaryHistoryPage = () => {
       diaryDate.getDate() === today.getDate();
 
     if (!isSameDay) {
-      alert('You can only edit diaries from today.');
+      alert('You can only edit diaries created today.');
       return;
     }
 
@@ -48,7 +56,7 @@ const DiaryHistoryPage = () => {
       setEditingDiary(null);
     } catch (err) {
       console.error(err);
-      alert('❌ Update failed.');
+      alert('❌ Update failed');
     }
   };
 
@@ -56,11 +64,11 @@ const DiaryHistoryPage = () => {
     <div className="container py-5 diary-history">
       <h2 className="text-center text-primary mb-4">📖 Diary History</h2>
 
-      {diaries.length === 0 ? (
-        <p className="text-center text-muted">No diaries yet.</p>
+      {currentDiaries.length === 0 ? (
+        <p className="text-center text-muted">No diaries available.</p>
       ) : (
         <div className="row g-4">
-          {diaries.map((diary) => {
+          {currentDiaries.map((diary) => {
             const diaryDate = new Date(diary.date);
             const today = new Date();
 
@@ -99,6 +107,35 @@ const DiaryHistoryPage = () => {
         </div>
       )}
 
+      {/* 🔹 Pagination */}
+      {totalPages > 1 && (
+        <div className="d-flex justify-content-center mt-4">
+          <nav>
+            <ul className="pagination">
+              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
+                  «
+                </button>
+              </li>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <li key={i} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                  <button className="page-link" onClick={() => setCurrentPage(i + 1)}>
+                    {i + 1}
+                  </button>
+                </li>
+              ))}
+
+              <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
+                  »
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {editingDiary && (
         <Modal show onHide={() => setEditingDiary(null)} centered>
@@ -118,7 +155,7 @@ const DiaryHistoryPage = () => {
               Cancel
             </Button>
             <Button variant="success" onClick={handleSave}>
-              Save Changes
+              Save changes
             </Button>
           </Modal.Footer>
         </Modal>

@@ -137,7 +137,7 @@ Keep the answer short in 1–2 sentences, no need to list details again.
 
         fetchPaged();
     }, [currentPage]);
-
+    
     return (
         <section className="section">
             <div className="container">
@@ -218,5 +218,4 @@ Keep the answer short in 1–2 sentences, no need to list details again.
         </section>
     );
 };
-
 export default MoodHistoryPage;
