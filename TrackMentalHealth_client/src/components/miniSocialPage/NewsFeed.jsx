@@ -98,7 +98,7 @@ function NewsFeed() {
           onClick={() => setShowModal(true)}
           style={{ flex: 1 }}
         >
-          Bạn đang nghĩ gì thế?
+          What are you thinking?
         </button>
       </div>
 
@@ -115,7 +115,7 @@ function NewsFeed() {
         <div className="text-center py-3"><div className="spinner-border text-primary" role="status" /></div>
       )}
       {!hasMore && posts.length > 0 && (
-        <div className="text-center text-muted mb-4">🎉 Bạn đã xem hết tất cả bài viết</div>
+        <div className="text-center text-muted mb-4">🎉 You have viewed all the posts.</div>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
 
 export function getCurrentUserId() {
-    return localStorage.getItem('currentUserId');
+    return parseInt(localStorage.getItem('currentUserId'));
 }
