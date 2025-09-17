@@ -3,7 +3,8 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { sendCallSignal } from "../../../services/stompClient";
 import { showToast } from "../../../utils/showToast";
-import ringtone from "../../../assets/ringtone/ringtone.mp3";
+// import { AudioManager } from "../../../utils/audioManager"; // Tắt chuông
+// import ringtone from "../../../assets/ringtone/ringtone.mp3"; // Tắt chuông
 
 const CallSignalListener = ({ signal, currentUserId }) => {
   const navigate = useNavigate();
@@ -19,11 +20,9 @@ const CallSignalListener = ({ signal, currentUserId }) => {
     switch (signal.type) {
       case "CALL_REQUEST":
         if (signal.calleeId === currentUserId) {
-          // Bắt đầu chuông
+          // Bắt đầu chuông - ĐÃ TẮT CHUÔNG
           setIsRinging(true);
-          if (audioRef.current) {
-            audioRef.current.play().catch(() => console.log("Autoplay blocked"));
-          }
+          // AudioManager.playRingtone(audioRef); // Tắt chuông
           
           // tránh tạo nhiều toast trùng lặp
           if (!toast.isActive(toastIdRef.current)) {
@@ -39,12 +38,9 @@ const CallSignalListener = ({ signal, currentUserId }) => {
                   <div style={{ display: "flex", gap: "12px", justifyContent: 'center' }}>
                     <button
                       onClick={() => {
-                        // Dừng chuông
+                        // Dừng chuông - ĐÃ TẮT CHUÔNG
                         setIsRinging(false);
-                        if (audioRef.current) {
-                          audioRef.current.pause();
-                          audioRef.current.currentTime = 0;
-                        }
+                        // AudioManager.stopAllRingtone(); // Tắt chuông
                         
                         sendCallSignal({
                           type: "CALL_ACCEPTED",
@@ -69,12 +65,9 @@ const CallSignalListener = ({ signal, currentUserId }) => {
                     </button>
                     <button
                       onClick={() => {
-                        // Dừng chuông
+                        // Dừng chuông - ĐÃ TẮT CHUÔNG
                         setIsRinging(false);
-                        if (audioRef.current) {
-                          audioRef.current.pause();
-                          audioRef.current.currentTime = 0;
-                        }
+                        // AudioManager.stopAllRingtone(); // Tắt chuông
                         
                         sendCallSignal({
                           type: "CALL_REJECTED",
@@ -112,12 +105,9 @@ const CallSignalListener = ({ signal, currentUserId }) => {
         break;
 
       case "CALL_ACCEPTED":
-        // Dừng chuông
+        // Dừng chuông - ĐÃ TẮT CHUÔNG
         setIsRinging(false);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
+        // AudioManager.stopAllRingtone(); // Tắt chuông
         
         if (signal.callerId !== currentUserId) {
           toast.dismiss(toastIdRef.current);
@@ -133,12 +123,9 @@ const CallSignalListener = ({ signal, currentUserId }) => {
         break;
 
       case "CALL_REJECTED":
-        // Dừng chuông
+        // Dừng chuông - ĐÃ TẮT CHUÔNG
         setIsRinging(false);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
+        // AudioManager.stopAllRingtone(); // Tắt chuông
         
         toast.dismiss(toastIdRef.current);
         if (signal.callerId !== currentUserId) {
@@ -147,15 +134,17 @@ const CallSignalListener = ({ signal, currentUserId }) => {
         break;
 
       case "CALL_ENDED":
-        // Dừng chuông
+        // Dừng chuông - ĐÃ TẮT CHUÔNG
         setIsRinging(false);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
+        // AudioManager.stopAllRingtone(); // Tắt chuông
         
         toast.dismiss(toastIdRef.current);
-        showToast("Call ended", "info");
+        showToast("Call ended by other party", "info");
+        
+        // Tự động quay về trang chat sau 2 giây
+        setTimeout(() => {
+          navigate(`/user/chat/${signal.sessionId}`);
+        }, 2000);
         break;
 
       default:
@@ -165,13 +154,14 @@ const CallSignalListener = ({ signal, currentUserId }) => {
 
   return (
     <>
-      <audio 
+      {/* Audio element đã bị xóa - TẮT CHUÔNG */}
+      {/* <audio 
         ref={audioRef} 
         loop 
         style={{ display: 'none' }}
       >
         <source src={ringtone} type="audio/mpeg" />
-      </audio>
+      </audio> */}
     </>
   );
 };
