@@ -99,20 +99,8 @@ const UserLayout = () => {
         setNotifications((prev) => [...prev, noti]);
       },
       onNewMessage: (msg) => {
-        console.log("📩 UserLayout received new message (notification only):", msg);
-        
-        // Chỉ hiển thị thông báo nếu:
-        // 1. Tin nhắn không phải từ chính mình
-        // 2. User không đang ở trong chat detail
-        if (msg.senderId && msg.senderId != currentUserId && !isInChatDetail()) {
-          showToast(`New message from ${msg.senderName}`, "info");
-        } else {
-          console.log("🔇 Skipping notification:", {
-            isOwnMessage: msg.senderId == currentUserId,
-            isInChatDetail: isInChatDetail()
-          });
-        }
-        // onNewMessage chỉ để hiển thị notification, không cập nhật chat UI
+        console.log("📩 UserLayout received new message (no notification):", msg);
+        // Không hiển thị thông báo, chỉ log để debug
       },
       onPrivateMessage: (msg) => {
         if (!msg?.message || !msg.senderName) {
@@ -121,19 +109,7 @@ const UserLayout = () => {
         }
         console.log("📩 UserLayout received private message:", msg);
         
-        // Chỉ hiển thị thông báo nếu:
-        // 1. Tin nhắn không phải từ chính mình
-        // 2. User không đang ở trong chat detail
-        if (msg.senderId && msg.senderId != currentUserId && !isInChatDetail()) {
-          showToast(`📩 New message from ${msg.senderName}`, "info");
-        } else {
-          console.log("🔇 Skipping notification for private message:", {
-            isOwnMessage: msg.senderId == currentUserId,
-            isInChatDetail: isInChatDetail()
-          });
-        }
-        
-        // Cập nhật privateMessages state
+        // Cập nhật privateMessages state (không hiển thị thông báo)
         setPrivateMessages(prev => {
           const newMessages = [...prev, msg];
           console.log("📩 Updated privateMessages:", newMessages);
@@ -147,19 +123,7 @@ const UserLayout = () => {
         }
         console.log("📩 UserLayout received group message:", msg);
         
-        // Chỉ hiển thị thông báo nếu:
-        // 1. Tin nhắn không phải từ chính mình
-        // 2. User không đang ở trong chat detail
-        if (msg.senderId && msg.senderId != currentUserId && !isInChatDetail()) {
-          showToast(`📩 New group message from ${msg.senderName || 'Someone'}`, "info");
-        } else {
-          console.log("🔇 Skipping notification for group message:", {
-            isOwnMessage: msg.senderId == currentUserId,
-            isInChatDetail: isInChatDetail()
-          });
-        }
-        
-        // Cập nhật groupMessages state
+        // Cập nhật groupMessages state (không hiển thị thông báo)
         setGroupMessages(prev => {
           const newMessages = [...prev, msg];
           console.log("📩 Updated groupMessages:", newMessages);

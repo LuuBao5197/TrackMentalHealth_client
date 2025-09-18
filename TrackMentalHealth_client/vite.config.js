@@ -17,6 +17,8 @@ export default defineConfig({
   },
 
    server: {
+    host: '0.0.0.0', // Allow external connections
+    port: 5173,
     proxy: {
       '/ws': {
         target: 'http://localhost:9999',
