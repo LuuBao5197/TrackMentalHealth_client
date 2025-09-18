@@ -30,33 +30,40 @@ const LoginForm = ({ subtext, subtitle }) => {
 
             if (decoded.role === "USER") {
                 navigate("/user/homepage");
-            } else if(decoded.role === "ADMIN") {
+            } else if (decoded.role === "ADMIN") {
                 navigate("/dashboard");
-            } else if(decoded.role === "PSYCHOLOGIST") {
+            } else if (decoded.role === "PSYCHOLOGIST") {
                 navigate("/user/homepage");
-            } else if(decoded.role === "TEST_DESIGNER") {
+            } else if (decoded.role === "TEST_DESIGNER") {
                 navigate("/testDesigner/test/");
-            } else if(decoded.role === "CONTENT_CREATOR") {
+            } else if (decoded.role === "CONTENT_CREATOR") {
                 navigate("/contentCreator/create-lesson");
-            } 
+            }
         } catch (err) {
             console.error("Token decode failed", err);
         }
     };
 
-    const loginWithSocialToken = async (provider, idToken) => {
+    const loginWithSocialToken = async (provider, credential) => {
         try {
-            const response = await axios.post(`http://localhost:9999/api/auth/oauth/${provider}`, null, {
-                params: { idToken },
-            });
-            const { token } = response.data;
-            handleSuccessLogin(token);
+            // Decode credential (JWT)
+            const decoded = jwtDecode(credential);
+            console.log("Decoded Google token:", decoded);
+
+            // Gửi credential lên backend để xác thực
+            const res = await axios.post(
+                `http://localhost:9999/api/auth/oauth/${provider}`,
+                null,
+                { params: { idToken: credential } }
+            );
+
+            // Lưu token backend trả về
+            handleSuccessLogin(res.data.token);
         } catch (err) {
-            console.error(`Login with ${provider} failed:`, err);
-            setErrorMessage(`Login with ${provider} failed`);
+            console.error(`Login with ${provider} failed:`, err.response?.data || err.message);
+            alert(err.response?.data || "Login failed");
         }
     };
-
 
     const formik = useFormik({
         initialValues: {
@@ -73,7 +80,14 @@ const LoginForm = ({ subtext, subtitle }) => {
                 const res = await axios.post('http://localhost:9999/api/users/login', values);
                 handleSuccessLogin(res.data.token);
             } catch (err) {
-                setErrorMessage("Invalid email or password");
+                if (err.response) {
+                    console.error("Backend error:", err.response.data);
+                    const msg = err.response.data.error || err.response.data.message || "Login failed";
+                    setErrorMessage(msg); // ✅ chỉ lưu string
+                } else {
+                    console.error("Unexpected error:", err);
+                    setErrorMessage("Something went wrong");
+                }
             }
         }
     });
@@ -89,11 +103,11 @@ const LoginForm = ({ subtext, subtitle }) => {
                         <GoogleLogin
                             onSuccess={(credentialResponse) => {
                                 const credential = credentialResponse.credential;
-                                loginWithSocialToken('google', credential);
+                                loginWithSocialToken("google", credential);
                             }}
-                            onError={() => setErrorMessage('Google login failed')}
-                            useOneTap 
-                        />    
+                            onError={() => setErrorMessage("Google login failed")}
+                            useOneTap
+                        />
                     </Stack>
                 </>
             }

@@ -155,8 +155,7 @@ const Header = () => {
                 style={{ width: "40px", height: "40px" }}
               >
                 <img
-                  src={user?.avatar || "/default-avatar.png"}
-                  
+                  src={userInfo?.avatar || "/default-avatar.png"}
                   alt="User Avatar"
                   className="rounded-circle border border-1 border-dark shadow-sm"
                   style={{ width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }}
