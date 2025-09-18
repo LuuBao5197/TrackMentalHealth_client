@@ -152,6 +152,18 @@ const CallSignalListener = ({ signal, currentUserId }) => {
     }
   }, [signal, currentUserId, navigate]);
 
+  // ✅ Cleanup effect để clear signal khi component unmount
+  useEffect(() => {
+    return () => {
+      // Clear toast khi component unmount
+      if (toastIdRef.current) {
+        toast.dismiss(toastIdRef.current);
+      }
+      // Clear ringing state
+      setIsRinging(false);
+    };
+  }, []);
+
   return (
     <>
       {/* Audio element đã bị xóa - TẮT CHUÔNG */}
