@@ -123,7 +123,6 @@ const Header = () => {
           <ul>
             <li><Link to="/user/homepage" className={currentPath === "/user/homepage" ? "active" : ""}>HomePage</Link></li>
             <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
-            <li><Link to="/user/chat/list" className={currentPath === "/user/chat/list" ? "active" : ""}>Chat</Link></li>
             <li><Link to="/user/write-diary" className={currentPath === "/user/write-diary" ? "active" : ""}>Diary</Link></li>
             <li><Link to="/user/lesson" className={currentPath === "/user/lesson" ? "active" : ""}>Lesson</Link></li>
             <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Article</Link></li>

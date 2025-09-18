@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Breathing Exercise – Mini</title>
+  <style>
+    :root{
+      --bg:#f3f6fb; --card:#ffffffcc; --accent:#10b981; --muted:#6b7280; --pri:#0ea5e9;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:
+      radial-gradient(800px 400px at 10% 0%, #ecfeff, transparent),
+      radial-gradient(900px 400px at 100% 10%, #fff7ed, transparent),
+      var(--bg);
+      color:#0f172a; display:flex; align-items:center; justify-content:center; padding:20px;}
+    .wrap{width:100%;max-width:920px}
+    .card{background:var(--card);border-radius:16px;padding:20px;border:1px solid #e6eef6;box-shadow:0 10px 30px rgba(2,6,23,.06)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{font-size:20px;margin:0}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 360px}}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill{padding:8px 12px;border-radius:999px;background:#fff;border:1px solid #e6eef6}
+    .btn{background:var(--pri);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn.secondary{background:#1118270d;color:#111827;border:1px solid #e6eef6}
+    .center{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;background:#fff;border-radius:12px;border:1px solid #e6eef6}
+    .circle{width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #a7f3d0,#34d399);display:grid;place-items:center;font-weight:800;color:#064e3b;transition:all 1s ease}
+    .phase{font-size:18px;font-weight:800}
+    .muted{color:var(--muted)}
+    label.select{display:flex;align-items:center;gap:8px}
+    .meter{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden;border:1px solid #e6eef6;width:100%}
+    .meter>div{height:100%;background:linear-gradient(90deg,var(--pri),#06b6d4);width:0}
+    footer{margin-top:16px;text-align:center;color:var(--muted);font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1>🌿 Relaxed Breathing</h1>
+        <div class="muted">A small tool to help you reduce stress</div>
+      </header>
+
+      <div class="grid">
+        <main class="center">
+          <div id="circle" class="circle" style="width:160px;height:160px;font-size:26px">Ready</div>
+          <div class="phase" id="cue">Press Start</div>
+
+          <div style="width:100%;max-width:420px">
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+              <label class="pill">Pattern:
+                <select id="pattern" style="margin-left:8px">
+                  <option value="box">Box 4-4-4-4</option>
+                  <option value="478">4-7-8</option>
+                  <option value="55">Coherent 5-5</option>
+                </select>
+              </label>
+
+              <label class="pill">⏱ Minutes:
+                <input id="mins" type="number" value="1" min="1" max="30" style="width:64px;margin-left:8px"/>
+              </label>
+
+              <label class="pill"><input id="sound" type="checkbox" checked style="margin-right:6px"/>Sound</label>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button id="start" class="btn">Start</button>
+              <button id="stop" class="btn secondary" disabled>Stop</button>
+            </div>
+
+            <div style="margin-top:12px" class="muted">
+              <div class="meter"><div id="meterFill"></div></div>
+            </div>
+          </div>
+        </main>
+
+        <aside class="center" style="align-items:flex-start">
+          <h3 style="margin:0 0 6px 0">Quick Guide</h3>
+          <ul class="muted">
+            <li>Sit upright, shoulders relaxed.</li>
+            <li>Breathe evenly with the circle, follow the displayed text.</li>
+            <li>Practice 1–3 minutes to relax your nervous system.</li>
+          </ul>
+
+          <div style="width:100%;margin-top:8px">
+            <div class="muted">Cycles completed: <b id="cycles">0</b></div>
+            <div class="muted" style="margin-top:6px">Status: <b id="status">Not running</b></div>
+          </div>
+        </aside>
+      </div>
+
+      <footer>Made with ❤️ — Note: enable sound if desired.</footer>
+    </div>
+  </div>
+
+  <script>
+    // WebAudio beep
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioCtx();
+    function beep(freq=660, ms=90, type='sine', gain=0.02){
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = gain; o.connect(g); g.connect(audioCtx.destination);
+      o.start(); setTimeout(()=>o.stop(), ms);
+    }
+
+    const circle = document.getElementById('circle');
+    const cue = document.getElementById('cue');
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+    const patternSel = document.getElementById('pattern');
+    const minsInput = document.getElementById('mins');
+    const soundChk = document.getElementById('sound');
+    const meterFill = document.getElementById('meterFill');
+    const cyclesEl = document.getElementById('cycles');
+    const statusEl = document.getElementById('status');
+
+    let plan = [];
+    let planIdx = 0;
+    let endTime = 0;
+    let running = false;
+    let tickTimer = null;
+
+    function makePlan(mode){
+      const steps = [];
+      const a=(label,sec)=>steps.push({label,sec});
+      if(mode==='box'){ a('Inhale',4); a('Hold',4); a('Exhale',4); a('Hold',4); }
+      else if(mode==='478'){ a('Inhale',4); a('Hold',7); a('Exhale',8); }
+      else { a('Inhale',5); a('Exhale',5); }
+      return steps;
+    }
+
+    function runStep(){
+      if(!running) return;
+      const step = plan[planIdx % plan.length];
+      cue.textContent = step.label;
+      // visual scale
+      if(step.label.includes('Inhale')) {
+        circle.style.transform = 'scale(1.25)';
+        circle.style.transitionDuration = (step.sec*1000)+'ms';
+      } else if(step.label.includes('Exhale')) {
+        circle.style.transform = 'scale(0.8)';
+        circle.style.transitionDuration = (step.sec*1000)+'ms';
+      } else { // Hold / Rest
+        circle.style.transform = 'scale(1)';
+        circle.style.transitionDuration = (step.sec*1000)+'ms';
+      }
+      if(soundChk.checked){
+        beep(step.label.includes('Exhale')?520:660, 90, 'sine', 0.02);
+      }
+
+      const start = Date.now();
+      const dur = step.sec*1000;
+      function progress(){
+        if(!running) return;
+        const t = Date.now() - start;
+        const ratio = Math.min(1, t/dur);
+        meterFill.style.width = (ratio*100)+'%';
+        if(t < dur){
+          requestAnimationFrame(progress);
+        } else {
+          planIdx++;
+          if(Date.now() < endTime){
+            runStep();
+          } else {
+            stopBreath();
+          }
+        }
+      }
+      progress();
+    }
+
+    function startBreath(){
+      if(running) return;
+      planIdx = 0;
+      plan = makePlan(patternSel.value);
+      const mins = Math.max(1, Math.min(30, parseInt(minsInput.value) || 1));
+      endTime = Date.now() + mins*60*1000;
+      running = true;
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      statusEl.textContent = 'Running';
+      runStep();
+      tickTimer = setInterval(()=> {
+        const left = Math.max(0, Math.ceil((endTime - Date.now())/1000));
+        if(left <= 0) { clearInterval(tickTimer); }
+      }, 500);
+    }
+
+    function stopBreath(){
+      running = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      statusEl.textContent = 'Stopped';
+      meterFill.style.width = '0%';
+      circle.style.transform = 'scale(1)';
+      cue.textContent = 'Completed';
+      if(tickTimer) clearInterval(tickTimer);
+      cyclesEl.textContent = String( (parseInt(cyclesEl.textContent)||0) + 1 );
+    }
+
+    startBtn.addEventListener('click', ()=>{ audioCtx.resume(); startBreath(); });
+    stopBtn.addEventListener('click', stopBreath);
+
+    // initialize visuals
+    meterFill.style.width = '0%';
+    circle.style.transform = 'scale(1)';
+    cue.textContent = 'Ready';
+    statusEl.textContent = 'Not running';
+  </script>
+</body>
+</html>
