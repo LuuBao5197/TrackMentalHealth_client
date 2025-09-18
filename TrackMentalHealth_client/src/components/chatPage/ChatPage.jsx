@@ -245,7 +245,21 @@ function ChatPage() {
         try {
             const data = await initiateChatSession(psychologistId, currentUserId);
             if (data.id) {
-                navigate(`/user/chat/${data.id}`);
+                // Tìm psychologist info từ danh sách
+                const psychologist = psychologists.find(p => p.id === psychologistId);
+                console.log("🔍 Psychologist data:", psychologist);
+                
+                const receiverData = {
+                    id: psychologist?.usersID?.id || psychologistId,
+                    fullname: psychologist?.usersID?.fullname || psychologist?.fullname || "Psychologist",
+                    avatar: psychologist?.usersID?.avatar || psychologist?.avatar
+                };
+                
+                console.log("🔍 Receiver data:", receiverData);
+                
+                navigate(`/user/chat/${data.id}`, { 
+                    state: { receiver: receiverData } 
+                });
             } else {
                 showAlert("No chat session exists. Please create one.", "warning");
             }

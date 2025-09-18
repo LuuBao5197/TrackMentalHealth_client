@@ -23,6 +23,7 @@ function ChatWithUser() {
     const location = useLocation();
 
     const preloadedReceiver = location.state?.receiver;
+    console.log("🔍 Preloaded receiver:", preloadedReceiver);
 
     const [messages, setMessages] = useState([]);
     const [currentUserName, setCurrentUserName] = useState("Tôi");
@@ -34,6 +35,8 @@ function ChatWithUser() {
             ? preloadedReceiver.avatar
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(preloadedReceiver?.fullname || "U")}`
     );
+    
+    console.log("🔍 Initial receiver state:", { receiverId, receiverName, receiverAvatar });
 
     // 🔹 Load tin nhắn cũ
     useEffect(() => {
@@ -60,15 +63,26 @@ function ChatWithUser() {
                     );
                 }
 
-                // Lấy thông tin người nhận nếu chưa có
-                if (!receiverId && res.length > 0) {
+                // Cập nhật thông tin người nhận từ session data (ưu tiên hơn preloaded data)
+                if (res.length > 0) {
                     const { sender, receiver } = res[0].session;
                     const otherUser = sender.id === currentUserId ? receiver : sender;
+                    
+                    // Luôn cập nhật thông tin từ session data để đảm bảo chính xác
                     setReceiverId(otherUser.id);
                     setReceiverName(otherUser.fullname || "Đối phương");
                     setReceiverAvatar(
                         otherUser.avatar?.trim() || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.fullname || "U")}`
                     );
+                    
+                    console.log("🔍 Updated receiver info from session data:", {
+                        id: otherUser.id,
+                        fullname: otherUser.fullname,
+                        avatar: otherUser.avatar
+                    });
+                } else if (!receiverId) {
+                    // Nếu chưa có tin nhắn và chưa có receiverId, sử dụng preloaded data
+                    console.log("🔍 No messages found, using preloaded receiver data:", preloadedReceiver);
                 }
             } catch (err) {
                 console.error("❌ Lỗi lấy tin nhắn:", err);
