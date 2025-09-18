@@ -43,7 +43,6 @@ import ArticleListForCreator from '../components/ArticlePage/ArticleListForCreat
 import ExerciseListForCreator from '../components/ExercisePage/ExerciseListForCreator.jsx';
 import CreateQuestionForm from '../components/QuizPage/CreateQuestionForm.jsx';
 import QuizForm from '../components/QuizPage/QuizForm.jsx';
-import VideoCall from '../components/chatPage/chatvideo/VideoCall.jsx';
 import QuizResultForm from '../components/QuizPage/CreateResultForQuiz.jsx';
 import DoQuizForm from '../components/QuizPage/DoQuizForm.jsx';
 import QuizListForUser from '../components/QuizPage/QuizListForUser.jsx';
@@ -53,7 +52,7 @@ import ExerciseApprovalForAdmin from '../components/ExercisePage/ExerciseApprova
 import QuizAttemptList from '../components/QuizPage/QuizAttemptList.jsx';
 import QuizAttemptDetail from '../components/QuizPage/QuizAttemptDetail.jsx';
 import PublicCall from '../components/chatPage/chatvideo/PublicCall.jsx';
-import VideoCallZego from '../components/chatPage/chatvideo/VideoCallZego.jsx';
+import VideoCallAgora from '../components/chatPage/chatvideo/VideoCallAgora.jsx';
 import TestHistory from '../components/testPage/TestHistory.jsx';
 import TestAttemptDetail from '../components/testPage/TestAttemptDetail.jsx';
 import ExerciseHistoryList from '../components/ExercisePage/ExerciseHistoryList.jsx';
@@ -192,7 +191,7 @@ const Router = [
           { path: 'chat/public-call', element: <PublicCall /> },
           {
             path: 'chat/video-call/:sessionId',
-            element: <VideoCallZego />
+            element: <VideoCallAgora />
           },
         ],
       },

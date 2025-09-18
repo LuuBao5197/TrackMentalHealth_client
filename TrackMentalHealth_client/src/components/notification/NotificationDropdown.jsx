@@ -51,7 +51,7 @@ const NotificationDropdown = ({
         {/* Filter dropdown */}
         <li className="mb-2" style={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 1001 }}>
           <button
-            className="btn btn-sm btn-outline-primary w-100 d-flex justify-content-between align-items-center"
+            className="btn btn-sm btn-outline-success w-100 d-flex justify-content-between align-items-center"
             onClick={(e) => { e.stopPropagation(); setShowFilterMenu(!showFilterMenu); }}
           >
             Filter: {filter === "all" ? "All" : "Unread"}

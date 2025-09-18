@@ -1,4 +1,5 @@
-import React, { useEffect, useState, createContext } from "react";
+// userLayout.jsx
+import React, { useEffect, useState, createContext, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Outlet } from "react-router-dom";
 import Header from "@components/userPage/Header";
@@ -7,27 +8,41 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import "../../assets/css/main.css";
+
+// Add pulse animation for WebSocket indicator
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+`;
+document.head.appendChild(style);
 import useBodyScrolled from "../../hooks/useBodyScrolled";
 import useMobileNavToggle from "../../hooks/useMobileNavToggle";
 import useScrollTopButton from "../../hooks/useScrollTopButton";
 import useAOS from "../../hooks/useAOS";
 import usePreloader from "../../hooks/usePreloader";
 
-import { connectWebSocket } from "../../services/stompClient";
+import { connectWebSocket, sendCallSignal } from "../../services/stompClient";
 import { showToast } from "../../utils/showToast";
 import { chatAI, getAIHistory } from "../../api/api";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import ChatWidgetWrapper from "../../components/chatPage/ChatWidgetWrapper";
+import CallSignalListener from "../../components/chatPage/chatvideo/CallSignalListener";
 
 export const WebSocketContext = createContext();
 export const ChatContext = createContext();
 
 const UserLayout = () => {
   const user = useSelector((state) => state.auth.user);
+  const wsConnectedRef = useRef(false); // ✅ đảm bảo connect chỉ 1 lần
 
   const [headerHeight, setHeaderHeight] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [incomingCallSignal, setIncomingCallSignal] = useState(null);
+  const [wsStatus, setWsStatus] = useState('disconnected');
 
   const [chatMessages, setChatMessages] = useState([]);
   const [showChatWidget, setShowChatWidget] = useState(true);
@@ -56,46 +71,68 @@ const UserLayout = () => {
     if (header) setHeaderHeight(header.offsetHeight);
   }, []);
 
-  // kết nối WebSocket (chỉ giữ noti + call)
+  // 🔹 Connect WebSocket chỉ 1 lần, không disconnect khi unmount
   useEffect(() => {
-    if (!user) return;
+    if (!user || wsConnectedRef.current) return;
 
-    const disconnect = connectWebSocket({
-      callId: `user_${user.userId}`,
+    wsConnectedRef.current = true;
+
+    connectWebSocket({
+      // ✅ Không dùng callId nữa
       onNotification: (noti) => {
+        showToast(`${noti.message}`, "info");
         setNotifications((prev) => [...prev, noti]);
-        showToast(`${noti.message}`,'info');
       },
+      onNewMessage: (msg) => {
+        showToast(`New message from ${msg.senderName}`, "info");
+      },
+      onPrivateMessage: (msg) => {
+        if (!msg?.message || !msg.senderName) return;
+        showToast(`📩 New message from ${msg.senderName}`, "info");
+      },
+
+
       onCallSignal: (signal) => {
-        setIncomingCallSignal(signal);
-        if (signal.type === "CALL_REQUEST" && signal.calleeId === user.userId) {
-          showToast({
-            message: `${signal.callerName} is calling you...`,
-            type: ToastTypes.INFO,
-            time: 15000,
-            showCallButtons: true,
-            position: "top-center",
-            onAccept: () => {
-              setIncomingCallSignal(null);
-              window.location.href = `/user/video-call/${signal.sessionId || signal.callId
-                }`;
-            },
-            onCancel: () => setIncomingCallSignal(null),
-          });
+        console.log("📞 UserLayout received call signal:", signal);
+        
+        // Nếu là CALL_REQUEST thì lưu state để CallSignalListener xử lý
+        if (signal.type === "CALL_REQUEST" && signal.calleeId == user.userId) {
+          console.log("📞 Incoming call for user:", user.userId);
+          setIncomingCallSignal(signal);
+        }
+
+        // Nếu các loại tín hiệu khác (accepted, rejected, ended) cũng truyền vào state
+        if (["CALL_ACCEPTED", "CALL_REJECTED", "CALL_ENDED", "CALL_CANCEL"].includes(signal.type)) {
+          console.log("📞 Call signal update:", signal.type);
+          setIncomingCallSignal(signal);
         }
       },
-    });
 
-    return () => disconnect && disconnect();
+      onConnect: () => {
+        console.log("✅ WebSocket connected in UserLayout");
+        setWsStatus('connected');
+      },
+
+      onDisconnect: () => {
+        console.log("❌ WebSocket disconnected in UserLayout");
+        setWsStatus('disconnected');
+      },
+
+      onError: (error) => {
+        console.error("💥 WebSocket error in UserLayout:", error);
+        setWsStatus('error');
+      }
+
+
+    });
+    // ⚠️ Không return disconnect, để WS luôn kết nối
   }, [user]);
+
 
   // load lịch sử chat bot
   const loadAIHistory = async () => {
     try {
       const history = await getAIHistory(currentUserId);
-      console.log(history);
-      
-      // Convert dữ liệu từ backend thành format chatMessages
       const formatted = history.map((h) => ({
         id: h.id,
         senderId: String(h.role).toLowerCase() === "ai" ? "ai" : h.user?.id,
@@ -103,46 +140,28 @@ const UserLayout = () => {
         message: h.message,
         timestamp: h.timestamp,
       }));
-
-      setChatMessages(formatted);  
+      setChatMessages(formatted);
       setAiHistoryLoaded(true);
     } catch (err) {
       console.error("Lỗi load history:", err);
     }
   };
 
-  // chỉ chạy 1 lần khi mount
   useEffect(() => {
-    if (!aiHistoryLoaded) {
-      loadAIHistory();
-    }
+    if (!aiHistoryLoaded) loadAIHistory();
   }, []);
-
-
 
   const handleSendMessage = async (msg) => {
     if (!msg.trim()) return;
-
-    const userMsg = { senderId: currentUserId, message: msg };
-    setChatMessages((prev) => [...prev, userMsg]);
+    setChatMessages((prev) => [...prev, { senderId: currentUserId, message: msg }]);
 
     try {
-      const aiReply = await chatAI({
-        message: msg,
-        userId: currentUserId.toString(),
-      });
-      setChatMessages((prev) => [
-        ...prev,
-        { senderId: "ai", message: String(aiReply) },
-      ]);
+      const aiReply = await chatAI({ message: msg, userId: currentUserId.toString() });
+      setChatMessages((prev) => [...prev, { senderId: "ai", message: String(aiReply) }]);
     } catch {
-      setChatMessages((prev) => [
-        ...prev,
-        { senderId: "ai", message: "Xin lỗi, tôi chưa thể trả lời." },
-      ]);
+      setChatMessages((prev) => [...prev, { senderId: "ai", message: "Xin lỗi, tôi chưa thể trả lời." }]);
     }
   };
-
 
   return (
     <WebSocketContext.Provider value={{ notifications, incomingCallSignal }}>
@@ -157,24 +176,56 @@ const UserLayout = () => {
       >
         <div>
           <Header />
+          
+          {/* WebSocket Status Indicator */}
+          <div style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            zIndex: 9999,
+            padding: '8px 12px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            color: 'white',
+            background: wsStatus === 'connected' ? '#28a745' : 
+                       wsStatus === 'error' ? '#dc3545' : '#6c757d',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#fff',
+              animation: wsStatus === 'connected' ? 'pulse 2s infinite' : 'none'
+            }}></div>
+            WS: {wsStatus.toUpperCase()}
+            {incomingCallSignal && (
+              <span style={{ marginLeft: '10px', fontSize: '10px' }}>
+                📞 {incomingCallSignal.type}
+              </span>
+            )}
+          </div>
+          
+          {/* // UserLayout.jsx */}
+          {user && (
+            <CallSignalListener
+              signal={incomingCallSignal}
+              currentUserId={user.userId}
+            />
+          )}
+
           <main style={{ paddingTop: headerHeight }} className="container">
             <Outlet />
             {showChatWidget && aiHistoryLoaded && (
-              <ChatWidgetWrapper
-                messages={chatMessages}
-                onSendMessage={handleSendMessage}
-              />
+              <ChatWidgetWrapper messages={chatMessages} onSendMessage={handleSendMessage} />
             )}
-
-
           </main>
           <Footer />
-          <ToastContainer
-            position="bottom-right"
-            autoClose={3000}
-            newestOnTop
-            theme="colored"
-          />
+          <ToastContainer position="bottom-right" autoClose={3000} newestOnTop theme="colored" />
         </div>
       </ChatContext.Provider>
     </WebSocketContext.Provider>

@@ -1,15 +1,16 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCurrentUserId } from "../../../utils/getCurrentUserID";
-import { joinRoom, destroyRoom } from "../../../services/ZegoService";
+import { joinRoom, destroyRoom, playLocalVideo, toggleCamera, toggleMicrophone } from "../../../services/AgoraService";
 
 export default function PublicCall() {
-  const { id: paramRoomID } = useParams();
-  const roomID =
-    paramRoomID || String(Math.floor(100000 + Math.random() * 900000));
-
+  const roomID = 'public_room';
   const ref = useRef(null);
   const navigate = useNavigate();
+  const [joined, setJoined] = useState(false);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [microphoneEnabled, setMicrophoneEnabled] = useState(true);
+  
   const userID = String(
     getCurrentUserId() || Math.floor(Math.random() * 1e6)
   );
@@ -17,20 +18,48 @@ export default function PublicCall() {
 
   useEffect(() => {
     if (!ref.current) return;
-    joinRoom(ref.current, {
-      roomID,
-      userID,
-      userName,
-      mode: "group", // hoặc "one-on-one"
-      showPreJoinView: true,
-      turnOnCameraWhenJoining: true,
-      turnOnMicrophoneWhenJoining: true,
-    });
+    
+    const joinPublicRoom = async () => {
+      try {
+        await joinRoom(ref.current, {
+          roomId: roomID,
+          userId: userID,
+          userName: userName,
+          mode: "group",
+        });
+        
+        // Play local video after joining
+        playLocalVideo(ref.current);
+        setJoined(true);
+      } catch (error) {
+        console.error('Error joining public room:', error);
+      }
+    };
+
+    joinPublicRoom();
 
     return () => {
       destroyRoom();
     };
-  }, [roomID]);
+  }, [roomID, userID, userName]);
+
+  const handleToggleCamera = async () => {
+    try {
+      const enabled = await toggleCamera();
+      setCameraEnabled(enabled);
+    } catch (error) {
+      console.error('Error toggling camera:', error);
+    }
+  };
+
+  const handleToggleMicrophone = async () => {
+    try {
+      const enabled = await toggleMicrophone();
+      setMicrophoneEnabled(enabled);
+    } catch (error) {
+      console.error('Error toggling microphone:', error);
+    }
+  };
 
   return (
     <div
@@ -59,7 +88,30 @@ export default function PublicCall() {
         </ol>
       </nav>
 
-      <div ref={ref} style={{ height: "95%", width: "100%" }} />
+      {/* Status and Controls */}
+      <div className="alert alert-info d-flex justify-content-between align-items-center">
+        <span>
+          {joined ? "Connected to public room" : "Connecting to public room..."}
+        </span>
+        {joined && (
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${cameraEnabled ? 'btn-success' : 'btn-danger'}`}
+              onClick={handleToggleCamera}
+            >
+              {cameraEnabled ? '📹' : '📹❌'} Camera
+            </button>
+            <button
+              className={`btn btn-sm ${microphoneEnabled ? 'btn-success' : 'btn-danger'}`}
+              onClick={handleToggleMicrophone}
+            >
+              {microphoneEnabled ? '🎤' : '🎤❌'} Mic
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div ref={ref} style={{ height: "90%", width: "100%", position: "relative" }} />
     </div>
   );
 }

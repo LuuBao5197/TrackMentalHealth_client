@@ -123,6 +123,7 @@ const Header = () => {
           <ul>
             <li><Link to="/user/homepage" className={currentPath === "/user/homepage" ? "active" : ""}>HomePage</Link></li>
             <li><Link to="/user/aboutUs" className={currentPath === "/user/aboutUs" ? "active" : ""}>About</Link></li>
+            <li><Link to="/user/chat/list" className={currentPath === "/user/chat/list" ? "active" : ""}>Chat</Link></li>
             <li><Link to="/user/write-diary" className={currentPath === "/user/write-diary" ? "active" : ""}>Diary</Link></li>
             <li><Link to="/user/lesson" className={currentPath === "/user/lesson" ? "active" : ""}>Lesson</Link></li>
             <li><Link to="/user/artical" className={currentPath === "/user/artical" ? "active" : ""}>Article</Link></li>
@@ -168,23 +169,17 @@ const Header = () => {
                 </li>
 
                 <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/exercise/history`
-
-                  )}>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/exercise/history`)}>
                     View Exercise History
                   </button>
                 </li>
                 <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`
-
-                  )}>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/quiz/history`)}>
                     View Quiz History
                   </button>
                 </li>
                 <li>
-                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`
-
-                  )}>
+                  <button className="dropdown-item" onClick={() => navigate(`/user/test/history`)}>
                     View Test History
                   </button>
                 </li>
