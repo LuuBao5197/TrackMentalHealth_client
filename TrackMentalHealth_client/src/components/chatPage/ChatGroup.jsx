@@ -15,7 +15,7 @@ import {
     initiateChatSession,
     findUsersByGroupId,
 } from "../../api/api";
-import { sendWebSocketMessage } from "../../services/stompClient";
+import { sendWebSocketMessage, connectWebSocket, unsubscribe } from "../../services/stompClient";
 import { WebSocketContext } from "../../layouts/user/UserLayout";
 
 
@@ -64,84 +64,122 @@ function ChatGroup() {
         fetchData();
     }, [groupId, currentUserId]);
 
-    // 🔹 Lắng nghe tin nhắn group từ WebSocketContext
+    // 🔹 Tạo WebSocket subscription riêng cho group này
     useEffect(() => {
-        console.log("🔍 ChatGroup useEffect triggered:", {
-            groupMessagesLength: groupMessages?.length,
+        if (!groupId) return;
+
+        console.log("🔍 ChatGroup connecting WebSocket for group:", groupId);
+
+        const disconnect = connectWebSocket({
             groupId,
-            currentUserId
+            onGroupMessage: (msg) => {
+                console.log("📩 ChatGroup received group message:", msg);
+                console.log("🔍 Message details:", {
+                    groupId: msg.groupId,
+                    currentGroupId: groupId,
+                    senderId: msg.sender?.id ?? msg.senderId,
+                    currentUserId: currentUserId,
+                    content: msg.content
+                });
+                
+                // Kiểm tra xem tin nhắn có thuộc group hiện tại không
+                if (msg.groupId != groupId) {
+                    console.log("❌ Message not for current group, skipping:", {
+                        messageGroupId: msg.groupId,
+                        currentGroupId: groupId
+                    });
+                    return;
+                }
+
+                const senderId = msg.sender?.id ?? msg.senderId;
+                const isCurrentUser = String(senderId) === String(currentUserId);
+                
+                console.log("🔍 Sender check:", {
+                    messageSenderId: senderId,
+                    currentUserId: currentUserId,
+                    isCurrentUser: isCurrentUser
+                });
+
+                setMessages((prev) => {
+                    console.log("🔍 Current messages count:", prev.length);
+                    console.log("🔍 Current messages:", prev.map(m => ({ id: m.id, text: m.text, isTemporary: m.isTemporary })));
+                    
+                    // Kiểm tra trùng tin nhắn - chỉ kiểm tra ID thật
+                    const exists = prev.some(m => 
+                        m.id && msg.id && m.id === msg.id
+                    );
+                    if (exists) {
+                        console.log("❌ Message already exists (by ID), skipping:", msg);
+                        return prev;
+                    }
+
+                    // Nếu là tin nhắn của user hiện tại, thay thế tin nhắn tạm thời
+                    if (isCurrentUser) {
+                        console.log("🔄 Replacing temporary group message");
+                        console.log("🔍 Looking for temporary message with text:", msg.content);
+                        
+                        const updatedMessages = prev.map(m => {
+                            if (m.isTemporary && m.text === msg.content) {
+                                console.log("✅ Found temporary message to replace:", m);
+                                return {
+                                    id: msg.id,
+                                    text: msg.content,
+                                    user: {
+                                        id: String(senderId),
+                                        name: msg.sender?.fullname ?? msg.senderName ?? "Bạn",
+                                        avatar: msg.sender?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender?.fullname || "Bạn")}`
+                                    },
+                                    timestamp: new Date(msg.sendAt).getTime(),
+                                };
+                            }
+                            return m;
+                        });
+                        
+                        console.log("🔍 Updated messages after replacement:", updatedMessages.map(m => ({ id: m.id, text: m.text, isTemporary: m.isTemporary })));
+                        return updatedMessages;
+                    }
+
+                    // Tin nhắn từ người khác - thêm mới
+                    console.log("➕ Adding new group message from others");
+                    const newMessage = {
+                        id: msg.id,
+                        text: msg.content,
+                        user: {
+                            id: String(senderId),
+                            name: msg.sender?.fullname ?? msg.senderName ?? "User",
+                            avatar: msg.sender?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender?.fullname || "U")}`
+                        },
+                        timestamp: new Date(msg.sendAt).getTime(),
+                    };
+                    
+                    console.log("🔍 New message to add:", newMessage);
+                    const updatedMessages = [...prev, newMessage];
+                    console.log("🔍 Final messages count:", updatedMessages.length);
+                    
+                    return updatedMessages;
+                });
+            }
         });
 
-        if (!groupMessages || groupMessages.length === 0) {
-            console.log("❌ No group messages or empty array");
-            return;
-        }
-
-        // Chỉ xử lý tin nhắn mới nhất để tránh lặp
-        const latestMessage = groupMessages[groupMessages.length - 1];
-        
-        // Kiểm tra xem tin nhắn có thuộc group hiện tại không
-        if (latestMessage.groupId != groupId) {
-            console.log("❌ Latest message not for current group");
-            return;
-        }
-
-        console.log("📩 Processing latest group message:", latestMessage);
-
-        const senderId = latestMessage.sender?.id ?? latestMessage.senderId;
-        const isCurrentUser = String(senderId) === String(currentUserId);
-
-        setMessages((prev) => {
-            // Kiểm tra trùng tin nhắn
-            const exists = prev.some(m => 
-                (m.id && latestMessage.id && m.id === latestMessage.id) || 
-                (m.text === latestMessage.content && m.user.id === senderId.toString())
-            );
-            if (exists) {
-                console.log("❌ Message already exists, skipping:", latestMessage);
-                return prev;
+        return () => {
+            console.log("🔍 ChatGroup disconnecting WebSocket");
+            // Unsubscribe specific group subscription
+            if (groupId) {
+                unsubscribe(`/topic/group/${groupId}`);
             }
-
-            // Nếu là tin nhắn của user hiện tại, thay thế tin nhắn tạm thời
-            if (isCurrentUser) {
-                console.log("🔄 Replacing temporary group message");
-                return prev.map(m => 
-                    m.isTemporary && m.text === latestMessage.content 
-                        ? {
-                            id: latestMessage.id,
-                            text: latestMessage.content,
-                            user: {
-                                id: String(senderId),
-                                name: latestMessage.sender?.fullname ?? latestMessage.senderName ?? "Bạn",
-                                avatar: latestMessage.sender?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(latestMessage.sender?.fullname || "Bạn")}`
-                            },
-                            timestamp: new Date(latestMessage.sendAt).getTime(),
-                        }
-                        : m
-                );
-            }
-
-            // Tin nhắn từ người khác - thêm mới
-            console.log("➕ Adding new group message from others");
-            return [
-                ...prev,
-                {
-                    id: latestMessage.id,
-                    text: latestMessage.content,
-                    user: {
-                        id: String(senderId),
-                        name: latestMessage.sender?.fullname ?? latestMessage.senderName ?? "User",
-                        avatar: latestMessage.sender?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(latestMessage.sender?.fullname || "U")}`
-                    },
-                    timestamp: new Date(latestMessage.sendAt).getTime(),
-                },
-            ];
-        });
-    }, [groupMessages, groupId, currentUserId]);
+            disconnect();
+        };
+    }, [groupId, currentUserId]);
 
     // Gửi tin nhắn
     const handleSendMessage = (text) => {
         if (!text.trim()) return;
+
+        console.log("📤 Sending group message:", {
+            groupId,
+            senderId: currentUserId,
+            content: text
+        });
 
         // 🚀 OPTIMISTIC UPDATE - Hiển thị tin nhắn ngay lập tức
         const tempMessage = {
@@ -156,15 +194,24 @@ function ChatGroup() {
             isTemporary: true // Đánh dấu tin nhắn tạm thời
         };
 
+        console.log("🔍 Temporary message created:", tempMessage);
+
         // Thêm tin nhắn vào UI ngay lập tức
-        setMessages(prev => [...prev, tempMessage]);
+        setMessages(prev => {
+            const updated = [...prev, tempMessage];
+            console.log("🔍 Messages after adding temporary:", updated.length);
+            return updated;
+        });
 
         // Gửi qua WebSocket
-        sendWebSocketMessage("/app/chat.group.send", {
+        const messageData = {
             groupId,
             senderId: currentUserId,
             content: text,
-        });
+        };
+        
+        console.log("📤 Sending WebSocket message:", messageData);
+        sendWebSocketMessage("/app/chat.group.send", messageData);
     };
 
     // Mở chat riêng với user được chọn

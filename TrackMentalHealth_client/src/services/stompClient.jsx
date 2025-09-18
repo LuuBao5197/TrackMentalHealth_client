@@ -46,7 +46,15 @@ export function connectWebSocket({
     }
 
     client = new Client({
-        webSocketFactory: () => new WebSocket("/ws"),
+        webSocketFactory: () => {
+            // Dynamic WebSocket URL based on environment
+            const wsUrl = import.meta.env.DEV 
+                ? "/ws"  // Development: use proxy
+                : `ws://${window.location.hostname}:9999/ws`; // Production: direct connection
+            
+            console.log("🔌 WebSocket URL:", wsUrl);
+            return new WebSocket(wsUrl);
+        },
         reconnectDelay: 5000,
         debug: (str) => console.log('[STOMP DEBUG]', str),
 
@@ -80,6 +88,9 @@ export function connectWebSocket({
             
             // 🔹 Private chat messages (for all sessions)
             subscribeSafe(`/topic/chat/*`, onPrivateMessage, "Private chat message");
+            
+            // 🔹 Group chat messages (for all groups)
+            subscribeSafe(`/topic/group/*`, onGroupMessage, "Group chat message");
 
             // 🔹 Notifications
             subscribeSafe(`/topic/notifications/${currentUserId}`, onNotification, "Notification");
