@@ -70,7 +70,7 @@ const QuizListForUser = () => {
         <p>Loading...</p>
       ) : (
         <Row>
-          {quizs.map((test) => (
+          {quizs.filter(q=>q.hasResults == true).map((test) => (
             <Col md={6} key={test.id} className="mb-4">
               <Card className="h-100 shadow-sm">
                 <Card.Body>

@@ -223,7 +223,7 @@ const QuizResultForm = () => {
                     />
                     <ul className="list-group">
                         {console.log(quizList)}
-                        {quizList.filter(quiz => quiz.hasResults == true).map(quiz => (
+                        {quizList.filter(quiz => quiz.hasResults == false).map(quiz => (
                             <li
                                 key={quiz.id}
                                 className="list-group-item list-group-item-action"

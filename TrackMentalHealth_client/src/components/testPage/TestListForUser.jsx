@@ -5,6 +5,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaEdit } from 'react-icons/fa';
 import axios from 'axios';
+import { showAlert } from '../../utils/showAlert';
 
 const TestListForUser = () => {
   const [tests, setTests] = useState([]);
@@ -32,6 +33,13 @@ const TestListForUser = () => {
   useEffect(() => {
     fetchTests();
   }, [page]);
+
+  useEffect(() => {
+    // Chỉ chạy khi tests có dữ liệu
+    if (tests && tests.length > 0) {
+        showAlert(tests[0].source);
+    }
+}, [tests]); // Dependency array là [tests]
 
   const handleSearch = (e) => {
     e.preventDefault();
