@@ -28,14 +28,14 @@ const CallSignalListener = ({ signal, currentUserId }) => {
           if (!toast.isActive(toastIdRef.current)) {
             toastIdRef.current = toast.info(
               ({ closeToast }) => (
-                <div style={{ textAlign: 'center', padding: '10px' }}>
-                  <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>
-                    📞 Incoming Video Call
+                <div style={{ textAlign: 'center', padding: '8px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>
+                    Incoming Video Call
                   </div>
-                  <div style={{ fontSize: '16px', marginBottom: '15px' }}>
+                  <div style={{ fontSize: '14px', marginBottom: '12px' }}>
                     <strong>{signal.callerName}</strong> is calling...
                   </div>
-                  <div style={{ display: "flex", gap: "12px", justifyContent: 'center' }}>
+                  <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
                     <button
                       onClick={() => {
                         // Dừng chuông - ĐÃ TẮT CHUÔNG
@@ -58,10 +58,10 @@ const CallSignalListener = ({ signal, currentUserId }) => {
                           },
                         });
                       }}
-                      className="btn btn-success btn-lg"
-                      style={{ padding: '10px 20px', fontSize: '16px' }}
+                      className="btn btn-success"
+                      style={{ padding: '8px 16px', fontSize: '14px' }}
                     >
-                      ✅ Accept
+                      Accept
                     </button>
                     <button
                       onClick={() => {
@@ -78,10 +78,10 @@ const CallSignalListener = ({ signal, currentUserId }) => {
                         toast.dismiss(toastIdRef.current);
                         showToast('Call rejected', 'info');
                       }}
-                      className="btn btn-danger btn-lg"
-                      style={{ padding: '10px 20px', fontSize: '16px' }}
+                      className="btn btn-danger"
+                      style={{ padding: '8px 16px', fontSize: '14px' }}
                     >
-                      ❌ Decline
+                      Decline
                     </button>
                   </div>
                 </div>
@@ -93,10 +93,12 @@ const CallSignalListener = ({ signal, currentUserId }) => {
                 draggable: false,
                 closeButton: false,
                 style: {
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'linear-gradient(135deg, #4fd1c7 0%, #26d0ce 100%)',
                   color: 'white',
-                  borderRadius: '15px',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                  maxWidth: '320px',
+                  padding: '16px',
                 }
               }
             );
