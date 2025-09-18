@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { connectWebSocket, sendCallSignal } from "../../services/StompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
+import { showToast } from "../../utils/showToast";
+// import { AudioManager } from "../../utils/audioManager"; // Tắt chuông
 import "../../assets/css/chat.css";
-import ringtone from "../../assets/ringtone/ringtone.mp3";
+// import ringtone from "../../assets/ringtone/ringtone.mp3"; // Tắt chuông
 
 export default function CallManager({ receiverName }) {
   const { sessionId } = useParams();
@@ -12,6 +14,8 @@ export default function CallManager({ receiverName }) {
 
   const [incomingCall, setIncomingCall] = useState(null);
   const [isCalling, setIsCalling] = useState(false);
+  const [callStatus, setCallStatus] = useState('idle'); // 'idle', 'calling', 'ringing', 'connected'
+  const [callEnded, setCallEnded] = useState(false);
 
   // Lắng nghe tín hiệu call
   useEffect(() => {
@@ -27,19 +31,41 @@ export default function CallManager({ receiverName }) {
               setIncomingCall({
                 sessionId: msg.sessionId,
                 callerName: msg.callerName,
+                callerId: msg.callerId,
               });
+              setCallStatus('ringing');
             }
             break;
 
           case "CALL_ACCEPTED":
             setIsCalling(false);
+            setCallStatus('connected');
             navigate(`/user/video-call/${msg.sessionId}`);
             break;
 
           case "CALL_REJECTED":
+            setIsCalling(false);
+            setIncomingCall(null);
+            setCallStatus('idle');
+            break;
+
           case "CALL_CANCEL":
             setIsCalling(false);
             setIncomingCall(null);
+            setCallStatus('idle');
+            break;
+
+          case "CALL_ENDED":
+            setIsCalling(false);
+            setIncomingCall(null);
+            setCallStatus('idle');
+            setCallEnded(true);
+            showToast("Call ended by other party", "info");
+            
+            // Tự động quay về trang chat sau 2 giây
+            setTimeout(() => {
+              navigate(`/user/chat/${sessionId}`);
+            }, 2000);
             break;
 
           default:
@@ -53,19 +79,33 @@ export default function CallManager({ receiverName }) {
 
   // Hành động gọi
   const startCall = () => {
-    sendCallSignal(sessionId, {
+    // Cần lấy calleeId từ sessionId hoặc từ props
+    const calleeId = sessionId; // Giả sử sessionId chính là calleeId
+    
+    sendCallSignal({
       type: "CALL_REQUEST",
       callerId: currentUserId,
       callerName: receiverName,
-      sessionId,
+      calleeId: calleeId,
+      sessionId: sessionId,
     });
     setIsCalling(true);
+    setCallStatus('calling');
   };
 
   const acceptCall = () => {
-    sendCallSignal(sessionId, {
+    if (callEnded) {
+      navigate(`/user/chat/${sessionId}`);
+      return;
+    }
+
+    // Dừng tất cả audio elements - ĐÃ TẮT CHUÔNG
+    // AudioManager.stopAllRingtone(); // Tắt chuông
+    
+    sendCallSignal({
       type: "CALL_ACCEPTED",
       sessionId,
+      callerId: incomingCall?.callerId,
       calleeId: currentUserId,
     });
     setIncomingCall(null);
@@ -73,39 +113,55 @@ export default function CallManager({ receiverName }) {
   };
 
   const declineCall = () => {
-    sendCallSignal(sessionId, {
+    if (callEnded) {
+      navigate(`/user/chat/${sessionId}`);
+      return;
+    }
+
+    // Dừng tất cả audio elements - ĐÃ TẮT CHUÔNG
+    // AudioManager.stopAllRingtone(); // Tắt chuông
+    
+    sendCallSignal({
       type: "CALL_REJECTED",
       sessionId,
+      callerId: incomingCall?.callerId,
       calleeId: currentUserId,
     });
     setIncomingCall(null);
   };
 
   const cancelCall = () => {
-    sendCallSignal(sessionId, {
+    // Dừng tất cả audio elements - ĐÃ TẮT CHUÔNG
+    // AudioManager.stopAllRingtone(); // Tắt chuông
+    
+    sendCallSignal({
       type: "CALL_CANCEL",
       sessionId,
       callerId: currentUserId,
+      calleeId: sessionId, // Giả sử sessionId là calleeId
     });
     setIsCalling(false);
   };
 
-  // Chuông gọi
+  // Chuông gọi - ĐÃ TẮT CHUÔNG
   useEffect(() => {
-    const audio = document.getElementById("ringtone");
-    if (incomingCall) {
-      audio.play().catch(() => console.log("Autoplay blocked"));
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-    }
+    // Tắt hoàn toàn chuông báo
+    // if (incomingCall) {
+    //   // Dừng tất cả audio elements khác trước khi phát
+    //   AudioManager.stopAllRingtone();
+    //   // Phát ringtone
+    //   AudioManager.playRingtoneById("ringtone");
+    // } else {
+    //   AudioManager.stopAudioById("ringtone");
+    // }
   }, [incomingCall]);
 
   return (
     <>
-      <audio id="ringtone" loop>
+      {/* Audio element đã bị xóa - TẮT CHUÔNG */}
+      {/* <audio id="ringtone" loop>
         <source src={ringtone} type="audio/mpeg" />
-      </audio>
+      </audio> */}
 
       {/* Overlay khi nhận cuộc gọi */}
       {incomingCall && (

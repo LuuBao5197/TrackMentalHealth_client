@@ -11,9 +11,8 @@ import {
 import { sendWebSocketMessage, sendCallSignal, connectWebSocket } from "../../services/stompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
-import CallManager from "./CallManager";
 import { showToast } from "../../utils/showToast";
-import { leaveRoom, destroyRoom } from "../../services/ZegoService";
+import { leaveRoom, destroyRoom } from "../../services/AgoraService";
 import { WebSocketContext } from "../../layouts/user/UserLayout";
 
 function ChatWithUser() {
@@ -81,50 +80,46 @@ function ChatWithUser() {
     }, [sessionId, currentUserId, receiverId]);
 
     // 🔹 Kết nối WebSocket và subscribe
-useEffect(() => {
-    const disconnect = connectWebSocket({
-        sessionId,
-        onMessageReceived: (msg) => {
-            setMessages(prev => {
-                const exists = prev.some(m => m.id === msg.id);
-                if (exists) return prev;
+    useEffect(() => {
+        const disconnect = connectWebSocket({
+            sessionId,
+            onPrivateMessage: (msg) => {
+                // Kiểm tra trùng tin nhắn
+                setMessages(prev => {
+                    const exists = prev.some(m => m.id === msg.id);
+                    if (exists) return prev;
 
-                return [
-                    ...prev,
-                    {
-                        id: msg.id || Date.now() + Math.random(),
-                        text: msg.message,
-                        user: {
-                            id: msg.senderId.toString(),
-                            name: msg.senderName,
-                            avatar: msg.senderAvatar?.trim() || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "U")}`
+                    const isSenderCurrentUser = msg.senderId === currentUserId;
+
+                    return [
+                        ...prev,
+                        {
+                            id: msg.id || Date.now() + Math.random(),
+                            text: msg.message,
+                            user: {
+                                id: msg.senderId.toString(),
+                                name: msg.senderName,
+                                avatar: isSenderCurrentUser
+                                    ? currentUserAvatar
+                                    : (msg.senderAvatar?.trim() || receiverAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "U")}`)
+                            }
                         }
-                    }
-                ];
-            });
+                    ];
+                });
 
-            setPrivateMessages(prev => [...prev, msg]);
-        }
-    });
+                // Cập nhật privateMessages trong context
+                if (setPrivateMessages) {
+                    setPrivateMessages(prev => [...prev, msg]);
+                }
+            }
+        });
 
-    return () => disconnect();
-}, [sessionId, setPrivateMessages]); // ❌ bỏ messages khỏi dependency
+        return () => disconnect();
+    }, [sessionId, currentUserId, currentUserAvatar, setPrivateMessages]);
 
-
-    // 🔹 Gửi tin nhắn (optimistic UI)
+    // Gửi tin nhắn ws
     const handleSendMessage = (text) => {
         if (!text.trim() || !receiverId) return;
-
-        const tempId = Date.now() + Math.random();
-        // Hiển thị ngay trên UI
-        setMessages(prev => [
-            ...prev,
-            {
-                id: tempId,
-                text,
-                user: { id: currentUserId.toString(), name: currentUserName, avatar: currentUserAvatar }
-            }
-        ]);
 
         sendWebSocketMessage(`/app/chat/${sessionId}`, {
             sender: { id: currentUserId },
@@ -134,75 +129,22 @@ useEffect(() => {
         });
     };
 
-    // 🔹 Xử lý tín hiệu cuộc gọi
-    useEffect(() => {
-        if (incomingCallSignal && incomingCallSignal.sessionId === sessionId) {
-            switch (incomingCallSignal.type) {
-                case "CALL_REQUEST":
-                    if (incomingCallSignal.callerId !== currentUserId) {
-                        showToast({
-                            message: `Cuộc gọi từ ${incomingCallSignal.callerName}...`,
-                            type: "info",
-                            time: 15000,
-                            showCallButtons: true,
-                            position: 'top-center',
-                            onAccept: () => {
-                                setIncomingCallSignal(null);
-                                navigate(`/user/chat/video-call/${incomingCallSignal.sessionId}`, {
-                                    state: { currentUserId, currentUserName, isCaller: false }
-                                });
-                                sendCallSignal(incomingCallSignal.sessionId, {
-                                    type: "CALL_ACCEPTED",
-                                    receiverId: currentUserId,
-                                    receiverName: currentUserName,
-                                    sessionId: incomingCallSignal.sessionId
-                                });
-                            },
-                            onCancel: () => {
-                                setIncomingCallSignal(null);
-                                sendCallSignal(incomingCallSignal.sessionId, {
-                                    type: "CALL_REJECTED",
-                                    receiverId: currentUserId,
-                                    receiverName: currentUserName,
-                                    sessionId: incomingCallSignal.sessionId
-                                });
-                            }
-                        });
-                    }
-                    break;
-                case "CALL_ACCEPTED":
-                    if (incomingCallSignal.receiverId !== currentUserId) {
-                        showToast({ message: `${incomingCallSignal.receiverName} đã chấp nhận cuộc gọi`, type: "success" });
-                    }
-                    break;
-                case "CALL_REJECTED":
-                    showToast({ message: `${incomingCallSignal.receiverName || "Người nhận"} đã từ chối cuộc gọi`, type: "warning" });
-                    break;
-                default:
-                    console.log("Tín hiệu cuộc gọi không xác định:", incomingCallSignal);
-            }
-        }
-    }, [incomingCallSignal, currentUserId, currentUserName, navigate, sessionId, setIncomingCallSignal]);
+    const handleStartVideoCall = (calleeUserId) => {
+        if (!calleeUserId) return;
 
-    // Cleanup
-    useEffect(() => {
-        return () => { leaveRoom(); destroyRoom(); };
-    }, []);
-
-    const handleStartVideoCall = () => {
-        if (!sessionId) return;
-
-        sendCallSignal(sessionId, {
+        sendCallSignal({
             type: "CALL_REQUEST",
             callerId: currentUserId,
             callerName: currentUserName,
-            sessionId
+            calleeId:calleeUserId,
+            sessionId, // vẫn giữ sessionId nếu cần xác định chat session
         });
 
         navigate(`/user/chat/video-call/${sessionId}`, {
-            state: { currentUserId, currentUserName, isCaller: true }
+            state: { currentUserId, currentUserName,calleeUserId, isCaller: true }
         });
     };
+
 
     return (
         <div className="container mt-3 mb-3">
@@ -218,10 +160,15 @@ useEffect(() => {
                         <MessageHeader onBack={() => navigate("/user/chat/list")} avatar={receiverAvatar}>
                             <div style={{ display: "flex", alignItems: "center", width: "100%", justifyContent: "space-between", position: "relative" }}>
                                 <span>{receiverName}</span>
-                                <CallManager sessionId={sessionId} currentUserId={currentUserId} receiverName={receiverName} />
-                                <button onClick={handleStartVideoCall} style={{ background: "transparent", border: "none", cursor: "pointer", position: "absolute", right: "10px" }} title="Video Call">
-                                    <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#038238ff" }}></i>
-                                </button>
+                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                    <button
+                                        onClick={() => handleStartVideoCall(receiverId)}
+                                        style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                                        title="Video Call"
+                                    >
+                                        <i className="bi bi-camera-video" style={{ fontSize: "1.5rem", color: "#038238ff" }}></i>
+                                    </button>
+                                </div>
                             </div>
                         </MessageHeader>
 
