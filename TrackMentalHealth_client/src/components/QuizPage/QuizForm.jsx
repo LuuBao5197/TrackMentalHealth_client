@@ -7,9 +7,11 @@ import CKEditorComponent from '../../utils/ckeditor/CkEditorComponent'
 import CkeditorPreview from '../../utils/ckeditor/CkEditorPreview';
 const questionTypes = [
     { value: '', label: 'All Types' },
+    { value: 'SINGLE_CHOICE', label: 'Single Choice' },
     { value: 'MULTI_CHOICE', label: 'Multiple Choice' },
     { value: 'TEXT_INPUT', label: 'Text Input' },
-    { value: 'NUMBER_INPUT', label: 'Number Input' },
+    { value: 'MATCHING', label: 'Matching' },
+    { value: 'ORDERING', label: 'Ordering' },
     { value: 'SCORE_BASED', label: 'Score Based' }
 ];
 

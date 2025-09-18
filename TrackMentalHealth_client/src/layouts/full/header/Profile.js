@@ -44,17 +44,6 @@ const Profile = () => {
 
   if (!user) return <CircularProgress />;
 
-  // const handleMyProfile = () => {
-  //   const user = JSON.parse(localStorage.getItem('user'));
-  //   console.log("User object: ", user); // Kiểm tra ID
-  //   if (user && user.id) {
-  //     navigate(`/admin/users/profile/${user.id}`); // ✅ Không có console.log() ở đây
-  //   } else {
-  //     alert("User ID not found in localStorage");
-  //   }
-  //   handleClose2();
-  // };
-
   return (
     <Box>
       <IconButton size="large" color="inherit" onClick={handleClick2}>

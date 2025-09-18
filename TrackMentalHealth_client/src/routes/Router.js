@@ -107,6 +107,7 @@ const Router = [
     children: [
       { index: true, element: <Navigate to="/user/homepage" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
+      { path: "admin/users/edit-profile/:userId", element: <EditProfile /> },
       {
         element: <ProtectedRoute allowedRoles={['ADMIN']} />,
         children: [
@@ -126,7 +127,7 @@ const Router = [
           { path: 'admin/users/role/:roleId', element: <UserList /> },
           { path: 'admin/users/profile/:id', element: <UserDetail /> },
           { path: 'admin/users/pending-registrations', element: <PendingRegistrations /> },
-          { path: "admin/users/edit-profile/:userId", element: <EditProfile /> },
+         
         ],
       },
       { path: '*', element: <Navigate to="/auth/404" replace /> },
@@ -148,6 +149,7 @@ const Router = [
       { path: 'exercise/:id', element: <ExerciseDetail /> },
       { path: 'article/:id', element: <ArticleDetail /> },
       {path: 'game', element: <GamePage />},
+
       // USER ONLY
       {
         element: <ProtectedRoute allowedRoles={['USER']} />,
@@ -162,9 +164,6 @@ const Router = [
           { path: 'quiz/quiz-attempt/:attemptId', element: <QuizAttemptDetail /> },
           { path: 'test/history', element: <TestHistory /> },
           { path: 'test-attempt-detail/:id', element: <TestAttemptDetail /> },
-
-
-          
           // Appointment for USER
           { path: 'appointment/:userId', element: <Appointments /> },
           { path: 'appointment/edit/:appointmentid', element: <UpdateAppointment /> },

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Card } from 'react-bootstrap';
 import DataTable from 'react-data-table-component';
 import axios from 'axios';
 import {
@@ -9,6 +10,8 @@ import {
 } from '@tabler/icons-react';
 import TestPreviewModal from './TestPreviewModal';
 import { useNavigate } from 'react-router';
+import { showAlert } from '../../utils/showAlert';
+import { maxHeight, maxWidth, width } from '@mui/system';
 
 const TestList = () => {
   const [tests, setTests] = useState([]);
@@ -80,7 +83,7 @@ const TestList = () => {
         await axios.delete(`http://localhost:9999/api/test/${testId}`);
         fetchTests(currentPage - 1);
       } catch (error) {
-        console.error('Delete failed:', error);
+        showAlert('Delete failed because data relevant other data', "error");
       }
     }
   };
@@ -90,35 +93,27 @@ const TestList = () => {
       name: 'Title',
       selector: row => row.title,
       sortable: true,
-      center: true,
-      maxWidth: '200px',
+      maxWidth: '300px'
+      // grow: 2, // Cho phép cột này rộng hơn các cột khác
     },
     {
       name: 'Description',
       selector: row => row.description,
       sortable: true,
-      center: true,
-      maxWidth: '250px',
+      maxWidth: '400px'
+      // grow: 3, // Cột này sẽ rộng nhất
     },
     {
       name: 'Instructions',
       sortable: true,
       selector: row => row.instructions,
-      center: true,
-      maxWidth: '250px',
-    },
-    {
-      name: 'Status',
-      sortable: true,
-      selector: row => row.status,
-      center: true,
-      maxWidth: '200px',
+      maxWidth: '200px'
+      // grow: 3, // Cột này cũng rộng
     },
     {
       name: 'Actions',
-      center: true,
-      button: true,
-      maxWidth: '250px',
+      center: true, // Chỉ căn giữa cho cột Actions
+      maxWidth: '200px', // Đặt chiều rộng tối thiểu để các nút không bị vỡ
       cell: row => (
         <div className="btn-group">
           <button className="btn btn-sm btn-outline-primary" onClick={() => handleDetail(row)}>
@@ -138,70 +133,68 @@ const TestList = () => {
   const customStyles = {
     rows: {
       style: {
-        minHeight: '52px',
-        maxHeight: '52px',
-        alignItems: 'center',
+        paddingTop: '10px',
+        paddingBottom: '10px',
       },
     },
     headCells: {
       style: {
         fontWeight: 'bold',
-        textAlign: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
+        fontSize: '14px', // Chỉnh size chữ cho header
       },
     },
     cells: {
       style: {
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
+        whiteSpace: 'normal',
+        wordBreak: 'break-word',
+        // overflow: 'hidden',
         textOverflow: 'ellipsis',
-        textAlign: 'center',
-        justifyContent: 'center',
-        maxWidth: '100%',
+        textAlign: 'left', // Căn lề trái cho dễ đọc
+        justifyContent: 'left', // Căn lề trái cho dễ đọc
       },
     },
   };
 
   return (
     <div className="container mt-4">
-      <h3 className="mb-3">Test List</h3>
-
-      <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div className="input-group" style={{ minWidth: '250px' }}>
-          <span className="input-group-text">
-            <IconSearch size={18} />
-          </span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search by title..."
-            value={search}
-            onChange={handleSearchChange}
+      <Card className="shadow-sm">
+        <Card.Header className="p-3">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h4 className="mb-0">Test List</h4>
+            <div className="input-group" style={{ minWidth: '300px', maxWidth: '400px' }}>
+              <span className="input-group-text">
+                <IconSearch size={18} />
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search tests..."
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
+          </div>
+        </Card.Header>
+        <Card.Body className="p-0"> {/* p-0 để DataTable vừa khít */}
+          <DataTable
+            columns={columns}
+            data={tests}
+            customStyles={customStyles}
+            progressPending={loading}
+            pagination
+            paginationServer
+            paginationTotalRows={totalRows}
+            onChangePage={handlePageChange}
+            onChangeRowsPerPage={handlePerRowsChange}
+            paginationRowsPerPageOptions={[5, 10, 15, 20]}
+            highlightOnHover
+            striped
+            responsive
+            noDataComponent={<div className="p-4">No data available</div>}
           />
-        </div>
-        <span className="text-muted">
-          Page {currentPage} / {totalPages}
-        </span>
-      </div>
+        </Card.Body>
+      </Card>
 
-      <DataTable
-        columns={columns}
-        data={tests}
-        customStyles={customStyles}
-        progressPending={loading}
-        pagination
-        paginationServer
-        paginationTotalRows={totalRows}
-        paginationDefaultPage={currentPage}
-        onChangePage={handlePageChange}
-        onChangeRowsPerPage={handlePerRowsChange}
-        paginationRowsPerPageOptions={[5, 8, 10, 12, 15]}
-        highlightOnHover
-        striped
-        responsive
-        noDataComponent="No data available"
-      />
       <TestPreviewModal
         show={showDetail}
         onClose={() => setShowDetail(false)}
