@@ -7,7 +7,7 @@ import {
     MinChatUiProvider,
 } from "@minchat/react-chat-ui";
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import {
     getChatGroupById,
@@ -15,10 +15,12 @@ import {
     initiateChatSession,
     findUsersByGroupId,
 } from "../../api/api";
-import { connectWebSocket, sendWebSocketMessage } from "../../services/stompClient";
+import { sendWebSocketMessage } from "../../services/stompClient";
+import { WebSocketContext } from "../../layouts/user/UserLayout";
 
 
 function ChatGroup() {
+    const { groupMessages } = useContext(WebSocketContext);
     const currentUserId = getCurrentUserId();
     const { groupId } = useParams();
     const nav = useNavigate();
@@ -62,39 +64,102 @@ function ChatGroup() {
         fetchData();
     }, [groupId, currentUserId]);
 
-    // WebSocket nhận tin nhắn mới
+    // 🔹 Lắng nghe tin nhắn group từ WebSocketContext
     useEffect(() => {
-        if (!groupId) return;
-        const disconnect = connectWebSocket({
+        console.log("🔍 ChatGroup useEffect triggered:", {
+            groupMessagesLength: groupMessages?.length,
             groupId,
-            onGroupMessage: (msg) => {
-                const senderId = msg.sender?.id ?? msg.senderId;
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: msg.id,
-                        text: msg.content,
-                        user: {
-                          id: String(senderId),
-                            name: msg.sender?.fullname ?? msg.senderName ?? "User",
-                            avatar:
-                                msg.sender?.avatar ||
-                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                    msg.sender?.fullname || "U"
-                                )}`,
-                        },
-                        timestamp: new Date(msg.sendAt).getTime(),
-                    },
-                ]);
-            },
-
+            currentUserId
         });
-        return () => disconnect();
-    }, [groupId]);
+
+        if (!groupMessages || groupMessages.length === 0) {
+            console.log("❌ No group messages or empty array");
+            return;
+        }
+
+        // Chỉ xử lý tin nhắn mới nhất để tránh lặp
+        const latestMessage = groupMessages[groupMessages.length - 1];
+        
+        // Kiểm tra xem tin nhắn có thuộc group hiện tại không
+        if (latestMessage.groupId != groupId) {
+            console.log("❌ Latest message not for current group");
+            return;
+        }
+
+        console.log("📩 Processing latest group message:", latestMessage);
+
+        const senderId = latestMessage.sender?.id ?? latestMessage.senderId;
+        const isCurrentUser = String(senderId) === String(currentUserId);
+
+        setMessages((prev) => {
+            // Kiểm tra trùng tin nhắn
+            const exists = prev.some(m => 
+                (m.id && latestMessage.id && m.id === latestMessage.id) || 
+                (m.text === latestMessage.content && m.user.id === senderId.toString())
+            );
+            if (exists) {
+                console.log("❌ Message already exists, skipping:", latestMessage);
+                return prev;
+            }
+
+            // Nếu là tin nhắn của user hiện tại, thay thế tin nhắn tạm thời
+            if (isCurrentUser) {
+                console.log("🔄 Replacing temporary group message");
+                return prev.map(m => 
+                    m.isTemporary && m.text === latestMessage.content 
+                        ? {
+                            id: latestMessage.id,
+                            text: latestMessage.content,
+                            user: {
+                                id: String(senderId),
+                                name: latestMessage.sender?.fullname ?? latestMessage.senderName ?? "Bạn",
+                                avatar: latestMessage.sender?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(latestMessage.sender?.fullname || "Bạn")}`
+                            },
+                            timestamp: new Date(latestMessage.sendAt).getTime(),
+                        }
+                        : m
+                );
+            }
+
+            // Tin nhắn từ người khác - thêm mới
+            console.log("➕ Adding new group message from others");
+            return [
+                ...prev,
+                {
+                    id: latestMessage.id,
+                    text: latestMessage.content,
+                    user: {
+                        id: String(senderId),
+                        name: latestMessage.sender?.fullname ?? latestMessage.senderName ?? "User",
+                        avatar: latestMessage.sender?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(latestMessage.sender?.fullname || "U")}`
+                    },
+                    timestamp: new Date(latestMessage.sendAt).getTime(),
+                },
+            ];
+        });
+    }, [groupMessages, groupId, currentUserId]);
 
     // Gửi tin nhắn
     const handleSendMessage = (text) => {
         if (!text.trim()) return;
+
+        // 🚀 OPTIMISTIC UPDATE - Hiển thị tin nhắn ngay lập tức
+        const tempMessage = {
+            id: `temp_${Date.now()}_${Math.random()}`,
+            text: text,
+            user: {
+                id: String(currentUserId),
+                name: "Bạn", // Tạm thời dùng "Bạn" cho group
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent("Bạn")}`
+            },
+            timestamp: Date.now(),
+            isTemporary: true // Đánh dấu tin nhắn tạm thời
+        };
+
+        // Thêm tin nhắn vào UI ngay lập tức
+        setMessages(prev => [...prev, tempMessage]);
+
+        // Gửi qua WebSocket
         sendWebSocketMessage("/app/chat.group.send", {
             groupId,
             senderId: currentUserId,

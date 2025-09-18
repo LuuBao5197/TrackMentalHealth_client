@@ -1,7 +1,7 @@
 // userLayout.jsx
 import React, { useEffect, useState, createContext, useRef } from "react";
 import { useSelector } from "react-redux";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "@components/userPage/Header";
 import Footer from "@components/userPage/Footer";
 import { toast, ToastContainer } from "react-toastify";
@@ -38,6 +38,7 @@ export const ChatContext = createContext();
 const UserLayout = () => {
   const user = useSelector((state) => state.auth.user);
   const wsConnectedRef = useRef(false); // ✅ đảm bảo connect chỉ 1 lần
+  const location = useLocation(); // ✅ để detect route hiện tại
 
   const [headerHeight, setHeaderHeight] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -47,6 +48,20 @@ const UserLayout = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [showChatWidget, setShowChatWidget] = useState(true);
   const [aiHistoryLoaded, setAiHistoryLoaded] = useState(false);
+  const [privateMessages, setPrivateMessages] = useState([]);
+  const [groupMessages, setGroupMessages] = useState([]);
+
+  // ✅ Function để kiểm tra user có đang ở trong chat detail không
+  const isInChatDetail = () => {
+    const path = location.pathname;
+    return path.includes('/chat/') && (path.includes('/user/') || path.includes('/group/'));
+  };
+
+  // ✅ Function để kiểm tra user có đang ở trong video call không
+  const isInVideoCall = () => {
+    const path = location.pathname;
+    return path.includes('/video-call/');
+  };
 
   // lưu user vào localStorage
   useEffect(() => {
@@ -84,11 +99,72 @@ const UserLayout = () => {
         setNotifications((prev) => [...prev, noti]);
       },
       onNewMessage: (msg) => {
-        showToast(`New message from ${msg.senderName}`, "info");
+        console.log("📩 UserLayout received new message (notification only):", msg);
+        
+        // Chỉ hiển thị thông báo nếu:
+        // 1. Tin nhắn không phải từ chính mình
+        // 2. User không đang ở trong chat detail
+        if (msg.senderId && msg.senderId != currentUserId && !isInChatDetail()) {
+          showToast(`New message from ${msg.senderName}`, "info");
+        } else {
+          console.log("🔇 Skipping notification:", {
+            isOwnMessage: msg.senderId == currentUserId,
+            isInChatDetail: isInChatDetail()
+          });
+        }
+        // onNewMessage chỉ để hiển thị notification, không cập nhật chat UI
       },
       onPrivateMessage: (msg) => {
-        if (!msg?.message || !msg.senderName) return;
-        showToast(`📩 New message from ${msg.senderName}`, "info");
+        if (!msg?.message || !msg.senderName) {
+          console.log("❌ Invalid private message:", msg);
+          return;
+        }
+        console.log("📩 UserLayout received private message:", msg);
+        
+        // Chỉ hiển thị thông báo nếu:
+        // 1. Tin nhắn không phải từ chính mình
+        // 2. User không đang ở trong chat detail
+        if (msg.senderId && msg.senderId != currentUserId && !isInChatDetail()) {
+          showToast(`📩 New message from ${msg.senderName}`, "info");
+        } else {
+          console.log("🔇 Skipping notification for private message:", {
+            isOwnMessage: msg.senderId == currentUserId,
+            isInChatDetail: isInChatDetail()
+          });
+        }
+        
+        // Cập nhật privateMessages state
+        setPrivateMessages(prev => {
+          const newMessages = [...prev, msg];
+          console.log("📩 Updated privateMessages:", newMessages);
+          return newMessages;
+        });
+      },
+      onGroupMessage: (msg) => {
+        if (!msg?.content) {
+          console.log("❌ Invalid group message:", msg);
+          return;
+        }
+        console.log("📩 UserLayout received group message:", msg);
+        
+        // Chỉ hiển thị thông báo nếu:
+        // 1. Tin nhắn không phải từ chính mình
+        // 2. User không đang ở trong chat detail
+        if (msg.senderId && msg.senderId != currentUserId && !isInChatDetail()) {
+          showToast(`📩 New group message from ${msg.senderName || 'Someone'}`, "info");
+        } else {
+          console.log("🔇 Skipping notification for group message:", {
+            isOwnMessage: msg.senderId == currentUserId,
+            isInChatDetail: isInChatDetail()
+          });
+        }
+        
+        // Cập nhật groupMessages state
+        setGroupMessages(prev => {
+          const newMessages = [...prev, msg];
+          console.log("📩 Updated groupMessages:", newMessages);
+          return newMessages;
+        });
       },
 
 
@@ -151,6 +227,14 @@ const UserLayout = () => {
     if (!aiHistoryLoaded) loadAIHistory();
   }, []);
 
+  // ✅ Clear call signal khi thoát khỏi video call
+  useEffect(() => {
+    if (!isInVideoCall() && incomingCallSignal) {
+      console.log("🔇 Clearing call signal - user left video call");
+      setIncomingCallSignal(null);
+    }
+  }, [location.pathname, incomingCallSignal]);
+
   const handleSendMessage = async (msg) => {
     if (!msg.trim()) return;
     setChatMessages((prev) => [...prev, { senderId: currentUserId, message: msg }]);
@@ -164,7 +248,15 @@ const UserLayout = () => {
   };
 
   return (
-    <WebSocketContext.Provider value={{ notifications, incomingCallSignal }}>
+    <WebSocketContext.Provider value={{ 
+      notifications, 
+      incomingCallSignal, 
+      setIncomingCallSignal,
+      privateMessages,
+      setPrivateMessages,
+      groupMessages,
+      setGroupMessages
+    }}>
       <ChatContext.Provider
         value={{
           chatMessages,
@@ -202,7 +294,7 @@ const UserLayout = () => {
               background: '#fff',
               animation: wsStatus === 'connected' ? 'pulse 2s infinite' : 'none'
             }}></div>
-            WS: {wsStatus.toUpperCase()}
+            {wsStatus.toUpperCase()}
             {incomingCallSignal && (
               <span style={{ marginLeft: '10px', fontSize: '10px' }}>
                 📞 {incomingCallSignal.type}

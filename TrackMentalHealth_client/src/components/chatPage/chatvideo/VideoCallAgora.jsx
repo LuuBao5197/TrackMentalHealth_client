@@ -73,7 +73,7 @@ export default function VideoCallAgora() {
         setConnectionError(true);
         // Vẫn hiển thị controls để user có thể end call
         setJoined(true);
-      }
+      } 
     });
 
     return () => {
@@ -118,8 +118,8 @@ export default function VideoCallAgora() {
 
 
   return (
-    <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column" }}>
-      <nav aria-label="breadcrumb">
+    <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column" }} className="container mt-3 mb-3">
+      <nav aria-label="breadcrumb"> 
         <ol className="breadcrumb">
           <li
             className="breadcrumb-item"

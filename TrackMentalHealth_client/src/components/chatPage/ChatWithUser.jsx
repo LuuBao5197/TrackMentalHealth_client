@@ -8,7 +8,7 @@ import {
     MessageList,
     MinChatUiProvider
 } from "@minchat/react-chat-ui";
-import { sendWebSocketMessage, sendCallSignal, connectWebSocket } from "../../services/stompClient";
+import { sendWebSocketMessage, sendCallSignal, connectWebSocket, unsubscribe } from "../../services/stompClient";
 import { getCurrentUserId } from "../../utils/getCurrentUserID";
 import { getMessagesBySessionId } from "../../api/api";
 import { showToast } from "../../utils/showToast";
@@ -79,48 +79,101 @@ function ChatWithUser() {
         fetchMessages();
     }, [sessionId, currentUserId, receiverId]);
 
-    // 🔹 Kết nối WebSocket và subscribe
+    // 🔹 Xử lý tin nhắn từ WebSocketContext
     useEffect(() => {
-        const disconnect = connectWebSocket({
-            sessionId,
-            onPrivateMessage: (msg) => {
-                // Kiểm tra trùng tin nhắn
-                setMessages(prev => {
-                    const exists = prev.some(m => m.id === msg.id);
-                    if (exists) return prev;
+        if (!privateMessages || privateMessages.length === 0) return;
 
-                    const isSenderCurrentUser = msg.senderId === currentUserId;
+        // Lấy tin nhắn mới nhất
+        const latestMessage = privateMessages[privateMessages.length - 1];
+        
+        // Kiểm tra xem tin nhắn có thuộc session hiện tại không
+        if (latestMessage.sessionId && latestMessage.sessionId != sessionId) {
+            console.log("🔍 Message not for current session, skipping:", latestMessage);
+            return;
+        }
 
-                    return [
-                        ...prev,
-                        {
-                            id: msg.id || Date.now() + Math.random(),
-                            text: msg.message,
-                            user: {
-                                id: msg.senderId.toString(),
-                                name: msg.senderName,
-                                avatar: isSenderCurrentUser
-                                    ? currentUserAvatar
-                                    : (msg.senderAvatar?.trim() || receiverAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "U")}`)
-                            }
-                        }
-                    ];
-                });
-
-                // Cập nhật privateMessages trong context
-                if (setPrivateMessages) {
-                    setPrivateMessages(prev => [...prev, msg]);
-                }
+        console.log("📩 ChatWithUser received private message from context:", latestMessage);
+        
+        // Kiểm tra trùng tin nhắn
+        setMessages(prev => {
+            // Kiểm tra trùng bằng ID (chỉ kiểm tra ID thật, không kiểm tra nội dung)
+            const exists = prev.some(m => 
+                m.id && latestMessage.id && m.id === latestMessage.id
+            );
+            if (exists) {
+                console.log("❌ Message already exists, skipping:", latestMessage);
+                return prev;
             }
-        });
 
-        return () => disconnect();
-    }, [sessionId, currentUserId, currentUserAvatar, setPrivateMessages]);
+            const isSenderCurrentUser = latestMessage.senderId == currentUserId;
+            console.log("🔍 Sender check:", {
+                messageSenderId: latestMessage.senderId,
+                currentUserId,
+                isSenderCurrentUser
+            });
+
+            // Nếu là tin nhắn của user hiện tại, thay thế tin nhắn tạm thời
+            if (isSenderCurrentUser) {
+                console.log("🔄 Replacing temporary message");
+                console.log("🔍 Looking for temporary message with text:", latestMessage.message);
+                console.log("🔍 Current messages:", prev.map(m => ({ id: m.id, text: m.text, isTemporary: m.isTemporary })));
+                
+                const updatedMessages = prev.map(m => {
+                    if (m.isTemporary && m.text === latestMessage.message) {
+                        console.log("✅ Found temporary message to replace:", m);
+                        return {
+                            id: latestMessage.id || Date.now() + Math.random(),
+                            text: latestMessage.message,
+                            user: {
+                                id: latestMessage.senderId.toString(),
+                                name: latestMessage.senderName,
+                                avatar: currentUserAvatar
+                            }
+                        };
+                    }
+                    return m;
+                });
+                
+                console.log("🔍 Updated messages:", updatedMessages.map(m => ({ id: m.id, text: m.text, isTemporary: m.isTemporary })));
+                return updatedMessages;
+            }
+
+            // Tin nhắn từ người khác - thêm mới
+            console.log("➕ Adding new message from others");
+            return [
+                ...prev,
+                {
+                    id: latestMessage.id || Date.now() + Math.random(),
+                    text: latestMessage.message,
+                    user: {
+                        id: latestMessage.senderId.toString(),
+                        name: latestMessage.senderName,
+                        avatar: latestMessage.senderAvatar?.trim() || receiverAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(latestMessage.senderName || "U")}`
+                    }
+                }
+            ];
+        });
+    }, [privateMessages, sessionId, currentUserId, currentUserAvatar, receiverAvatar]);
 
     // Gửi tin nhắn ws
     const handleSendMessage = (text) => {
         if (!text.trim() || !receiverId) return;
 
+        const tempMessage = {
+            id: `temp_${Date.now()}_${Math.random()}`,
+            text: text,
+            user: {
+                id: currentUserId.toString(),
+                name: currentUserName,
+                avatar: currentUserAvatar
+            },
+            isTemporary: true 
+        };
+
+        // Thêm tin nhắn vào UI ngay lập tức
+        setMessages(prev => [...prev, tempMessage]);
+
+        // Gửi qua WebSocket
         sendWebSocketMessage(`/app/chat/${sessionId}`, {
             sender: { id: currentUserId },
             receiver: { id: receiverId },
