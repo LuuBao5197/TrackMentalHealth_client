@@ -116,7 +116,6 @@ export default function VideoCallAgora() {
     }
   };
 
-
   return (
     <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column" }} className="container mt-3 mb-3">
       <nav aria-label="breadcrumb"> 
