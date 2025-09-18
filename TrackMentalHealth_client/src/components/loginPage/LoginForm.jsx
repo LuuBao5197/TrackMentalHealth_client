@@ -46,13 +46,14 @@ const LoginForm = ({ subtext, subtitle }) => {
 
     const loginWithSocialToken = async (provider, credential) => {
         try {
-            // Decode credential (JWT)
-            const decoded = jwtDecode(credential);
-            console.log("Decoded Google token:", decoded);
+            // chọn đúng endpoint
+            const endpoint = provider === "google"
+                ? "google-web"   // 👈 web phải dùng google-web
+                : provider;
 
             // Gửi credential lên backend để xác thực
             const res = await axios.post(
-                `http://localhost:9999/api/auth/oauth/${provider}`,
+                `http://localhost:9999/api/auth/oauth/${endpoint}`,
                 null,
                 { params: { idToken: credential } }
             );
@@ -103,11 +104,12 @@ const LoginForm = ({ subtext, subtitle }) => {
                         <GoogleLogin
                             onSuccess={(credentialResponse) => {
                                 const credential = credentialResponse.credential;
-                                loginWithSocialToken("google", credential);
+                                loginWithSocialToken("google", credential); // vẫn truyền "google"
                             }}
                             onError={() => setErrorMessage("Google login failed")}
                             useOneTap
                         />
+
                     </Stack>
                 </>
             }
