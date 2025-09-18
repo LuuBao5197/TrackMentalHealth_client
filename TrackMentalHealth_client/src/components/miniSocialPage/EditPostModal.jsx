@@ -15,11 +15,11 @@ const filters = [
 
 function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
   const [content, setContent] = useState('');
-  const [oldImages, setOldImages] = useState([]); // URL ảnh cũ
+  const [oldImages, setOldImages] = useState([]); // old image URLs
   const [deletedOldImages, setDeletedOldImages] = useState([]);
 
-  const [rawImages, setRawImages] = useState([]); // blob url của ảnh mới
-  const [croppedImages, setCroppedImages] = useState([]); // data url preview
+  const [rawImages, setRawImages] = useState([]); // new image blob URLs
+  const [croppedImages, setCroppedImages] = useState([]); // preview data URLs
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -47,11 +47,11 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
 
     for (let file of files) {
       if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-        setError('Chỉ chấp nhận ảnh JPG, JPEG, PNG.');
+        setError('Only JPG, JPEG, PNG images are allowed.');
         return;
       }
       if (file.size > 2 * 1024 * 1024) {
-        setError('Ảnh phải nhỏ hơn 2MB.');
+        setError('Image must be smaller than 2MB.');
         return;
       }
       validFiles.push(URL.createObjectURL(file));
@@ -59,18 +59,22 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
 
     const totalImages = oldImages.length - deletedOldImages.length + rawImages.length + validFiles.length;
     if (totalImages > 3) {
-      setError('Tổng cộng chỉ được tối đa 3 ảnh.');
+      setError('You can upload a maximum of 3 images.');
       return;
     }
 
     setError('');
     setRawImages(prev => [...prev, ...validFiles]);
-    setCurrentIndex(oldImages.length - deletedOldImages.length + rawImages.length); // sang ảnh mới
+    setCurrentIndex(oldImages.length - deletedOldImages.length + rawImages.length);
   };
 
   const handleCrop = async () => {
     try {
-      const cropped = await getCroppedImg(rawImages[currentIndex - (oldImages.length - deletedOldImages.length)], croppedAreaPixels, filter);
+      const cropped = await getCroppedImg(
+        rawImages[currentIndex - (oldImages.length - deletedOldImages.length)],
+        croppedAreaPixels,
+        filter
+      );
       const updated = [...croppedImages];
       updated[currentIndex - (oldImages.length - deletedOldImages.length)] = cropped;
       setCroppedImages(updated);
@@ -99,7 +103,7 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
   const handleUpdate = async () => {
     const totalImages = oldImages.length - deletedOldImages.length + croppedImages.length;
     if (!content && totalImages === 0) {
-      setError('Vui lòng nhập nội dung hoặc chọn ít nhất 1 ảnh.');
+      setError('Please enter content or select at least 1 image.');
       return;
     }
 
@@ -107,10 +111,8 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
       const formData = new FormData();
       formData.append('content', content);
       formData.append('isAnonymous', isAnonymous);
-      formData.append('userId', postData.userID); // cần truyền userId
-      // Note: postId đang nằm trong URL => không cần append
+      formData.append('userId', postData.userID); // required userId
 
-      // 1. Gửi danh sách URL ảnh cũ còn giữ lại (oldUrlsToKeep)
       const urlsToKeep = oldImages
         .filter(img => !deletedOldImages.includes(img))
         .map(media => media.mediaUrl);
@@ -119,45 +121,38 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
         formData.append('oldUrlsToKeep', url);
       });
 
-      // 2. Gửi ảnh mới đã crop
       for (let i = 0; i < croppedImages.length; i++) {
         const response = await fetch(croppedImages[i]);
         const blob = await response.blob();
         const file = new File([blob], `new_image_${i}.jpg`, { type: blob.type });
-        formData.append('images', file); // key = "images" theo API
+        formData.append('images', file);
       }
 
-      // for (let pair of formData.entries()) {
-      //   console.log(pair[0] + ':', pair[1]);
-      // }
-      // return;
-
       await axios.put(
-        `http://localhost:9999/api/community/post/${postData.id}`, // ✅ đúng format API
+        `http://localhost:9999/api/community/post/${postData.id}`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      showAlert('Cập nhật bài viết thành công');
+      showAlert('Post updated successfully');
       onClose();
       onPostUpdated?.();
     } catch (err) {
       console.error(err);
-      showAlert('Cập nhật thất bại', 'error');
+      showAlert('Update failed', 'error');
     }
   };
-
 
   const allCurrentImages = [...oldImages.filter(img => !deletedOldImages.includes(img)), ...rawImages];
 
   return (
     <Modal show={show} onHide={onClose} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>Chỉnh sửa bài viết</Modal.Title>
+        <Modal.Title>Edit Post</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         <Form.Group className="mb-3">
-          <Form.Label>Nội dung</Form.Label>
+          <Form.Label>Content</Form.Label>
           <Form.Control
             as="textarea"
             rows={3}
@@ -168,19 +163,20 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
         <Form.Group className="mb-3">
           <Form.Check
             type="checkbox"
-            label="Ẩn danh"
+            label="Anonymous"
             checked={isAnonymous}
             onChange={(e) => setIsAnonymous(e.target.checked)}
           />
         </Form.Group>
 
         <Form.Group className="mb-3">
-          <Form.Label>Chọn ảnh mới</Form.Label>
+          <Form.Label>Select New Images</Form.Label>
           <Form.Control type="file" multiple accept="image/*" onChange={handleImageChange} />
         </Form.Group>
+
         {oldImages.filter(img => !deletedOldImages.includes(img)).length > 0 && (
           <div className="mb-3">
-            <strong>Ảnh cũ</strong>
+            <strong>Old Images</strong>
             <div className="d-flex gap-2 mt-2 flex-wrap">
               {oldImages
                 .filter(img => !deletedOldImages.includes(img))
@@ -197,7 +193,6 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
                       size="sm"
                       onClick={() => {
                         setDeletedOldImages(prev => [...prev, url]);
-                        // cập nhật currentIndex nếu cần
                         setCurrentIndex(prev => Math.max(0, prev - 1));
                       }}
                       style={{
@@ -216,18 +211,17 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
           </div>
         )}
 
-
         {allCurrentImages.length > 0 && (
           <>
             <div className="mb-2">
-              <strong>Đang chỉnh ảnh {currentIndex + 1} / {allCurrentImages.length}</strong>
+              <strong>Editing Image {currentIndex + 1} / {allCurrentImages.length}</strong>
               <Button
                 variant="outline-danger"
                 size="sm"
                 className="ms-3"
                 onClick={() => removeImage(currentIndex)}
               >
-                Xoá ảnh này
+                Delete This Image
               </Button>
             </div>
 
@@ -255,7 +249,7 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
                       <option key={f.value} value={f.value}>{f.name}</option>
                     ))}
                   </Form.Select>
-                  <Button variant="success" size="sm" onClick={handleCrop}>Áp dụng</Button>
+                  <Button variant="success" size="sm" onClick={handleCrop}>Apply</Button>
                 </div>
               </div>
             )}
@@ -266,14 +260,14 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
                 disabled={currentIndex === 0}
                 onClick={() => setCurrentIndex(currentIndex - 1)}
               >
-                ← Trước
+                ← Previous
               </Button>
               <Button
                 variant="outline-secondary"
                 disabled={currentIndex === allCurrentImages.length - 1}
                 onClick={() => setCurrentIndex(currentIndex + 1)}
               >
-                Tiếp →
+                Next →
               </Button>
             </div>
           </>
@@ -281,7 +275,7 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
 
         {croppedImages.length > 0 && (
           <div className="preview-container text-center mt-4">
-            <strong>Ảnh mới đã xử lý</strong>
+            <strong>Processed New Images</strong>
             <div className="d-flex gap-2 mt-2 flex-wrap justify-content-center">
               {croppedImages.map((img, idx) => (
                 <img key={idx} src={img} alt={`preview-${idx}`} className="rounded" style={{ maxHeight: 100, maxWidth: 150 }} />
@@ -291,8 +285,8 @@ function EditPostModalForm({ show, onClose, postData, onPostUpdated }) {
         )}
       </Modal.Body>
       <Modal.Footer className="d-flex justify-content-center gap-2">
-        <Button variant="secondary" onClick={onClose}>Huỷ</Button>
-        <Button variant="primary" onClick={handleUpdate}>Cập nhật</Button>
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" onClick={handleUpdate}>Update</Button>
       </Modal.Footer>
     </Modal>
   );

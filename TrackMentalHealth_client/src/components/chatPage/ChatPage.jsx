@@ -164,20 +164,59 @@ function ChatPage() {
         fetchChatGroupByCreatorId();
 
         const disconnect = connectWebSocket({
-            sessionId: null,
-            groupId: null,
+            groupId: null, // hoặc hiện tại đang mở
             onPrivateMessage: (msg) => {
                 if (!msg || !msg.message || !msg.senderName) return;
-                toast.info(`New message from ${msg.senderName.toUpperCase()}`);
+
+                showToast(`New message from ${msg.senderName.toUpperCase()}`, 'info');
+
+                // 1️⃣ Nếu tin nhắn là của session đang mở → append vào messages
                 if (msg.session?.id === currentSession?.id) {
                     setCurrentSessionMessages((prev) => [
                         ...prev,
                         { senderId: msg.senderId, message: msg.message },
                     ]);
                 }
-                fetchSessions();
+
+                // 2️⃣ Update trực tiếp sessions state (unreadCount + latestMessage)
+                setSessions((prevSessions) =>
+                    prevSessions.map((session) => {
+                        if (session.id === msg.session?.id) {
+                            const isCurrentSession = session.id === currentSession?.id;
+                            return {
+                                ...session,
+                                latestMessage: msg.message,
+                                timestamp: msg.timestamp || new Date().toISOString(),
+                                unreadCount: isCurrentSession
+                                    ? session.unreadCount
+                                    : (session.unreadCount || 0) + 1,
+                                isLastMessageUnread: !isCurrentSession,
+                            };
+                        }
+                        return session;
+                    })
+                );
             },
+            onGroupMessage: (msg) => {
+                if (!msg || !msg.content) return;
+                // Update group state
+                setGroup((prev) =>
+                    prev.map((grp) => (grp.id === msg.groupId ? { ...grp, latestMessage: msg.content } : grp))
+                );
+                showToast(`New group message from ${msg.senderName}`, 'info');
+            },
+            onCallSignal: (signal) => {
+                console.log("Incoming call signal:", signal);
+                showToast("Incoming call!", "info");
+                // Bạn có thể mở modal nhận cuộc gọi ở đây
+            },
+            onNotification: (notif) => {
+                console.log("Notification:", notif);
+                showToast(`🔔 ${notif.title || notif.message}`, "info");
+            }
         });
+
+
 
         return () => {
             if (disconnect) disconnect();
@@ -462,7 +501,7 @@ function ChatPage() {
 
                                     {/* Nút chat */}
                                     <button
-                                        className="btn btn-sm btn-outline-primary"
+                                        className="btn btn-sm btn-outline-success"
                                         onClick={() => chatWithPsychologist(p.usersID.id)}
                                     >
                                         Chat

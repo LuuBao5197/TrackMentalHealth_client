@@ -3,13 +3,14 @@ import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { saveAs } from 'file-saver';
 import { Button, Spinner, Alert } from 'reactstrap';
+import { useSelector } from 'react-redux';
 
 const ImportTestExcel = () => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [messages, setMessages] = useState([]); // Danh sách thông báo
     const [messageType, setMessageType] = useState(''); // 'success' | 'danger'
-
+    const userId = useSelector((state) => state.auth.user.userId);
     const onDrop = useCallback((acceptedFiles) => {
         const excelFile = acceptedFiles.find(file =>
             file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
@@ -39,8 +40,10 @@ const ImportTestExcel = () => {
             return;
         }
 
+
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('userId',userId);
 
         try {
             setUploading(true);
@@ -82,10 +85,29 @@ const ImportTestExcel = () => {
         }
     };
 
-    const handleDownloadTemplate = () => {
-        // Giả định file mẫu có sẵn ở public/TrackMentalHealth/TestTemplate.xlsx
-        const fileUrl = 'TrackMentalHealth/TestTemplate';
-        saveAs(fileUrl, 'import-template.xlsx');
+   const handleDownloadTemplate = async () => { // 1. Chuyển hàm thành async
+        try {
+            // 2. Dùng fetch để lấy file từ public folder
+            // Lưu ý: Đường dẫn bắt đầu bằng '/' để trỏ tới gốc của public folder
+            const response = await fetch('/TrackMentalHealth/TestTemplate.xlsx');
+
+            // Báo lỗi nếu không tìm thấy file (ví dụ: lỗi 404)
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+
+            // 3. Chuyển đổi kết quả trả về thành một Blob
+            const blob = await response.blob();
+
+            // 4. Dùng saveAs để lưu Blob, file sẽ không bị hỏng
+            saveAs(blob, 'ImportTemplate.xlsx');
+
+        } catch (error) {
+            console.error('Error downloading template:', error);
+            // Hiển thị thông báo lỗi cho người dùng nếu cần
+            setMessages(['❌ Could not download the template file. Please check the file path.']);
+            setMessageType('danger');
+        }
     };
 
     return (

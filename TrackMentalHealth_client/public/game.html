@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bấm Chấm – Mini Game HTML5</title>
+  <style>
+    :root{
+      --bg1:#f0f9ff;--bg2:#fff7ed;--card:#ffffffcc;--ink:#0f172a;--muted:#6b7280;--brand:#0ea5e9;--ok:#10b981;--warn:#f59e0b;
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink);
+      background: radial-gradient(1200px 800px at 20% -10%, var(--bg1), transparent),
+                  radial-gradient(1200px 800px at 100% -10%, var(--bg2), transparent),
+                  #f3f4f6;}
+    .wrap{max-width:980px;margin:32px auto;padding:0 16px}
+    .card{background:var(--card);backdrop-filter:saturate(150%) blur(6px);border:1px solid #e5e7eb;border-radius:20px;box-shadow:var(--shadow)}
+    header.card{padding:16px 18px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+    h1{font-size:22px;margin:0}
+    main.card{margin-top:16px;padding:18px}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:900px){.grid{grid-template-columns:2fr 1fr}}
+    .section{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fafafa}
+    .btn{border:none;background:var(--brand);color:#fff;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);transition:.15s}
+    .btn.ok{background:var(--ok)}
+    .btn.warn{background:var(--warn)}
+    .btn.secondary{background:#1118270d;color:#111827;border:1px solid #e5e7eb}
+
+    /* Stage */
+    #stage{position:relative;height:420px;border-radius:16px;background:linear-gradient(180deg,#f0f9ff,#fff);border:1px solid #e5e7eb;overflow:hidden;user-select:none}
+    .dot{position:absolute;width:48px;height:48px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #fde68a,#f59e0b);box-shadow:var(--shadow);cursor:pointer;display:grid;place-items:center;font-weight:900;color:#7c2d12}
+    .dot:active{transform:scale(.95)}
+
+    .hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .muted{color:var(--muted)}
+
+    .toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#111827;color:#fff;border-radius:999px;padding:8px 14px;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="card">
+      <h1>🟡 Bấm Chấm <span class="muted">– Click the Dot</span></h1>
+      <div class="muted">Thuần HTML/CSS/JS – 1 file</div>
+    </header>
+
+    <main class="card grid">
+      <section class="section">
+        <h2>Chơi game</h2>
+        <div class="controls" style="margin-bottom:12px">
+          <label class="pill">⏱️ Thời lượng
+            <select id="duration">
+              <option value="30">30 giây</option>
+              <option value="45">45 giây</option>
+              <option value="60">60 giây</option>
+            </select>
+          </label>
+          <label class="pill">🎯 Độ khó
+            <select id="difficulty">
+              <option value="easy">Dễ</option>
+              <option value="normal" selected>Vừa</option>
+              <option value="hard">Khó</option>
+              <option value="insane">Rất khó</option>
+            </select>
+          </label>
+          <label class="pill"><input id="sound" type="checkbox" checked> Âm thanh</label>
+          <button class="btn ok" id="btnStart">Bắt đầu</button>
+          <button class="btn secondary" id="btnPause" disabled>Tạm dừng</button>
+          <button class="btn warn" id="btnRestart" disabled>Chơi lại</button>
+        </div>
+
+        <div class="hud" style="margin-bottom:10px">
+          <div class="pill">🏆 Điểm: <b id="score">0</b></div>
+          <div class="pill">🔥 Combo: <b id="combo">x1</b></div>
+          <div class="pill">⏳ Còn: <b id="timeLeft">0</b>s</div>
+          <div class="pill">🥇 Kỷ lục: <b id="best">0</b></div>
+          <div class="muted">(kỷ lục lưu theo độ khó)</div>
+        </div>
+
+        <div id="stage" aria-label="vùng chơi" role="application"></div>
+      </section>
+
+      <aside class="section">
+        <h3>Mẹo nhanh</h3>
+        <ul>
+          <li>Di chuột theo chấm, click nhẹ tay – đừng gồng.</li>
+          <li>Nhìn góc di chuyển dự đoán vị trí tiếp theo.</li>
+          <li>Chơi 1–2 lượt khi thấy căng → xả stress.</li>
+        </ul>
+        <h3>Quy tắc điểm</h3>
+        <ul>
+          <li>+1 điểm mỗi lần bấm trúng.</li>
+          <li>Combo tăng sau mỗi lần trúng liên tiếp (tối đa x5), trượt sẽ về x1.</li>
+          <li>Độ khó càng cao → chấm chạy nhanh và đổi vị trí liên tục.</li>
+        </ul>
+      </aside>
+    </main>
+
+    <footer class="muted" style="text-align:center;margin:16px 0 40px">Made with ❤️ – Không dùng thư viện ngoài.</footer>
+  </div>
+
+  <script>
+    // ---------- Tiny sound (WebAudio) ----------
+    const AudioCtx = window.AudioContext || window.webkitAudioContext; 
+    const audioCtx = new AudioCtx();
+    function beep(freq=680, ms=80, type='square', gain=.02){
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = gain; o.connect(g); g.connect(audioCtx.destination);
+      o.start(); setTimeout(()=>{o.stop();}, ms);
+    }
+
+    // ---------- Elements ----------
+    const stage = document.getElementById('stage');
+    const btnStart = document.getElementById('btnStart');
+    const btnPause = document.getElementById('btnPause');
+    const btnRestart = document.getElementById('btnRestart');
+    const scoreEl = document.getElementById('score');
+    const comboEl = document.getElementById('combo');
+    const timeEl = document.getElementById('timeLeft');
+    const bestEl = document.getElementById('best');
+    const soundChk = document.getElementById('sound');
+    const durationSel = document.getElementById('duration');
+    const diffSel = document.getElementById('difficulty');
+
+    // ---------- State ----------
+    let game=null; // {end,timer,moveTimer,blinkTimer,paused,score,combo,dot}
+
+    const DIFF = {
+      easy:   {moveEvery: 900, jitter: 16},
+      normal: {moveEvery: 700, jitter: 24},
+      hard:   {moveEvery: 520, jitter: 30},
+      insane: {moveEvery: 380, jitter: 40},
+    };
+
+    // Best score by difficulty in localStorage
+    function keyBest(){return `clickdot_best_${diffSel.value}`}
+    function loadBest(){ bestEl.textContent = localStorage.getItem(keyBest()) || 0 }
+    function saveBest(v){ const cur=+localStorage.getItem(keyBest())||0; if(v>cur){ localStorage.setItem(keyBest(), String(v)); loadBest();}}
+
+    // ---------- Helpers ----------
+    function rand(min,max){ return Math.random()*(max-min)+min }
+    function placeDot(dot){
+      const r = stage.getBoundingClientRect();
+      const w = 48, h = 48; // dot size
+      const x = rand(0, Math.max(0, r.width - w));
+      const y = rand(0, Math.max(0, r.height - h));
+      dot.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function jitterDot(dot, px){
+      const m = dot.style.transform.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/);
+      const curX = m ? parseFloat(m[1]) : 0;
+      const curY = m ? parseFloat(m[2]) : 0;
+      const x = Math.max(0, Math.min(stage.clientWidth-48, curX + rand(-px,px)));
+      const y = Math.max(0, Math.min(stage.clientHeight-48, curY + rand(-px,px)));
+      dot.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function showToast(msg){
+      const t=document.createElement('div'); t.className='toast'; t.textContent=msg; stage.appendChild(t);
+      setTimeout(()=>t.remove(), 1400);
+    }
+
+    // ---------- Game Flow ----------
+    function startGame(){
+      audioCtx.resume();
+      clearGame();
+      const sec = +durationSel.value;
+      const cfg = DIFF[diffSel.value];
+      loadBest();
+
+      const dot=document.createElement('div');
+      dot.className='dot';
+      dot.setAttribute('aria-label','chấm vàng');
+      dot.textContent='•';
+      stage.innerHTML=''; stage.appendChild(dot);
+
+      game={ end: Date.now()+sec*1000, paused:false, score:0, combo:1, dot };
+      scoreEl.textContent='0'; comboEl.textContent='x1';
+
+      placeDot(dot);
+
+      // click handler
+      dot.addEventListener('click', ()=>{
+        if(!game || game.paused) return;
+        game.score += game.combo; // combo adds multiplier
+        if(game.combo<5) game.combo++;
+        scoreEl.textContent=String(game.score);
+        comboEl.textContent='x'+game.combo;
+        if(soundChk.checked) beep(820,70,'square',.02);
+        placeDot(dot);
+      });
+
+      // miss click on stage resets combo
+      stage.addEventListener('click', onMissOnce, {once:true});
+      function onMissOnce(e){ if(e.target!==dot){ game.combo=1; comboEl.textContent='x1'; if(soundChk.checked) beep(260,80,'sine',.015);} stage.addEventListener('click', onMissOnce, {once:true}); }
+
+      // movement timers
+      game.moveTimer = setInterval(()=>{
+        jitterDot(dot, cfg.jitter);
+        // occasional teleport to new spot to increase challenge
+        if(Math.random()<0.22) placeDot(dot);
+      }, cfg.moveEvery);
+
+      // tick timer
+      game.timer = setInterval(()=>{
+        const left = Math.max(0, Math.ceil((game.end - Date.now())/1000));
+        timeEl.textContent = String(left);
+        if(left<=0){ endGame(); }
+      }, 200);
+
+      btnStart.disabled=true; btnPause.disabled=false; btnRestart.disabled=false;
+    }
+
+    function endGame(){
+      if(!game) return;
+      clearInterval(game.timer); clearInterval(game.moveTimer);
+      saveBest(game.score);
+      showToast(`Hoàn tất! Điểm của bạn: ${game.score}`);
+      btnStart.disabled=false; btnPause.disabled=true; btnRestart.disabled=false;
+      game=null;
+    }
+
+    function clearGame(){
+      if(game){ clearInterval(game.timer); clearInterval(game.moveTimer); }
+      game=null; timeEl.textContent='0'; stage.innerHTML='';
+    }
+
+    function togglePause(){
+      if(!game) return;
+      game.paused = !game.paused;
+      if(game.paused){
+        clearInterval(game.timer); clearInterval(game.moveTimer);
+        const mask=document.createElement('div'); mask.className='toast'; mask.textContent='Tạm dừng'; mask.id='paused'; stage.appendChild(mask);
+        btnPause.textContent='Tiếp tục';
+      } else {
+        const cfg = DIFF[diffSel.value];
+        const left = Math.max(0, Math.ceil((game.end - Date.now())/1000));
+        timeEl.textContent=String(left);
+        const pausedEl=document.getElementById('paused'); if(pausedEl) pausedEl.remove();
+        game.timer = setInterval(()=>{
+          const left = Math.max(0, Math.ceil((game.end - Date.now())/1000));
+          timeEl.textContent = String(left);
+          if(left<=0){ endGame(); }
+        }, 200);
+        game.moveTimer = setInterval(()=>{ jitterDot(game.dot, DIFF[diffSel.value].jitter); if(Math.random()<0.22) placeDot(game.dot); }, cfg.moveEvery);
+        btnPause.textContent='Tạm dừng';
+      }
+    }
+
+    // ---------- Events ----------
+    btnStart.addEventListener('click', startGame);
+    btnRestart.addEventListener('click', ()=>{ clearGame(); startGame(); });
+    btnPause.addEventListener('click', togglePause);
+    diffSel.addEventListener('change', ()=>loadBest());
+
+    // init
+    loadBest();
+  </script>
+</body>
+</html>
