@@ -73,7 +73,7 @@ const MentalAlertBox = () => {
       {result?.level === 4 && (
         <div className="mt-3">
           <p className="text-danger fw-bold">⚠️ Your condition is severe</p>
-          <Link to="/" className="btn btn-danger">
+          <Link to="/user/chat/list" className="btn btn-danger">
             👨‍⚕️ Contact a doctor now
           </Link>
         </div>
